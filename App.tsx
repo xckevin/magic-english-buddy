@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Home } from './components/Home';
 import { Player } from './components/Player';
 import { BookOpen, Languages } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { preloadTesseract } from './services/ocrService';
 
 const Layout: React.FC = () => {
   const navigate = useNavigate();
@@ -69,6 +70,11 @@ const Layout: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  // 预加载 Tesseract OCR 引擎
+  useEffect(() => {
+    preloadTesseract();
+  }, []);
+
   return (
     <HashRouter>
       <Routes>

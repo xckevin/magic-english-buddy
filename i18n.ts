@@ -1,5 +1,5 @@
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
 
 const resources = {
   en: {
@@ -10,7 +10,8 @@ const resources = {
       },
       home: {
         hero_title: "Ready to Practice?",
-        hero_subtitle: "Paste your English homework below, or ask our Magic AI to write a story for you!",
+        hero_subtitle:
+          "Paste your English homework below, or ask our Magic AI to write a story for you!",
         tab_write: "My Text",
         tab_generate: "Magic Generator",
         tab_preset: "Library",
@@ -31,7 +32,29 @@ const resources = {
         cat_science: "Science",
         cat_fun: "Fun Facts",
         preset_select_title: "Choose a story",
-        english_only: "English only"
+        english_only: "English only",
+        ocr_scan: "Scan",
+      },
+      ocr: {
+        title: "Scan Text from Image",
+        engine_local: "Local",
+        engine_cloud: "Cloud AI",
+        engine_local_desc:
+          "Offline recognition using Tesseract.js, no network needed",
+        engine_cloud_desc: "High accuracy recognition using Gemini Vision AI",
+        take_photo: "Take Photo",
+        choose_photo: "Choose Photo",
+        retake: "Retake",
+        recognize: "Extract Text",
+        processing: "Recognizing...",
+        processing_local: "Processing locally, please wait...",
+        processing_cloud: "Cloud AI analyzing image...",
+        loading_engine: "Loading OCR Engine...",
+        loading_engine_desc: "First time loading, please wait...",
+        camera_error: "Unable to access camera. Please check permissions.",
+        file_error: "Failed to load image. Please try another one.",
+        recognize_error: "Recognition failed. Please try again.",
+        no_text_found: "No text found in this image. Please try another one.",
       },
       player: {
         debug_hide: "Hide Debug",
@@ -41,19 +64,20 @@ const resources = {
         guide_click_title: "Click Words",
         guide_click_desc: "Click any word to hear it pronounced.",
         guide_select_title: "Select Sentences",
-        guide_select_desc: "Highlight any text with your mouse to read just that part.",
-        no_text: "No text to read. Please go back and enter some text."
+        guide_select_desc:
+          "Highlight any text with your mouse to read just that part.",
+        no_text: "No text to read. Please go back and enter some text.",
       },
       controls: {
         options: "Options",
         slow: "Slow",
         fast: "Fast",
-        loading_voices: "Loading voices..."
+        loading_voices: "Loading voices...",
       },
       text_display: {
-        read_selection: "Read Selection"
-      }
-    }
+        read_selection: "Read Selection",
+      },
+    },
   },
   zh: {
     translation: {
@@ -63,7 +87,8 @@ const resources = {
       },
       home: {
         hero_title: "准备好练习了吗？",
-        hero_subtitle: "在下方粘贴你的英语作业，或者让魔法 AI 为你写个精彩故事！",
+        hero_subtitle:
+          "在下方粘贴你的英语作业，或者让魔法 AI 为你写个精彩故事！",
         tab_write: "我的文本",
         tab_generate: "魔法生成器",
         tab_preset: "预置题库",
@@ -84,7 +109,28 @@ const resources = {
         cat_science: "趣味科学",
         cat_fun: "冷知识",
         preset_select_title: "选择一篇文章",
-        english_only: "仅保留英文"
+        english_only: "仅保留英文",
+        ocr_scan: "扫描",
+      },
+      ocr: {
+        title: "从图片中提取文字",
+        engine_local: "本地识别",
+        engine_cloud: "云端 AI",
+        engine_local_desc: "使用 Tesseract.js 离线识别，无需网络",
+        engine_cloud_desc: "使用 Gemini Vision AI 高精度识别",
+        take_photo: "拍照",
+        choose_photo: "从相册选择",
+        retake: "重拍",
+        recognize: "提取文字",
+        processing: "正在识别...",
+        processing_local: "本地处理中，请稍候...",
+        processing_cloud: "云端 AI 正在分析图片...",
+        loading_engine: "正在加载识别引擎...",
+        loading_engine_desc: "首次加载需要下载模型，请稍候...",
+        camera_error: "无法访问相机，请检查权限设置",
+        file_error: "图片加载失败，请换一张试试",
+        recognize_error: "识别失败，请重试",
+        no_text_found: "未在图片中发现文字，请换一张试试",
       },
       player: {
         debug_hide: "隐藏调试",
@@ -95,30 +141,28 @@ const resources = {
         guide_click_desc: "点击任意单词听发音。",
         guide_select_title: "划句朗读",
         guide_select_desc: "选中任意文本进行单独朗读。",
-        no_text: "没有可朗读的文本，请返回并输入内容。"
+        no_text: "没有可朗读的文本，请返回并输入内容。",
       },
       controls: {
         options: "设置",
         slow: "慢",
         fast: "快",
-        loading_voices: "加载语音..."
+        loading_voices: "加载语音...",
       },
       text_display: {
-        read_selection: "朗读选中内容"
-      }
-    }
-  }
+        read_selection: "朗读选中内容",
+      },
+    },
+  },
 };
 
-i18n
-  .use(initReactI18next)
-  .init({
-    resources,
-    lng: 'zh', // Default language
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false
-    }
-  });
+i18n.use(initReactI18next).init({
+  resources,
+  lng: "zh", // Default language
+  fallbackLng: "en",
+  interpolation: {
+    escapeValue: false,
+  },
+});
 
 export default i18n;

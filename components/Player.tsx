@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { TextDisplay } from './TextDisplay';
 import { Controls } from './Controls';
-import { useWebSpeech, isSpeechAvailable } from '../hooks/useWebSpeech';
+import { useWebSpeech } from '../hooks/useWebSpeech';
 import { WordToken, DebugInfo } from '../types';
 import { Bug, AlertTriangle, VolumeX } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-interface LocationState {
-  text?: string;
-}
+const STORAGE_KEY = 'magic-english-buddy-text';
 
 const DebugOverlay: React.FC<{ info: DebugInfo }> = ({ info }) => (
   <div className="fixed bottom-40 md:bottom-32 left-2 md:left-4 p-3 md:p-4 bg-black/90 text-green-400 font-mono text-[10px] md:text-xs rounded-lg shadow-xl z-[103] max-w-[280px] md:max-w-xs pointer-events-none opacity-90">
@@ -44,25 +42,39 @@ const DebugOverlay: React.FC<{ info: DebugInfo }> = ({ info }) => (
 );
 
 export const Player: React.FC = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const locationState = location.state as LocationState | null;
-  const text = locationState?.text || '';
+  
+  // 从 sessionStorage 读取文本
+  const [text, setText] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
 
   const [tokens, setTokens] = useState<WordToken[]>([]);
   const [speed, setSpeed] = useState(1.0);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoiceName, setSelectedVoiceName] = useState<string>('');
   const [showDebug, setShowDebug] = useState(false);
-  const [controlsHeight, setControlsHeight] = useState(100); // Default height (conservative estimate)
+  const [controlsHeight, setControlsHeight] = useState(100);
   const { t } = useTranslation();
 
-  // Redirect to home if no text
+  // 从 sessionStorage 加载文本
   useEffect(() => {
-    if (!text) {
+    try {
+      const savedText = sessionStorage.getItem(STORAGE_KEY);
+      if (savedText) {
+        setText(savedText);
+      }
+    } catch (e) {
+      // sessionStorage 不可用
+    }
+    setIsLoading(false);
+  }, []);
+
+  // 如果没有文本，重定向到首页
+  useEffect(() => {
+    if (!isLoading && !text) {
       navigate('/', { replace: true });
     }
-  }, [text, navigate]);
+  }, [isLoading, text, navigate]);
 
   // Check for debug flag in URL
   const allowDebug = useMemo(() => {
@@ -133,7 +145,16 @@ export const Player: React.FC = () => {
     }
   };
 
-  // Show nothing while redirecting
+  // 加载中状态
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // 无文本状态
   if (!text) {
     return (
       <div className="flex flex-col items-center justify-center py-12 md:py-20 space-y-3 md:space-y-4">

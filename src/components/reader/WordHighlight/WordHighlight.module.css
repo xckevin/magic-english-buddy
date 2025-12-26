@@ -1,0 +1,53 @@
+/**
+ * WordHighlight 组件样式
+ */
+
+.word {
+  display: inline;
+  padding: 2px 4px;
+  margin: 0 1px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.word:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.word:active {
+  background-color: rgba(107, 92, 231, 0.2);
+}
+
+/* 高亮状态 - TTS 播放时 */
+.highlighted {
+  background-color: var(--color-highlight) !important;
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+/* 已学习状态 */
+.learned {
+  text-decoration: underline;
+  text-decoration-color: var(--color-success);
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+
+/* 高亮动画 */
+@keyframes highlight-pulse {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(255, 215, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+  }
+}
+
+.highlighted {
+  animation: highlight-pulse 0.8s ease-in-out infinite;
+}
+

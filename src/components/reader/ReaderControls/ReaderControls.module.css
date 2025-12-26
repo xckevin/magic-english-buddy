@@ -1,0 +1,110 @@
+/**
+ * ReaderControls 组件样式
+ */
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-card-dark);
+  border-top: 1px solid var(--border-dark);
+}
+
+.controlBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  padding: var(--space-2);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.controlBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.controlBtn:active {
+  transform: scale(0.95);
+}
+
+.btnIcon {
+  font-size: 24px;
+  line-height: 1;
+  margin-bottom: var(--space-1);
+}
+
+.btnLabel {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ============ 播放按钮 ============ */
+
+.playBtn {
+  min-width: 72px;
+  padding: var(--space-3);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.playBtn:hover {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.playBtn .btnLabel {
+  color: var(--text-light);
+}
+
+.playBtn.playing {
+  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
+}
+
+.playIcon {
+  font-size: 28px;
+}
+
+/* ============ 跟读按钮 ============ */
+
+.recordBtn.recording {
+  background: rgba(255, 87, 87, 0.2);
+}
+
+.recordBtn.recording .btnIcon {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ============ 翻译按钮 ============ */
+
+.translationBtn.active {
+  background: rgba(107, 92, 231, 0.2);
+}
+
+.translationBtn.active .btnLabel {
+  color: var(--color-primary);
+}
+
+/* ============ 停止按钮 ============ */
+
+.stopBtn {
+  background: rgba(255, 87, 87, 0.1);
+}
+
+.stopBtn:hover {
+  background: rgba(255, 87, 87, 0.2);
+}
+

@@ -1,0 +1,72 @@
+/**
+ * StoryContent 组件样式
+ */
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+}
+
+.paragraph {
+  margin-bottom: var(--space-6);
+  padding: var(--space-4);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-xl);
+  border-left: 3px solid transparent;
+  transition: all var(--transition-normal);
+}
+
+.paragraph.active {
+  background: rgba(107, 92, 231, 0.08);
+  border-left-color: var(--color-primary);
+}
+
+.englishText {
+  font-size: var(--text-xl);
+  font-weight: var(--font-medium);
+  line-height: 2;
+  color: var(--text-light);
+  margin: 0 0 var(--space-2) 0;
+  word-spacing: 4px;
+}
+
+.translation {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--border-dark);
+  overflow: hidden;
+}
+
+/* 段落分隔装饰 */
+.paragraph:not(:last-child)::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-primary) 0%, transparent 100%);
+  margin-top: var(--space-4);
+  opacity: 0.3;
+}
+
+/* 滚动条样式 */
+.content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: var(--border-dark);
+  border-radius: var(--radius-full);
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+

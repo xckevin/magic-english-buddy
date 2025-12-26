@@ -47,6 +47,9 @@ const generateL1Nodes = (): MapNode[] => {
       magicPower: story.rewards.magicPower,
       cards: story.rewards.cards,
     },
+    // 第一个故事默认解锁
+    unlocked: index === 0,
+    completed: false,
   }));
 };
 

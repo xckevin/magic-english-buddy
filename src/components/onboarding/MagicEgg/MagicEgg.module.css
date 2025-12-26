@@ -1,0 +1,148 @@
+/**
+ * MagicEgg 组件样式
+ */
+
+.container {
+  position: relative;
+  width: 200px;
+  height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* ============ 背景光晕 ============ */
+
+.glow {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* ============ 进度环 ============ */
+
+.progressRing {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  transform: rotate(-90deg);
+}
+
+.progressBg {
+  stroke: rgba(255, 255, 255, 0.1);
+}
+
+.progressFill {
+  stroke: var(--color-primary);
+  filter: drop-shadow(0 0 8px var(--color-primary));
+}
+
+/* ============ 蛋 ============ */
+
+.egg {
+  position: relative;
+  width: 120px;
+  height: 150px;
+  background: linear-gradient(180deg, #F5F3FA 0%, #E8E4F3 50%, #D4CEE8 100%);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.3),
+    inset 0 -10px 20px rgba(0, 0, 0, 0.1),
+    inset 0 10px 20px rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+}
+
+.eggHighlight {
+  position: absolute;
+  top: 15%;
+  left: 20%;
+  width: 30%;
+  height: 25%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, transparent 100%);
+  border-radius: 50%;
+  filter: blur(5px);
+}
+
+.eggTexture {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 80px;
+  opacity: 0.15;
+  filter: grayscale(1);
+}
+
+/* ============ 裂纹 ============ */
+
+.crack {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 60px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 60'%3E%3Cpath d='M20 0 L15 15 L25 20 L12 35 L28 40 L20 60' stroke='%23333' stroke-width='2' fill='none'/%3E%3C/svg%3E") no-repeat center;
+  opacity: 0.7;
+}
+
+/* ============ 蛋壳碎片 ============ */
+
+.shellPiece {
+  position: absolute;
+  width: 25px;
+  height: 30px;
+  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ============ Buddy ============ */
+
+.buddy {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.buddyEmoji {
+  font-size: 100px;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+}
+
+.sparkles {
+  position: absolute;
+  top: -10px;
+  right: -20px;
+  font-size: 32px;
+  animation: float 2s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(10deg); }
+}
+
+/* ============ 粒子 ============ */
+
+.particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  background: var(--color-secondary);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--color-secondary);
+}
+

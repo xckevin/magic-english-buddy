@@ -5,232 +5,99 @@
 .container {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background: var(--bg-dark);
+  height: 100vh;
+  height: 100dvh;
+  background: #0a1628;
   color: var(--text-light);
+  overflow: hidden;
 }
 
 /* ============ 头部 ============ */
 
 .header {
-  flex-shrink: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: var(--space-4);
   padding-top: calc(var(--space-4) + var(--safe-area-top));
-  background: linear-gradient(180deg, var(--bg-card-dark) 0%, transparent 100%);
+  background: linear-gradient(180deg, rgba(10, 22, 40, 0.95) 0%, transparent 100%);
+  z-index: 50;
 }
 
-.userInfo {
+.userSection {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin-bottom: var(--space-4);
 }
 
 .avatar {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 22px;
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-md);
 }
 
-.userText {
+.userInfo {
   display: flex;
   flex-direction: column;
 }
 
 .greeting {
   font-size: var(--text-sm);
-  color: var(--text-muted);
-}
-
-.buddyName {
-  font-size: var(--text-lg);
   font-weight: var(--font-semibold);
   color: var(--text-light);
 }
 
-.statsRow {
+.regionName {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.statsSection {
   display: flex;
-  justify-content: space-around;
-  padding: var(--space-3);
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius-lg);
+  gap: var(--space-4);
 }
 
 .statItem {
   display: flex;
-  flex-direction: column;
   align-items: center;
-}
-
-.statValue {
-  font-size: var(--text-lg);
-  font-weight: var(--font-bold);
-  color: var(--text-light);
-}
-
-.statLabel {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-}
-
-/* ============ 等级标题 ============ */
-
-.levelHeader {
-  padding: var(--space-4);
-  text-align: center;
-}
-
-.levelTitle {
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: var(--font-bold);
-  color: var(--color-primary);
-  margin: 0 0 var(--space-1) 0;
-}
-
-.levelDesc {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  margin: 0;
-}
-
-/* ============ 故事列表 ============ */
-
-.storyList {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--space-4);
-  padding-bottom: calc(80px + var(--safe-area-bottom));
-}
-
-.storyCard {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  margin-bottom: var(--space-3);
-  background: var(--bg-card-dark);
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border-dark);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.storyCard:hover {
-  transform: translateX(4px);
-  border-color: var(--color-primary);
-}
-
-.storyCard.locked {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.storyCard.locked:hover {
-  transform: none;
-  border-color: var(--border-dark);
-}
-
-.storyCard.completed {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, var(--bg-card-dark) 100%);
-  border-color: rgba(34, 197, 94, 0.3);
-}
-
-.storyCard.available {
-  background: linear-gradient(135deg, rgba(107, 92, 231, 0.1) 0%, var(--bg-card-dark) 100%);
-  border-color: rgba(107, 92, 231, 0.3);
-}
-
-/* 连接线 */
-.connector {
-  position: absolute;
-  left: 36px;
-  top: 100%;
-  width: 2px;
-  height: calc(var(--space-3) + 8px);
-  background: var(--border-dark);
-}
-
-.connector.active {
-  background: var(--color-primary);
-}
-
-/* 故事图标 */
-.storyIcon {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius-lg);
-  flex-shrink: 0;
-}
-
-/* 故事信息 */
-.storyInfo {
-  flex: 1;
-  min-width: 0;
-}
-
-.storyTitle {
-  font-size: var(--text-base);
-  font-weight: var(--font-semibold);
-  color: var(--text-light);
-  margin: 0 0 var(--space-1) 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.storyMeta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.badge,
-.badgeNew,
-.badgeLocked {
-  font-size: var(--text-xs);
-  padding: 2px 8px;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-full);
 }
 
-.badge {
-  color: var(--color-success);
-  background: rgba(34, 197, 94, 0.1);
+.statIcon {
+  font-size: var(--text-sm);
 }
 
-.badgeNew {
-  color: var(--color-primary);
-  background: rgba(107, 92, 231, 0.1);
+.statValue {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-light);
 }
 
-.badgeLocked {
-  color: var(--text-tertiary);
-  background: rgba(255, 255, 255, 0.05);
-}
+/* ============ 地图区域 ============ */
 
-/* 箭头 */
-.arrow {
-  font-size: var(--text-lg);
-  color: var(--text-tertiary);
+.mapArea {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
 }
 
 /* ============ 底部导航 ============ */
 
 .bottomNav {
-  position: fixed;
+  position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
@@ -238,23 +105,28 @@
   justify-content: space-around;
   padding: var(--space-2);
   padding-bottom: calc(var(--space-2) + var(--safe-area-bottom));
-  background: var(--bg-card-dark);
-  border-top: 1px solid var(--border-dark);
+  background: linear-gradient(0deg, rgba(10, 22, 40, 0.98) 0%, transparent 100%);
+  z-index: 50;
 }
 
 .navItem {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--space-2);
+  padding: var(--space-2) var(--space-4);
   background: transparent;
   border: none;
   cursor: pointer;
   transition: all var(--transition-fast);
+  border-radius: var(--radius-lg);
+}
+
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .navItem.active {
-  color: var(--color-primary);
+  background: rgba(107, 92, 231, 0.2);
 }
 
 .navIcon {
@@ -280,14 +152,14 @@
   justify-content: center;
   height: 100vh;
   height: 100dvh;
-  background: var(--bg-dark);
+  background: #0a1628;
   color: var(--text-muted);
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--border-dark);
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
   border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;

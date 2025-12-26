@@ -1,0 +1,59 @@
+/**
+ * MapCanvas 组件样式
+ */
+
+.container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: linear-gradient(180deg, 
+    #0a1628 0%, 
+    #0f1f35 30%, 
+    #162840 60%,
+    #1a3050 100%
+  );
+  touch-action: none;
+}
+
+.canvas {
+  position: relative;
+  cursor: grab;
+  transform-origin: top left;
+}
+
+.canvas:active {
+  cursor: grabbing;
+}
+
+/* ============ 背景 ============ */
+
+.background {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.tree {
+  position: absolute;
+  font-size: 48px;
+  filter: blur(1px);
+  user-select: none;
+}
+
+/* ============ 路径层 ============ */
+
+.pathLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* ============ 节点层 ============ */
+
+.nodeLayer {
+  position: absolute;
+  inset: 0;
+}
+

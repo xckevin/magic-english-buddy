@@ -1,54 +1,77 @@
 /**
  * MapPage 地图页面
- * 故事列表、进度显示、Buddy 状态
+ * 魔法地图探索，迷雾解锁，节点预览
  */
 
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/useAppStore';
-import { db, type Story, type MapNode } from '@/db';
-import { readingProgressService } from '@/services/readingProgressService';
+import { db, type MapNode } from '@/db';
+import { MapCanvas, NodePreview } from '@/components/map';
+import { generateL1MapNodes, l1RegionConfig } from '@/data/maps/l1-forest';
 import styles from './MapPage.module.css';
 
 const MapPage: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser, currentUserId } = useAppStore();
+  const { currentUser } = useAppStore();
 
-  // 故事数据
-  const [stories, setStories] = useState<Story[]>([]);
+  // 地图数据
   const [mapNodes, setMapNodes] = useState<MapNode[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // 预览状态
+  const [selectedNode, setSelectedNode] = useState<MapNode | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  
+  // 当前激活节点
+  const [activeNodeId, setActiveNodeId] = useState<string>('');
 
   // 统计数据
   const [stats, setStats] = useState({
-    todayStories: 0,
-    totalStories: 0,
-    streakDays: 0,
+    completedNodes: 0,
+    totalNodes: 0,
+    magicPower: 0,
   });
 
-  // 加载数据
+  // 加载地图数据
   useEffect(() => {
-    const loadData = async () => {
+    const loadMapData = async () => {
       setLoading(true);
       try {
-        // 加载故事
-        const allStories = await db.stories.where('level').equals(1).toArray();
-        setStories(allStories);
-
-        // 加载地图节点
-        const nodes = await db.mapNodes.toArray();
+        // 先检查数据库中是否有地图节点
+        let nodes = await db.mapNodes.where('regionId').equals('region_l1').toArray();
+        
+        // 如果没有数据，生成并保存
+        if (nodes.length === 0) {
+          const generatedNodes = generateL1MapNodes();
+          await db.mapNodes.bulkPut(generatedNodes);
+          nodes = generatedNodes;
+        }
+        
         setMapNodes(nodes);
-
-        // 加载统计
-        if (currentUserId) {
-          const todayStats = await readingProgressService.getTodayStats(currentUserId);
-          const totalStats = await readingProgressService.getTotalStats(currentUserId);
-          setStats({
-            todayStories: todayStats.storiesRead,
-            totalStories: totalStats.totalStories,
-            streakDays: totalStats.streakDays,
-          });
+        
+        // 计算统计
+        const completed = nodes.filter(n => n.completed).length;
+        const total = nodes.length;
+        const power = nodes
+          .filter(n => n.completed)
+          .reduce((sum, n) => sum + (n.rewards?.magicPower || 0), 0);
+        
+        setStats({
+          completedNodes: completed,
+          totalNodes: total,
+          magicPower: power,
+        });
+        
+        // 设置当前激活节点（第一个未完成的解锁节点）
+        const currentNode = nodes.find(n => n.unlocked && !n.completed);
+        if (currentNode) {
+          setActiveNodeId(currentNode.id);
+        } else {
+          // 如果全部完成，激活最后一个
+          const lastNode = nodes[nodes.length - 1];
+          if (lastNode) setActiveNodeId(lastNode.id);
         }
       } catch (error) {
         console.error('Failed to load map data:', error);
@@ -57,66 +80,38 @@ const MapPage: React.FC = () => {
       }
     };
 
-    loadData();
-  }, [currentUserId]);
+    loadMapData();
+  }, []);
 
-  // 点击故事
-  const handleStoryClick = useCallback((story: Story) => {
-    if (isStoryClickable(story)) {
-      navigate(`/reader/${story.id}`);
+  // 节点点击
+  const handleNodeClick = useCallback((node: MapNode) => {
+    setSelectedNode(node);
+    setIsPreviewOpen(true);
+  }, []);
+
+  // 关闭预览
+  const handleClosePreview = useCallback(() => {
+    setIsPreviewOpen(false);
+    setTimeout(() => setSelectedNode(null), 300);
+  }, []);
+
+  // 开始节点
+  const handleStartNode = useCallback((node: MapNode) => {
+    handleClosePreview();
+    
+    // 根据节点类型导航
+    if (node.type === 'story' || node.type === 'boss') {
+      navigate(`/reader/${node.storyId}`);
+    } else if (node.type === 'challenge' || node.type === 'bonus') {
+      navigate(`/quiz/${node.storyId}`);
     }
-  }, [navigate, mapNodes]);
-
-  // 解锁下一个故事
-  const unlockNextStory = useCallback(async (currentStoryId: string) => {
-    const currentIndex = stories.findIndex(s => s.id === currentStoryId);
-    if (currentIndex >= 0 && currentIndex < stories.length - 1) {
-      const nextStory = stories[currentIndex + 1];
-      await db.stories.update(nextStory.id, { unlocked: true });
-      await db.mapNodes.update(nextStory.id, { unlocked: true });
-      
-      // 刷新数据
-      const updatedStories = await db.stories.where('level').equals(1).toArray();
-      setStories(updatedStories);
-    }
-  }, [stories]);
-
-  // 获取故事状态（基于 mapNodes）
-  const getStoryStatus = (story: Story): 'locked' | 'available' | 'completed' => {
-    const node = mapNodes.find(n => n.storyId === story.id);
-    if (node?.completed) return 'completed';
-    if (node?.unlocked) return 'available';
-    return 'locked';
-  };
-
-  // 检查故事是否可点击
-  const isStoryClickable = (story: Story): boolean => {
-    const node = mapNodes.find(n => n.storyId === story.id);
-    return node?.unlocked || false;
-  };
-
-  // 获取故事图标
-  const getStoryEmoji = (storyId: string): string => {
-    const emojiMap: Record<string, string> = {
-      'l1_001': '🍎',
-      'l1_002': '🐱',
-      'l1_003': '🌈',
-      'l1_004': '👨‍👩‍👧',
-      'l1_005': '🌅',
-      'l1_006': '🔢',
-      'l1_007': '🐶',
-      'l1_008': '🏞️',
-      'l1_009': '🧸',
-      'l1_010': '🌙',
-    };
-    return emojiMap[storyId] || '📖';
-  };
+  }, [navigate, handleClosePreview]);
 
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.spinner} />
-        <p>加载地图中...</p>
+        <p>正在绘制魔法地图...</p>
       </div>
     );
   }
@@ -125,82 +120,46 @@ const MapPage: React.FC = () => {
     <div className={styles.container}>
       {/* 头部状态栏 */}
       <header className={styles.header}>
-        <div className={styles.userInfo}>
+        <div className={styles.userSection}>
           <div className={styles.avatar}>
             {currentUser?.buddyName?.charAt(0) || '🐣'}
           </div>
-          <div className={styles.userText}>
-            <span className={styles.greeting}>你好，{currentUser?.name || '小魔法师'}</span>
-            <span className={styles.buddyName}>{currentUser?.buddyName || '小精灵'}</span>
+          <div className={styles.userInfo}>
+            <span className={styles.greeting}>{currentUser?.name || '小魔法师'}</span>
+            <span className={styles.regionName}>{l1RegionConfig.nameCn}</span>
           </div>
         </div>
-        <div className={styles.statsRow}>
+        <div className={styles.statsSection}>
           <div className={styles.statItem}>
-            <span className={styles.statValue}>{stats.todayStories}</span>
-            <span className={styles.statLabel}>今日</span>
+            <span className={styles.statIcon}>⭐</span>
+            <span className={styles.statValue}>{stats.completedNodes}/{stats.totalNodes}</span>
           </div>
           <div className={styles.statItem}>
-            <span className={styles.statValue}>{stats.totalStories}</span>
-            <span className={styles.statLabel}>已读</span>
-          </div>
-          <div className={styles.statItem}>
-            <span className={styles.statValue}>🔥 {stats.streakDays}</span>
-            <span className={styles.statLabel}>连续</span>
+            <span className={styles.statIcon}>✨</span>
+            <span className={styles.statValue}>{stats.magicPower}</span>
           </div>
         </div>
       </header>
 
-      {/* 等级标题 */}
-      <div className={styles.levelHeader}>
-        <h2 className={styles.levelTitle}>Level 1 · 魔法起源</h2>
-        <p className={styles.levelDesc}>简单句型，基础词汇</p>
-      </div>
-
-      {/* 故事列表 */}
-      <main className={styles.storyList}>
-        {stories.map((story, index) => {
-          const status = getStoryStatus(story);
-          const emoji = getStoryEmoji(story.id);
-          
-          return (
-            <motion.div
-              key={story.id}
-              className={`${styles.storyCard} ${styles[status]}`}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
-              onClick={() => handleStoryClick(story)}
-            >
-              {/* 连接线 */}
-              {index < stories.length - 1 && (
-                <div className={`${styles.connector} ${stories[index + 1]?.unlocked ? styles.active : ''}`} />
-              )}
-
-              {/* 故事图标 */}
-              <div className={styles.storyIcon}>
-                {status === 'locked' ? '🔒' : emoji}
-              </div>
-
-              {/* 故事信息 */}
-              <div className={styles.storyInfo}>
-                <h3 className={styles.storyTitle}>
-                  {status === 'locked' ? '???' : story.title}
-                </h3>
-                <div className={styles.storyMeta}>
-                  {status === 'completed' && <span className={styles.badge}>✅ 已完成</span>}
-                  {status === 'available' && <span className={styles.badgeNew}>🆕 可阅读</span>}
-                  {status === 'locked' && <span className={styles.badgeLocked}>🔒 未解锁</span>}
-                </div>
-              </div>
-
-              {/* 箭头 */}
-              {status !== 'locked' && (
-                <div className={styles.arrow}>→</div>
-              )}
-            </motion.div>
-          );
-        })}
+      {/* 地图画布 */}
+      <main className={styles.mapArea}>
+        <MapCanvas
+          nodes={mapNodes}
+          activeNodeId={activeNodeId}
+          width={400}
+          height={1500}
+          onNodeClick={handleNodeClick}
+          showFog={true}
+        />
       </main>
+
+      {/* 节点预览 */}
+      <NodePreview
+        node={selectedNode}
+        isOpen={isPreviewOpen}
+        onClose={handleClosePreview}
+        onStart={handleStartNode}
+      />
 
       {/* 底部导航 */}
       <nav className={styles.bottomNav}>
@@ -226,4 +185,3 @@ const MapPage: React.FC = () => {
 };
 
 export default MapPage;
-

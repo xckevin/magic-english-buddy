@@ -1,0 +1,19 @@
+/**
+ * FogOverlay 组件样式
+ */
+
+.fog {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.fogLayer {
+  transition: all 0.5s ease;
+}
+
+.particles {
+  opacity: 0.6;
+}
+

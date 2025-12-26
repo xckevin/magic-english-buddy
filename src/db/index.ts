@@ -177,7 +177,7 @@ export interface QuizRecord {
 export interface MapNode {
   id: string;
   regionId: string;
-  type: 'story' | 'boss' | 'treasure' | 'branch';
+  type: 'story' | 'boss' | 'bonus' | 'challenge' | 'treasure' | 'branch';
   storyId?: string;
   position: { x: number; y: number };
   prerequisites: string[];
@@ -186,6 +186,13 @@ export interface MapNode {
     cards?: string[];
     buddyAccessory?: string;
   };
+  // 运行时状态
+  unlocked?: boolean;
+  completed?: boolean;
+  // 显示信息
+  title?: string;
+  titleCn?: string;
+  emoji?: string;
 }
 
 /** 地图区域 */

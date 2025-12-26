@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/magic-english-buddy/dev-sw.js?dev-sw', { scope: '/magic-english-buddy/', type: 'classic' })

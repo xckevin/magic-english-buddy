@@ -1,0 +1,221 @@
+/**
+ * Magic English Buddy - Design Tokens
+ * 设计系统基础变量
+ */
+
+:root {
+  /* ============ 颜色系统 ============ */
+  
+  /* 主题色 - 魔法风格 */
+  --color-primary: #6B5CE7;        /* 魔法紫 */
+  --color-primary-light: #8B7EF0;
+  --color-primary-dark: #5346C4;
+  
+  --color-secondary: #FF6B9D;      /* 魔力粉 */
+  --color-secondary-light: #FF8FB4;
+  --color-secondary-dark: #E54D7D;
+  
+  --color-accent: #FFE066;         /* 高亮金 */
+  --color-accent-light: #FFEB99;
+  --color-accent-dark: #E6C84D;
+  
+  /* 语义色 */
+  --color-success: #4ECDC4;        /* 成功青 */
+  --color-success-light: #7DD8D2;
+  --color-success-dark: #3BB3AA;
+  
+  --color-warning: #FF8B4D;        /* 警告橙 */
+  --color-warning-light: #FFA673;
+  --color-warning-dark: #E67233;
+  
+  --color-error: #FF5757;          /* 错误红 */
+  --color-error-light: #FF7A7A;
+  --color-error-dark: #E63E3E;
+  
+  --color-info: #5B8DEF;           /* 信息蓝 */
+  --color-info-light: #7DA5F3;
+  --color-info-dark: #4275D6;
+  
+  /* 背景色 */
+  --bg-primary: #1A1A2E;           /* 深夜蓝 */
+  --bg-secondary: #16213E;         /* 暗蓝 */
+  --bg-tertiary: #0F0F23;          /* 更深蓝 */
+  --bg-card: #FFFFFF;              /* 卡片白 */
+  --bg-card-dark: #252540;         /* 深色卡片 */
+  --bg-overlay: rgba(0, 0, 0, 0.6); /* 遮罩层 */
+  
+  /* 文字色 */
+  --text-primary: #1A1A2E;
+  --text-secondary: #6B7280;
+  --text-tertiary: #9CA3AF;
+  --text-light: #FFFFFF;
+  --text-muted: #A0AEC0;
+  
+  /* 边框色 */
+  --border-light: #E5E7EB;
+  --border-medium: #D1D5DB;
+  --border-dark: #4B5563;
+  
+  /* 区域主题色 - L1 萌芽之森 */
+  --region-l1-primary: #4ADE80;    /* 翠绿色 */
+  --region-l1-secondary: #22C55E;
+  --region-l1-bg: #F0FDF4;
+  
+  /* 区域主题色 - L2 回声山谷 */
+  --region-l2-primary: #A78BFA;    /* 紫罗兰 */
+  --region-l2-secondary: #8B5CF6;
+  --region-l2-bg: #F5F3FF;
+  
+  /* 稀有度颜色 */
+  --rarity-white: #E5E7EB;
+  --rarity-green: #10B981;
+  --rarity-blue: #3B82F6;
+  --rarity-gold: #F59E0B;
+  
+  /* ============ 字体系统 ============ */
+  
+  --font-display: 'Nunito', 'PingFang SC', sans-serif;
+  --font-body: 'Inter', 'PingFang SC', sans-serif;
+  --font-reading: 'Literata', 'Noto Serif SC', serif;
+  --font-mono: 'Fira Code', 'SF Mono', monospace;
+  
+  /* 字号 */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 1.875rem;    /* 30px */
+  --text-4xl: 2.25rem;     /* 36px */
+  --text-5xl: 3rem;        /* 48px */
+  
+  /* 行高 */
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+  
+  /* 字重 */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+  
+  /* ============ 间距系统 ============ */
+  
+  --space-0: 0;
+  --space-1: 0.25rem;      /* 4px */
+  --space-2: 0.5rem;       /* 8px */
+  --space-3: 0.75rem;      /* 12px */
+  --space-4: 1rem;         /* 16px */
+  --space-5: 1.25rem;      /* 20px */
+  --space-6: 1.5rem;       /* 24px */
+  --space-8: 2rem;         /* 32px */
+  --space-10: 2.5rem;      /* 40px */
+  --space-12: 3rem;        /* 48px */
+  --space-16: 4rem;        /* 64px */
+  --space-20: 5rem;        /* 80px */
+  
+  /* ============ 圆角系统 ============ */
+  
+  --radius-none: 0;
+  --radius-sm: 0.25rem;    /* 4px */
+  --radius-md: 0.375rem;   /* 6px */
+  --radius-lg: 0.5rem;     /* 8px */
+  --radius-xl: 0.75rem;    /* 12px */
+  --radius-2xl: 1rem;      /* 16px */
+  --radius-3xl: 1.5rem;    /* 24px */
+  --radius-full: 9999px;
+  
+  /* ============ 阴影系统 ============ */
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+  
+  /* 发光效果 */
+  --glow-primary: 0 0 20px rgba(107, 92, 231, 0.4);
+  --glow-secondary: 0 0 20px rgba(255, 107, 157, 0.4);
+  --glow-accent: 0 0 20px rgba(255, 224, 102, 0.4);
+  --glow-success: 0 0 15px rgba(78, 205, 196, 0.4);
+  
+  /* ============ 过渡动画 ============ */
+  
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+  --transition-slower: 500ms ease;
+  
+  /* 动画时长 */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+  
+  /* 缓动函数 */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  
+  /* ============ 层级系统 ============ */
+  
+  --z-below: -1;
+  --z-base: 0;
+  --z-above: 1;
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-fixed: 30;
+  --z-modal-backdrop: 40;
+  --z-modal: 50;
+  --z-popover: 60;
+  --z-tooltip: 70;
+  --z-toast: 80;
+  --z-max: 9999;
+  
+  /* ============ 断点 ============ */
+  
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  
+  /* ============ 安全区域 ============ */
+  
+  --safe-area-top: env(safe-area-inset-top);
+  --safe-area-right: env(safe-area-inset-right);
+  --safe-area-bottom: env(safe-area-inset-bottom);
+  --safe-area-left: env(safe-area-inset-left);
+}
+
+/* 暗色模式适配 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-card: #252540;
+    --text-primary: #FFFFFF;
+    --text-secondary: #A0AEC0;
+    --border-light: #4B5563;
+  }
+}
+
+/* 减少动画模式 */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0ms;
+    --transition-base: 0ms;
+    --transition-slow: 0ms;
+    --transition-slower: 0ms;
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+    --duration-slower: 0ms;
+  }
+}
+

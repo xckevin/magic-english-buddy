@@ -1,53 +1,75 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    
+    <!-- PWA Meta -->
+    <meta name="theme-color" content="#6B5CE7" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Magic English Buddy" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    
+    <!-- SEO Meta -->
+    <meta name="description" content="Magic English Buddy - 你的魔法英语伙伴，专为儿童设计的离线英语学习应用" />
+    <meta name="keywords" content="英语学习,儿童教育,离线学习,PWA" />
+    
     <title>Magic English Buddy</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Nunito', 'sans-serif'],
-              display: ['Fredoka', 'sans-serif'],
-            },
-            colors: {
-              brand: {
-                light: '#E0F2FE',
-                DEFAULT: '#0EA5E9',
-                dark: '#0284C7',
-              },
-              fun: {
-                pink: '#F472B6',
-                yellow: '#FACC15',
-                green: '#4ADE80',
-                purple: '#A78BFA'
-              }
-            }
-          }
-        }
+    
+    <!-- Preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    
+    <style>
+      /* 初始加载样式 */
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #1A1A2E;
       }
-    </script>
-  <script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "clsx": "https://aistudiocdn.com/clsx@^2.1.1",
-    "i18next": "https://esm.sh/i18next@23.10.0",
-    "react-i18next": "https://esm.sh/react-i18next@14.1.0?external=react,react-dom,i18next"
-  }
-}
-</script>
-</head>
-  <body class="bg-brand-light min-h-screen text-slate-800 selection:bg-fun-pink selection:text-white">
-    <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
-</body>
+      
+      #root {
+        min-height: 100vh;
+        min-height: 100dvh;
+      }
+      
+      /* 初始加载动画 */
+      .initial-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #1A1A2E;
+        z-index: 9999;
+      }
+      
+      .initial-loader .spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid rgba(107, 92, 231, 0.2);
+        border-top-color: #6B5CE7;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <!-- 初始加载动画 -->
+      <div class="initial-loader">
+        <div class="spinner"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

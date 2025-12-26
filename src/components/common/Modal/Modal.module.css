@@ -1,0 +1,140 @@
+/**
+ * Modal 组件样式
+ */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-overlay);
+  backdrop-filter: blur(4px);
+  z-index: var(--z-modal-backdrop);
+  padding: var(--space-4);
+}
+
+.modal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - var(--space-8));
+  max-height: calc(100dvh - var(--space-8));
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-2xl);
+  overflow: hidden;
+  z-index: var(--z-modal);
+}
+
+/* ============ 尺寸 ============ */
+
+.sm {
+  width: 100%;
+  max-width: 320px;
+}
+
+.md {
+  width: 100%;
+  max-width: 480px;
+}
+
+.lg {
+  width: 100%;
+  max-width: 640px;
+}
+
+.full {
+  width: calc(100% - var(--space-8));
+  max-width: none;
+  height: calc(100vh - var(--space-8));
+  height: calc(100dvh - var(--space-8));
+  border-radius: var(--radius-xl);
+}
+
+/* ============ 头部 ============ */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.closeBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.closeBtn:hover {
+  color: var(--text-primary);
+  background: var(--border-light);
+}
+
+/* ============ 内容 ============ */
+
+.content {
+  flex: 1;
+  padding: var(--space-5);
+  overflow-y: auto;
+}
+
+/* ============ 底部 ============ */
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--border-light);
+}
+
+/* ============ 暗色模式 ============ */
+
+@media (prefers-color-scheme: dark) {
+  .modal {
+    background: var(--bg-card-dark);
+  }
+
+  .header {
+    border-bottom-color: var(--border-dark);
+  }
+
+  .title {
+    color: var(--text-light);
+  }
+
+  .closeBtn {
+    color: var(--text-muted);
+  }
+
+  .closeBtn:hover {
+    color: var(--text-light);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .footer {
+    border-top-color: var(--border-dark);
+  }
+}
+

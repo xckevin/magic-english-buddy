@@ -1,0 +1,146 @@
+/**
+ * Button 组件样式
+ */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-weight: var(--font-semibold);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+  border: none;
+  outline: none;
+  white-space: nowrap;
+}
+
+/* ============ 变体 ============ */
+
+.primary {
+  color: var(--text-light);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  box-shadow: var(--shadow-md), 0 0 0 0 rgba(107, 92, 231, 0);
+}
+
+.primary:hover:not(.disabled) {
+  box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.secondary {
+  color: var(--text-light);
+  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
+  box-shadow: var(--shadow-md);
+}
+
+.secondary:hover:not(.disabled) {
+  box-shadow: var(--shadow-lg), var(--glow-secondary);
+}
+
+.ghost {
+  color: var(--text-light);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.ghost:hover:not(.disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.danger {
+  color: var(--text-light);
+  background: linear-gradient(135deg, var(--color-error) 0%, var(--color-error-dark) 100%);
+  box-shadow: var(--shadow-md);
+}
+
+.danger:hover:not(.disabled) {
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(255, 87, 87, 0.4);
+}
+
+.success {
+  color: var(--text-light);
+  background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%);
+  box-shadow: var(--shadow-md);
+}
+
+.success:hover:not(.disabled) {
+  box-shadow: var(--shadow-lg), var(--glow-success);
+}
+
+/* ============ 尺寸 ============ */
+
+.sm {
+  height: 32px;
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-lg);
+}
+
+.md {
+  height: 44px;
+  padding: 0 var(--space-5);
+  font-size: var(--text-base);
+}
+
+.lg {
+  height: 56px;
+  padding: 0 var(--space-8);
+  font-size: var(--text-lg);
+  border-radius: var(--radius-2xl);
+}
+
+/* ============ 状态 ============ */
+
+.fullWidth {
+  width: 100%;
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.loading {
+  pointer-events: none;
+}
+
+/* ============ 子元素 ============ */
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2em;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+}
+
+.spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinnerIcon {
+  width: 1.2em;
+  height: 1.2em;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+

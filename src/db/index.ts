@@ -211,23 +211,13 @@ export interface MapRegion {
   };
 }
 
-/** 成就 */
+/** 用户已解锁成就 */
 export interface Achievement {
-  id: string;
-  name: string;
-  nameCn: string;
-  description: string;
-  descriptionCn: string;
-  icon: string;
-  category: 'reading' | 'vocabulary' | 'quiz' | 'buddy' | 'streak' | 'explore';
-  condition: {
-    type: string;
-    value: number;
-  };
-  reward: {
-    magicPower: number;
-    badge?: string;
-  };
+  id: string; // `${userId}_${achievementId}`
+  achievementId: string;
+  userId: string;
+  unlockedAt: number;
+  claimed: boolean;
 }
 
 // ============ 数据库类 ============
@@ -252,12 +242,12 @@ export class MagicEnglishDB extends Dexie {
       userProgress: 'id, level, magicPower',
       stories: 'id, level, regionId',
       dictionary: 'word, level, frequency',
-      userVocabulary: 'id, [userId+word], masteryLevel, nextReviewDate',
+      userVocabulary: 'id, [userId+word], masteryLevel, nextReviewDate, isCard',
       readingHistory: 'id, userId, storyId, startTime',
       quizHistory: 'id, userId, storyId, completedAt',
-      mapNodes: 'id, regionId, type',
+      mapNodes: 'id, regionId, type, storyId',
       mapRegions: 'id, level',
-      achievements: 'id, category',
+      achievements: 'id, achievementId, userId, unlockedAt',
     });
   }
 }

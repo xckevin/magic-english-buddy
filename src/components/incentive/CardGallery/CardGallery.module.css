@@ -1,0 +1,175 @@
+/**
+ * CardGallery 组件样式
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ============ 收集进度 ============ */
+
+.progressSection {
+  padding: var(--space-4);
+  background: var(--bg-card-dark);
+  border-radius: var(--radius-xl);
+}
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.progressTitle {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-light);
+}
+
+.progressCount {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--color-primary);
+}
+
+.progressBar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  border-radius: var(--radius-full);
+}
+
+/* ============ 筛选器 ============ */
+
+.filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.filterTabs {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.filterTab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.filterTab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-light);
+}
+
+.filterTab.active {
+  background: rgba(107, 92, 231, 0.2);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.filterCount {
+  font-weight: var(--font-bold);
+}
+
+.sortSelect {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--text-light);
+  background: var(--bg-card-dark);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+}
+
+/* ============ 卡牌网格 ============ */
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: var(--space-3);
+}
+
+.cardWrapper {
+  position: relative;
+  cursor: pointer;
+}
+
+.newBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: var(--font-bold);
+  color: white;
+  background: var(--color-error);
+  border-radius: var(--radius-sm);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* ============ 空位 ============ */
+
+.emptySlot {
+  aspect-ratio: 5/7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+}
+
+.emptyIcon {
+  font-size: 24px;
+  opacity: 0.3;
+}
+
+/* ============ 空状态 ============ */
+
+.emptyState {
+  text-align: center;
+  padding: var(--space-8);
+}
+
+.emptyEmoji {
+  font-size: 48px;
+  display: block;
+  margin-bottom: var(--space-4);
+}
+
+.emptyState p {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.emptyHint {
+  font-size: var(--text-sm);
+  margin-top: var(--space-2) !important;
+}
+

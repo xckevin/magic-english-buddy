@@ -4,4 +4,5 @@
 
 export { BuddyAvatar } from './BuddyAvatar';
 export { ShadowingRecorder } from './ShadowingRecorder';
+export { EvolutionCeremony } from './EvolutionCeremony';
 

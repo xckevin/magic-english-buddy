@@ -1,0 +1,218 @@
+/**
+ * Certificate 组件样式
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-4);
+}
+
+/* ============ 证书主体 ============ */
+
+.certificate {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  padding: var(--space-8);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: var(--radius-2xl);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* ============ 装饰边框 ============ */
+
+.border {
+  position: absolute;
+  inset: var(--space-4);
+  border: 2px solid rgba(107, 92, 231, 0.3);
+  border-radius: var(--radius-xl);
+  pointer-events: none;
+}
+
+.cornerTL,
+.cornerTR,
+.cornerBL,
+.cornerBR {
+  position: absolute;
+  font-size: 20px;
+  opacity: 0.6;
+}
+
+.cornerTL { top: -10px; left: -10px; }
+.cornerTR { top: -10px; right: -10px; }
+.cornerBL { bottom: -10px; left: -10px; }
+.cornerBR { bottom: -10px; right: -10px; }
+
+/* ============ 头部 ============ */
+
+.header {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.badge {
+  font-size: 48px;
+  margin-bottom: var(--space-2);
+}
+
+.title {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  color: var(--color-accent);
+  margin: 0;
+  letter-spacing: 0.1em;
+}
+
+.subtitle {
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--text-muted);
+  margin: var(--space-1) 0 0 0;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* ============ 内容 ============ */
+
+.content {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.hereby {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.name {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-light);
+  margin: 0 0 var(--space-2) 0;
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.buddy {
+  font-size: var(--text-base);
+  color: var(--text-light);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.achievement {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ============ 成就数据 ============ */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-2);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-lg);
+}
+
+.statIcon {
+  font-size: 18px;
+}
+
+.statValue {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-light);
+}
+
+.statLabel {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* ============ 底部 ============ */
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.seal {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  border-radius: 50%;
+  box-shadow: 0 4px 15px rgba(107, 92, 231, 0.4);
+}
+
+.seal span:first-child {
+  font-size: 20px;
+}
+
+.sealText {
+  font-size: 8px;
+  font-weight: var(--font-bold);
+  color: white;
+  text-transform: uppercase;
+}
+
+.dateSection {
+  text-align: right;
+}
+
+.date {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.app {
+  font-size: var(--text-xs);
+  color: var(--color-primary);
+  margin: var(--space-1) 0 0 0;
+  font-weight: var(--font-semibold);
+}
+
+/* ============ 操作按钮 ============ */
+
+.actions {
+  display: flex;
+  gap: var(--space-4);
+}
+
+/* ============ 打印样式 ============ */
+
+@media print {
+  .actions {
+    display: none;
+  }
+  
+  .certificate {
+    box-shadow: none;
+    max-width: 100%;
+  }
+}
+

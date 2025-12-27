@@ -1,0 +1,151 @@
+/**
+ * EvolutionCeremony 组件样式
+ */
+
+.container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #1a1a2e 0%, #0d0d1a 100%);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+/* ============ 粒子 ============ */
+
+.particlesContainer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--color-primary);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--color-primary);
+}
+
+/* ============ 光环 ============ */
+
+.aura {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(
+    circle,
+    rgba(107, 92, 231, 0.4) 0%,
+    rgba(107, 92, 231, 0.1) 50%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  filter: blur(20px);
+}
+
+/* ============ Buddy 展示 ============ */
+
+.buddyStage {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-8);
+}
+
+.buddyAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emoji {
+  font-size: 120px;
+  line-height: 1;
+  filter: drop-shadow(0 0 30px rgba(107, 92, 231, 0.5));
+}
+
+/* ============ 信息区域 ============ */
+
+.info {
+  text-align: center;
+  z-index: 10;
+}
+
+.title {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-light);
+  margin: 0 0 var(--space-3) 0;
+}
+
+.description {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-6) 0;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-4);
+  justify-content: center;
+}
+
+/* ============ 蓄力状态 ============ */
+
+.chargingText {
+  text-align: center;
+}
+
+.chargingBar {
+  width: 200px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-top: var(--space-4);
+}
+
+.chargingFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  border-radius: var(--radius-full);
+}
+
+/* ============ 进化中 ============ */
+
+.evolvingText h2 {
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ============ 完成状态 ============ */
+
+.completeSection {
+  text-align: center;
+}
+
+.successTitle {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  color: var(--color-accent);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.newName {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--text-light);
+  margin: 0 0 var(--space-2) 0;
+}
+

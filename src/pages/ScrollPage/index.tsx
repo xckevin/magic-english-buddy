@@ -1,114 +1,256 @@
 /**
- * 守护者卷轴页面
- * P2-11 阶段实现完整功能
+ * ScrollPage 卷轴页面
+ * 守护者卷轴 - 进度展示、成就、同步
  */
 
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { db, type UserProgress, type User } from '@/db';
+import { useAppStore } from '@/stores/useAppStore';
+import { QRSync, AchievementCard, MagicCard } from '@/components/incentive';
+import { BuddyAvatar } from '@/components/buddy';
+import { getBuddyState, type BuddyState, checkEvolution } from '@/services/buddyService';
+import { Button } from '@/components/common';
 import styles from './ScrollPage.module.css';
+
+// 示例成就数据
+const achievements = [
+  { id: '1', name: 'First Story', nameCn: '初次冒险', description: '完成第一个故事', icon: '📖', unlocked: true, unlockedAt: '2025-12-27', reward: 10 },
+  { id: '2', name: 'Word Master', nameCn: '单词小达人', description: '学习 50 个单词', icon: '📚', unlocked: true, unlockedAt: '2025-12-27', reward: 20 },
+  { id: '3', name: 'Streak 7', nameCn: '七日连胜', description: '连续学习 7 天', icon: '🔥', unlocked: false, reward: 50 },
+  { id: '4', name: 'Boss Slayer', nameCn: 'Boss 征服者', description: '击败第一个 Boss', icon: '👑', unlocked: false, reward: 100 },
+];
+
+// 示例卡牌数据
+const sampleCards = [
+  { word: 'apple', meaningCn: '苹果', emoji: '🍎', rarity: 'green' as const, masteryLevel: 3 as const },
+  { word: 'cat', meaningCn: '猫', emoji: '🐱', rarity: 'white' as const, masteryLevel: 2 as const },
+  { word: 'magic', meaningCn: '魔法', emoji: '✨', rarity: 'gold' as const, masteryLevel: 1 as const },
+  { word: 'dragon', meaningCn: '龙', emoji: '🐲', rarity: 'blue' as const, masteryLevel: 2 as const },
+];
+
+type TabType = 'overview' | 'cards' | 'achievements' | 'sync';
 
 const ScrollPage: React.FC = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAppStore();
 
-  // 临时：模拟用户数据
-  const mockData = {
-    userName: '小明',
-    buddyName: '星星',
-    level: 1,
-    levelTitle: '见习魔法师',
-    storiesRead: 3,
-    wordsLearned: 42,
-    totalTime: 25,
-    streakDays: 2,
-    achievements: ['first_story', 'word_10'],
-  };
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [progress, setProgress] = useState<UserProgress | null>(null);
+  const [buddyState, setBuddyState] = useState<BuddyState | null>(null);
+  const [evolutionInfo, setEvolutionInfo] = useState<{ canEvolve: boolean; progress: number }>({ canEvolve: false, progress: 0 });
 
-  const handleBack = () => {
-    navigate('/map');
+  // 加载数据
+  useEffect(() => {
+    const loadData = async () => {
+      if (!currentUser) return;
+
+      const userProgress = await db.userProgress.get(currentUser.id);
+      setProgress(userProgress || null);
+
+      const buddy = await getBuddyState(currentUser.id);
+      setBuddyState(buddy);
+
+      const evoInfo = await checkEvolution(currentUser.id);
+      setEvolutionInfo({ canEvolve: evoInfo.canEvolve, progress: evoInfo.progress });
+    };
+
+    loadData();
+  }, [currentUser]);
+
+  // 标签页
+  const tabs: Array<{ id: TabType; label: string; icon: string }> = [
+    { id: 'overview', label: '总览', icon: '📊' },
+    { id: 'cards', label: '卡牌', icon: '🃏' },
+    { id: 'achievements', label: '成就', icon: '🏆' },
+    { id: 'sync', label: '同步', icon: '📱' },
+  ];
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <div className={styles.overviewSection}>
+            {/* Buddy 卡片 */}
+            <motion.div
+              className={styles.buddyCard}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+            >
+              {buddyState && (
+                <>
+                  <BuddyAvatar
+                    stage={buddyState.stage}
+                    mood={buddyState.mood}
+                    size="xl"
+                    showBubble
+                    context="complete"
+                  />
+                  <div className={styles.buddyInfo}>
+                    <h3>{currentUser?.buddyName || '小伙伴'}</h3>
+                    <div className={styles.evolutionBar}>
+                      <div className={styles.evolutionLabel}>进化进度</div>
+                      <div className={styles.evolutionTrack}>
+                        <motion.div
+                          className={styles.evolutionFill}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${evolutionInfo.progress}%` }}
+                        />
+                      </div>
+                      <span className={styles.evolutionPercent}>{evolutionInfo.progress}%</span>
+                    </div>
+                    {evolutionInfo.canEvolve && (
+                      <Button variant="primary" size="sm">
+                        🌟 可以进化！
+                      </Button>
+                    )}
+                  </div>
+                </>
+              )}
+            </motion.div>
+
+            {/* 统计数据 */}
+            <div className={styles.statsGrid}>
+              <motion.div
+                className={styles.statCard}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+              >
+                <span className={styles.statIcon}>⭐</span>
+                <span className={styles.statValue}>L{progress?.level || 1}</span>
+                <span className={styles.statLabel}>等级</span>
+              </motion.div>
+
+              <motion.div
+                className={styles.statCard}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <span className={styles.statIcon}>✨</span>
+                <span className={styles.statValue}>{progress?.magicPower || 0}</span>
+                <span className={styles.statLabel}>魔力值</span>
+              </motion.div>
+
+              <motion.div
+                className={styles.statCard}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <span className={styles.statIcon}>📖</span>
+                <span className={styles.statValue}>{progress?.totalStoriesRead || 0}</span>
+                <span className={styles.statLabel}>故事</span>
+              </motion.div>
+
+              <motion.div
+                className={styles.statCard}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+              >
+                <span className={styles.statIcon}>🔥</span>
+                <span className={styles.statValue}>{progress?.streakDays || 0}</span>
+                <span className={styles.statLabel}>连续天</span>
+              </motion.div>
+            </div>
+          </div>
+        );
+
+      case 'cards':
+        return (
+          <div className={styles.cardsSection}>
+            <h3 className={styles.sectionTitle}>🃏 魔法卡牌</h3>
+            <p className={styles.sectionDesc}>学习单词，收集卡牌</p>
+            <div className={styles.cardsGrid}>
+              {sampleCards.map((card, index) => (
+                <motion.div
+                  key={card.word}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <MagicCard {...card} />
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'achievements':
+        return (
+          <div className={styles.achievementsSection}>
+            <h3 className={styles.sectionTitle}>🏆 成就墙</h3>
+            <div className={styles.achievementsList}>
+              {achievements.map((achievement, index) => (
+                <motion.div
+                  key={achievement.id}
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <AchievementCard
+                    name={achievement.name}
+                    nameCn={achievement.nameCn}
+                    description={achievement.description}
+                    icon={achievement.icon}
+                    unlocked={achievement.unlocked}
+                    unlockedAt={achievement.unlockedAt}
+                    rewardMagicPower={achievement.reward}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'sync':
+        return (
+          <div className={styles.syncSection}>
+            {currentUser && (
+              <QRSync userId={currentUser.id} userName={currentUser.name} />
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
   };
 
   return (
     <div className={styles.container}>
-      {/* 顶部栏 */}
+      {/* 头部 */}
       <header className={styles.header}>
-        <button className={styles.backBtn} onClick={handleBack}>
+        <button className={styles.backBtn} onClick={() => navigate('/map')}>
           ← 返回
         </button>
-        <h1 className={styles.title}>守护者卷轴</h1>
-        <div style={{ width: 60 }} />
+        <h1 className={styles.title}>📜 守护者卷轴</h1>
+        <div className={styles.placeholder} />
       </header>
 
-      {/* 卷轴内容 */}
-      <main className={styles.scrollContent}>
-        <motion.div
-          className={styles.scrollCard}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          {/* 个人信息卡 */}
-          <div className={styles.profileCard}>
-            <div className={styles.avatarSection}>
-              <div className={styles.avatar}>🐣</div>
-              <div className={styles.buddyBadge}>Lv.{mockData.level}</div>
-            </div>
-            <div className={styles.profileInfo}>
-              <h2 className={styles.userName}>{mockData.userName}</h2>
-              <p className={styles.buddyInfo}>
-                伙伴：{mockData.buddyName}
-              </p>
-              <span className={styles.levelBadge}>{mockData.levelTitle}</span>
-            </div>
-          </div>
-
-          {/* 数据统计 */}
-          <div className={styles.statsGrid}>
-            <div className={styles.statItem}>
-              <span className={styles.statIcon}>📚</span>
-              <span className={styles.statValue}>{mockData.storiesRead}</span>
-              <span className={styles.statLabel}>故事</span>
-            </div>
-            <div className={styles.statItem}>
-              <span className={styles.statIcon}>📝</span>
-              <span className={styles.statValue}>{mockData.wordsLearned}</span>
-              <span className={styles.statLabel}>单词</span>
-            </div>
-            <div className={styles.statItem}>
-              <span className={styles.statIcon}>⏱️</span>
-              <span className={styles.statValue}>{mockData.totalTime}</span>
-              <span className={styles.statLabel}>分钟</span>
-            </div>
-            <div className={styles.statItem}>
-              <span className={styles.statIcon}>🔥</span>
-              <span className={styles.statValue}>{mockData.streakDays}</span>
-              <span className={styles.statLabel}>连续天</span>
-            </div>
-          </div>
-
-          {/* 二维码区域 - 占位 */}
-          <div className={styles.qrSection}>
-            <div className={styles.qrPlaceholder}>
-              <span className={styles.qrEmoji}>📱</span>
-              <p>扫描二维码同步进度</p>
-            </div>
-            <p className={styles.qrHint}>请让老师扫描以同步魔法数据</p>
-          </div>
-        </motion.div>
-
-        {/* 操作按钮 */}
-        <div className={styles.actions}>
-          <button className={styles.actionBtn}>
-            <span>💾</span>
-            <span>保存图片</span>
+      {/* 标签页 */}
+      <div className={styles.tabs}>
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            className={`${styles.tab} ${activeTab === tab.id ? styles.active : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            <span className={styles.tabIcon}>{tab.icon}</span>
+            <span className={styles.tabLabel}>{tab.label}</span>
           </button>
-          <button className={styles.actionBtn}>
-            <span>🖨️</span>
-            <span>打印证书</span>
-          </button>
-        </div>
+        ))}
+      </div>
+
+      {/* 内容区 */}
+      <main className={styles.content}>
+        {renderContent()}
       </main>
     </div>
   );
 };
 
 export default ScrollPage;
-

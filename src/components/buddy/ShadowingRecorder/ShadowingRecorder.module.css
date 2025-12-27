@@ -1,0 +1,156 @@
+/**
+ * ShadowingRecorder 组件样式
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--bg-card-dark);
+  border-radius: var(--radius-xl);
+}
+
+/* ============ 状态 ============ */
+
+.status {
+  text-align: center;
+}
+
+.recordingIndicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  color: var(--color-error);
+}
+
+.recordDot {
+  width: 12px;
+  height: 12px;
+  background: var(--color-error);
+  border-radius: var(--radius-full);
+}
+
+.completedText {
+  font-size: var(--text-base);
+  color: var(--color-success);
+}
+
+.hintText {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+/* ============ 波形 ============ */
+
+.waveform {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 60px;
+  width: 100%;
+}
+
+.waveBar {
+  width: 4px;
+  background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  border-radius: var(--radius-sm);
+}
+
+/* ============ 控制按钮 ============ */
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+}
+
+.controlBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.controlBtn:hover {
+  transform: translateY(-2px);
+}
+
+.controlBtn.active {
+  color: var(--color-primary);
+}
+
+.btnIcon {
+  font-size: 28px;
+}
+
+.btnLabel {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.recordBtn {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-lg);
+}
+
+.recordBtn:hover {
+  transform: scale(1.05);
+}
+
+.recordBtn.recording {
+  background: var(--color-error);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+}
+
+.recordIcon {
+  font-size: 32px;
+}
+
+/* ============ 额外控制 ============ */
+
+.extraControls {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.extraBtn {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.extraBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-light);
+}
+

@@ -1,0 +1,93 @@
+/**
+ * MagicCard 组件样式
+ */
+
+.cardContainer {
+  perspective: 1000px;
+  cursor: pointer;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.front,
+.back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 2px solid;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.back {
+  transform: rotateY(180deg);
+}
+
+/* ============ 正面 ============ */
+
+.rarityBadge {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  font-size: 16px;
+}
+
+.emoji {
+  font-size: 40px;
+  margin-bottom: var(--space-2);
+}
+
+.word {
+  font-weight: var(--font-bold);
+  color: white;
+  margin: 0;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.mastery {
+  display: flex;
+  gap: 4px;
+  margin-top: var(--space-2);
+}
+
+.masteryDot {
+  width: 8px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
+}
+
+.masteryDot.filled {
+  background: white;
+}
+
+/* ============ 背面 ============ */
+
+.meaning {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: white;
+  text-align: center;
+}
+
+.rarityLabel {
+  position: absolute;
+  bottom: var(--space-3);
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.7);
+}
+

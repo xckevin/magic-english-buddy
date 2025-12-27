@@ -1,0 +1,107 @@
+/**
+ * QRSync 组件样式
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  color: var(--text-muted);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: var(--space-4);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============ 二维码区域 ============ */
+
+.qrSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-6);
+  background: var(--bg-card-dark);
+  border-radius: var(--radius-xl);
+}
+
+.title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-light);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.description {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-4) 0;
+  text-align: center;
+}
+
+.qrWrapper {
+  padding: var(--space-4);
+  background: white;
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-4);
+}
+
+.qrImage {
+  display: block;
+  width: 200px;
+  height: 200px;
+}
+
+.qrPlaceholder {
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-lg);
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+/* ============ 报告区域 ============ */
+
+.reportSection {
+  padding: var(--space-6);
+  background: var(--bg-card-dark);
+  border-radius: var(--radius-xl);
+}
+
+.reportText {
+  padding: var(--space-4);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-lg);
+  font-family: monospace;
+  font-size: var(--text-xs);
+  color: var(--text-light);
+  white-space: pre-wrap;
+  overflow-x: auto;
+  margin: var(--space-4) 0;
+}
+

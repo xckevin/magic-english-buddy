@@ -1,0 +1,143 @@
+/**
+ * ImageChoice 组件样式
+ */
+
+.container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ============ 题目区域 ============ */
+
+.questionSection {
+  text-align: center;
+}
+
+.title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--text-light);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.instruction {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.playBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  font-size: var(--text-lg);
+  color: var(--text-light);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  border: none;
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.playBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.playBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.playBtn.playing {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.playIcon {
+  font-size: 28px;
+}
+
+.playText {
+  font-weight: var(--font-medium);
+}
+
+/* ============ 选项区域 ============ */
+
+.optionsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+  flex: 1;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: var(--bg-card-dark);
+  border: 3px solid transparent;
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-height: 120px;
+}
+
+.option:hover {
+  border-color: rgba(107, 92, 231, 0.5);
+}
+
+.option.selected {
+  border-color: var(--color-primary);
+  background: rgba(107, 92, 231, 0.2);
+}
+
+.optionImage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emoji {
+  font-size: 56px;
+}
+
+.optionText {
+  font-size: var(--text-lg);
+  font-weight: var(--font-medium);
+  color: var(--text-light);
+  text-align: center;
+}
+
+/* ============ 提示区域 ============ */
+
+.hintSection {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4) 0;
+}
+
+.hintBtn {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.hintBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-light);
+}
+

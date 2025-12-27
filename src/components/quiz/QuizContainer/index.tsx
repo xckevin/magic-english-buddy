@@ -10,6 +10,7 @@ import { QuizProgress } from '../QuizProgress';
 import { ImageChoice } from '../ImageChoice';
 import { WordBuilder } from '../WordBuilder';
 import { SentenceOrder } from '../SentenceOrder';
+import { FillBlank } from '../FillBlank';
 import { QuizFeedback } from '../QuizFeedback';
 import { QuizResult } from '../QuizResult';
 import styles from './QuizContainer.module.css';
@@ -145,7 +146,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
       case 'sentence_order':
         return <SentenceOrder {...commonProps} />;
       case 'fill_blank':
-        return <ImageChoice {...commonProps} />;
+        return <FillBlank {...commonProps} />;
       default:
         return <ImageChoice {...commonProps} />;
     }

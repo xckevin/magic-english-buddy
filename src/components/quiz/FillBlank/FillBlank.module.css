@@ -1,0 +1,154 @@
+/**
+ * FillBlank 组件样式
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-4);
+}
+
+/* ============ 题目区域 ============ */
+
+.questionSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: var(--bg-card-dark);
+  border-radius: var(--radius-xl);
+}
+
+.questionIcon {
+  font-size: 48px;
+}
+
+.questionText {
+  font-size: var(--text-xl);
+  font-weight: var(--font-medium);
+  color: var(--text-light);
+  text-align: center;
+  line-height: 1.6;
+}
+
+.blank {
+  display: inline-block;
+  min-width: 100px;
+  padding: var(--space-1) var(--space-3);
+  margin: 0 var(--space-1);
+  background: rgba(107, 92, 231, 0.2);
+  border: 2px dashed var(--color-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-style: italic;
+  transition: all var(--transition-fast);
+}
+
+.blank.filled {
+  background: rgba(107, 92, 231, 0.4);
+  border-style: solid;
+  color: var(--text-light);
+  font-style: normal;
+  font-weight: var(--font-bold);
+}
+
+/* ============ 选项 ============ */
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+  color: var(--text-light);
+  font-size: var(--text-base);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.option:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.option.selected {
+  background: rgba(107, 92, 231, 0.2);
+  border-color: var(--color-primary);
+}
+
+.option.correct {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: var(--color-success);
+}
+
+.option.wrong {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: var(--color-error);
+}
+
+.option:disabled {
+  cursor: not-allowed;
+}
+
+.optionLetter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-bold);
+  font-size: var(--text-sm);
+  flex-shrink: 0;
+}
+
+.optionText {
+  flex: 1;
+  text-align: left;
+}
+
+.correctIcon,
+.wrongIcon {
+  position: absolute;
+  right: var(--space-4);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+}
+
+.correctIcon {
+  background: var(--color-success);
+  color: white;
+}
+
+.wrongIcon {
+  background: var(--color-error);
+  color: white;
+}
+
+/* ============ 提示 ============ */
+
+.hint {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+

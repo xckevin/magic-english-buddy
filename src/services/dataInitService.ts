@@ -5,11 +5,13 @@
 
 import { db, type Story, type DictionaryEntry, type MapRegion, type MapNode } from '@/db';
 import { l1Stories } from '@/data/stories/l1';
+import { l2Stories } from '@/data/stories/l2';
 import { l1Dictionary } from '@/data/dictionary/l1-words';
+import { l2ValleyMapRegion, l2ValleyMapNodes } from '@/data/maps/l2-valley';
 
 // 初始化状态标识
 const INIT_KEY = 'magic_english_data_initialized';
-const INIT_VERSION = '1.0.0';
+const INIT_VERSION = '2.0.0'; // 更新版本以包含 L2 数据
 
 /**
  * L1 区域地图数据
@@ -90,8 +92,10 @@ export const initStories = async (): Promise<number> => {
     return existingCount;
   }
 
-  await db.stories.bulkAdd(l1Stories as Story[]);
-  return l1Stories.length;
+  // 添加 L1 和 L2 故事
+  const allStories = [...l1Stories, ...l2Stories] as Story[];
+  await db.stories.bulkAdd(allStories);
+  return allStories.length;
 };
 
 /**
@@ -116,12 +120,14 @@ export const initMapData = async (): Promise<void> => {
     return;
   }
 
-  // 添加区域
+  // 添加 L1 区域和节点
   await db.mapRegions.add(l1Region);
-  
-  // 添加节点
-  const nodes = generateL1Nodes();
-  await db.mapNodes.bulkAdd(nodes);
+  const l1Nodes = generateL1Nodes();
+  await db.mapNodes.bulkAdd(l1Nodes);
+
+  // 添加 L2 区域和节点
+  await db.mapRegions.add(l2ValleyMapRegion);
+  await db.mapNodes.bulkAdd(l2ValleyMapNodes);
 };
 
 /**

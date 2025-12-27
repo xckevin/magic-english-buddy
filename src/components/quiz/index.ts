@@ -8,6 +8,7 @@ export { QuizProgress } from './QuizProgress';
 export { ImageChoice } from './ImageChoice';
 export { WordBuilder } from './WordBuilder';
 export { SentenceOrder } from './SentenceOrder';
+export { FillBlank } from './FillBlank';
 export { QuizFeedback } from './QuizFeedback';
 export { QuizResult } from './QuizResult';
 

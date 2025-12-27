@@ -1,0 +1,65 @@
+/**
+ * QuizProgress 组件样式
+ */
+
+.container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  padding-top: calc(var(--space-4) + var(--safe-area-top));
+}
+
+.exitBtn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-lg);
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.exitBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--text-light);
+}
+
+.progressWrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.progressBar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  border-radius: var(--radius-full);
+}
+
+.progressText {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-muted);
+  min-width: 50px;
+  text-align: right;
+}
+
+.placeholder {
+  width: 36px;
+}
+

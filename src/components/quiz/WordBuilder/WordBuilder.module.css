@@ -1,0 +1,162 @@
+/**
+ * WordBuilder 组件样式
+ */
+
+.container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ============ 题目区域 ============ */
+
+.questionSection {
+  text-align: center;
+}
+
+.title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--text-light);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.instruction {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.imageHint {
+  display: flex;
+  justify-content: center;
+}
+
+.hintEmoji {
+  font-size: 64px;
+}
+
+/* ============ 答案区域 ============ */
+
+.answerArea {
+  padding: var(--space-4);
+  background: rgba(107, 92, 231, 0.1);
+  border: 2px dashed rgba(107, 92, 231, 0.3);
+  border-radius: var(--radius-xl);
+  min-height: 80px;
+}
+
+.answerSlots {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.letterSlot {
+  width: 48px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-light);
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.emptySlot {
+  width: 48px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-lg);
+}
+
+/* ============ 可选字母 ============ */
+
+.lettersArea {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-4);
+}
+
+.letterBtn {
+  width: 56px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-light);
+  background: var(--bg-card-dark);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all var(--transition-fast);
+}
+
+.letterBtn:hover {
+  border-color: var(--color-primary);
+  background: rgba(107, 92, 231, 0.2);
+}
+
+/* ============ 操作按钮 ============ */
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-4) 0;
+  margin-top: auto;
+}
+
+.hintBtn,
+.clearBtn {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.hintBtn:hover,
+.clearBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-light);
+}
+
+.submitBtn {
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: white;
+  background: var(--color-success);
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.submitBtn:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+

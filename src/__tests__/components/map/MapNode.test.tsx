@@ -4,137 +4,152 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '../../utils/render';
-import { MapNode } from '@/components/map/MapNode';
-import { mockMapNode } from '../../mocks';
+import { MapNodeComponent } from '@/components/map/MapNode';
+import type { MapNode } from '@/db';
 
 describe('MapNode 组件', () => {
+  const mockNode: MapNode = {
+    id: 'test-node-001',
+    regionId: 'region_forest',
+    type: 'story',
+    storyId: 'l1_001',
+    title: 'Test Story',
+    titleCn: '测试故事',
+    emoji: '📖',
+    position: { x: 100, y: 200 },
+    prerequisites: [],
+    unlocked: true,
+    completed: false,
+  };
+
   const defaultProps = {
-    node: mockMapNode,
-    isUnlocked: true,
-    isCompleted: false,
-    isCurrent: false,
-    onClick: vi.fn()
+    node: mockNode,
+    isActive: false,
+    onClick: vi.fn(),
   };
 
   describe('渲染', () => {
-    it('应该渲染节点', () => {
-      render(<MapNode {...defaultProps} />);
-      
-      expect(screen.getByTestId('map-node')).toBeInTheDocument();
+    it('应该在指定位置渲染', () => {
+      const { container } = render(<MapNodeComponent {...defaultProps} />);
+      const node = container.firstChild as HTMLElement;
+
+      expect(node.style.left).toBe('100px');
+      expect(node.style.top).toBe('200px');
     });
 
-    it('应该在正确位置渲染', () => {
-      render(<MapNode {...defaultProps} />);
-      
-      const node = screen.getByTestId('map-node');
-      expect(node).toHaveStyle({
-        left: `${mockMapNode.position.x}px`,
-        top: `${mockMapNode.position.y}px`
-      });
+    it('应该显示节点 emoji', () => {
+      render(<MapNodeComponent {...defaultProps} />);
+      expect(screen.getByText('📖')).toBeInTheDocument();
     });
   });
 
-  describe('状态样式', () => {
-    it('已解锁应该有 unlocked 样式', () => {
-      render(<MapNode {...defaultProps} isUnlocked={true} />);
-      
-      expect(screen.getByTestId('map-node')).toHaveClass('unlocked');
+  describe('解锁状态', () => {
+    it('已解锁节点应该显示标题', () => {
+      render(<MapNodeComponent {...defaultProps} node={{ ...mockNode, unlocked: true }} />);
+      expect(screen.getByText('测试故事')).toBeInTheDocument();
     });
 
-    it('未解锁应该有 locked 样式', () => {
-      render(<MapNode {...defaultProps} isUnlocked={false} />);
-      
-      expect(screen.getByTestId('map-node')).toHaveClass('locked');
+    it('未解锁节点应该显示锁图标', () => {
+      render(<MapNodeComponent {...defaultProps} node={{ ...mockNode, unlocked: false }} />);
+      expect(screen.getByText('🔒')).toBeInTheDocument();
     });
 
-    it('已完成应该有 completed 样式', () => {
-      render(<MapNode {...defaultProps} isCompleted={true} />);
-      
-      expect(screen.getByTestId('map-node')).toHaveClass('completed');
+    it('未解锁节点应该显示 ???', () => {
+      render(<MapNodeComponent {...defaultProps} node={{ ...mockNode, unlocked: false }} />);
+      expect(screen.getByText('???')).toBeInTheDocument();
+    });
+  });
+
+  describe('完成状态', () => {
+    it('已完成节点应该显示完成标记', () => {
+      render(<MapNodeComponent {...defaultProps} node={{ ...mockNode, completed: true }} />);
+      expect(screen.getByText('✓')).toBeInTheDocument();
     });
 
-    it('当前节点应该有 current 样式', () => {
-      render(<MapNode {...defaultProps} isCurrent={true} />);
-      
-      expect(screen.getByTestId('map-node')).toHaveClass('current');
+    it('未完成节点不应该显示完成标记', () => {
+      render(<MapNodeComponent {...defaultProps} node={{ ...mockNode, completed: false }} />);
+      expect(screen.queryByText('✓')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('节点类型', () => {
+    it('Boss 节点应该显示皇冠', () => {
+      render(
+        <MapNodeComponent
+          {...defaultProps}
+          node={{ ...mockNode, type: 'boss', unlocked: true }}
+        />
+      );
+      expect(screen.getByText('👑')).toBeInTheDocument();
+    });
+
+    it('故事节点不应该显示皇冠', () => {
+      render(
+        <MapNodeComponent {...defaultProps} node={{ ...mockNode, type: 'story' }} />
+      );
+      expect(screen.queryByText('👑')).not.toBeInTheDocument();
+    });
+
+    it('挑战节点应该显示挑战标签', () => {
+      render(
+        <MapNodeComponent
+          {...defaultProps}
+          node={{ ...mockNode, type: 'challenge', unlocked: true }}
+        />
+      );
+      expect(screen.getByText('挑战')).toBeInTheDocument();
+    });
+
+    it('奖励节点应该显示奖励标签', () => {
+      render(
+        <MapNodeComponent
+          {...defaultProps}
+          node={{ ...mockNode, type: 'bonus', unlocked: true }}
+        />
+      );
+      expect(screen.getByText('奖励')).toBeInTheDocument();
     });
   });
 
   describe('交互', () => {
     it('点击已解锁节点应该触发 onClick', () => {
-      render(<MapNode {...defaultProps} isUnlocked={true} />);
-      
-      fireEvent.click(screen.getByTestId('map-node'));
-      
-      expect(defaultProps.onClick).toHaveBeenCalledWith(mockMapNode);
+      const onClick = vi.fn();
+      const { container } = render(
+        <MapNodeComponent
+          {...defaultProps}
+          node={{ ...mockNode, unlocked: true }}
+          onClick={onClick}
+        />
+      );
+
+      fireEvent.click(container.firstChild as Element);
+      expect(onClick).toHaveBeenCalledTimes(1);
     });
 
     it('点击未解锁节点不应该触发 onClick', () => {
       const onClick = vi.fn();
-      render(<MapNode {...defaultProps} isUnlocked={false} onClick={onClick} />);
-      
-      fireEvent.click(screen.getByTestId('map-node'));
-      
+      const { container } = render(
+        <MapNodeComponent
+          {...defaultProps}
+          node={{ ...mockNode, unlocked: false }}
+          onClick={onClick}
+        />
+      );
+
+      fireEvent.click(container.firstChild as Element);
       expect(onClick).not.toHaveBeenCalled();
     });
-
-    it('未解锁节点应该不可点击', () => {
-      render(<MapNode {...defaultProps} isUnlocked={false} />);
-      
-      const node = screen.getByTestId('map-node');
-      expect(node).toHaveAttribute('aria-disabled', 'true');
-    });
   });
 
-  describe('图标', () => {
-    it('故事节点应该显示书本图标', () => {
-      render(<MapNode {...defaultProps} node={{ ...mockMapNode, type: 'story' }} />);
-      
-      expect(screen.getByTestId('node-icon-story')).toBeInTheDocument();
-    });
+  describe('激活状态', () => {
+    it('应该接受 isActive prop', () => {
+      const { container, rerender } = render(
+        <MapNodeComponent {...defaultProps} isActive={false} />
+      );
+      expect(container.firstChild).not.toBeNull();
 
-    it('Boss 节点应该显示特殊图标', () => {
-      render(<MapNode {...defaultProps} node={{ ...mockMapNode, type: 'boss' }} />);
-      
-      expect(screen.getByTestId('node-icon-boss')).toBeInTheDocument();
-    });
-
-    it('宝藏节点应该显示宝箱图标', () => {
-      render(<MapNode {...defaultProps} node={{ ...mockMapNode, type: 'treasure' }} />);
-      
-      expect(screen.getByTestId('node-icon-treasure')).toBeInTheDocument();
-    });
-  });
-
-  describe('动画', () => {
-    it('当前节点应该有脉冲动画', () => {
-      render(<MapNode {...defaultProps} isCurrent={true} />);
-      
-      const node = screen.getByTestId('map-node');
-      expect(node).toHaveClass('pulse');
-    });
-
-    it('已完成节点应该显示星星', () => {
-      render(<MapNode {...defaultProps} isCompleted={true} />);
-      
-      expect(screen.getByTestId('completion-star')).toBeInTheDocument();
-    });
-  });
-
-  describe('无障碍', () => {
-    it('应该有适当的 ARIA 标签', () => {
-      render(<MapNode {...defaultProps} />);
-      
-      const node = screen.getByTestId('map-node');
-      expect(node).toHaveAttribute('aria-label');
-    });
-
-    it('未解锁时应该标记为禁用', () => {
-      render(<MapNode {...defaultProps} isUnlocked={false} />);
-      
-      const node = screen.getByTestId('map-node');
-      expect(node).toHaveAttribute('aria-disabled', 'true');
+      rerender(<MapNodeComponent {...defaultProps} isActive={true} />);
+      expect(container.firstChild).not.toBeNull();
     });
   });
 });
-

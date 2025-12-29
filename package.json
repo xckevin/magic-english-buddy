@@ -13,6 +13,7 @@
     "format": "prettier --write src/**/*.{ts,tsx,css}",
     "type-check": "tsc --noEmit",
     "test": "vitest",
+    "test:unit": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",

@@ -193,8 +193,13 @@ export const mockMapNode = {
   regionId: 'region_forest',
   type: 'story' as const,
   storyId: 'l1_001',
+  title: 'The Magic Apple',
+  titleCn: '魔法苹果',
+  emoji: '📖',
   position: { x: 50, y: 100 },
   prerequisites: [],
+  unlocked: true,
+  completed: false,
   rewards: {
     magicPower: 15,
     cards: ['word_apple']

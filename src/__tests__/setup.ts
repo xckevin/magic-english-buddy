@@ -144,20 +144,62 @@ class MockResizeObserver {
 
 (global as any).ResizeObserver = MockResizeObserver;
 
-// Mock matchMedia
-Object.defineProperty(window, 'matchMedia', {
-  value: vi.fn().mockImplementation((query: string) => ({
-    matches: false,
+// Mock matchMedia (用于 Framer Motion)
+// 创建完整的 MediaQueryList mock
+const createMediaQueryList = (query: string): MediaQueryList => {
+  const listeners: Array<(e: MediaQueryListEvent) => void> = [];
+  return {
+    matches: query === '(prefers-reduced-motion: reduce)' ? false : false,
     media: query,
     onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn()
-  })),
-  writable: true
+    addListener: vi.fn((cb) => listeners.push(cb)),
+    removeListener: vi.fn((cb) => {
+      const idx = listeners.indexOf(cb);
+      if (idx > -1) listeners.splice(idx, 1);
+    }),
+    addEventListener: vi.fn((event, cb) => {
+      if (event === 'change') listeners.push(cb);
+    }),
+    removeEventListener: vi.fn((event, cb) => {
+      if (event === 'change') {
+        const idx = listeners.indexOf(cb);
+        if (idx > -1) listeners.splice(idx, 1);
+      }
+    }),
+    dispatchEvent: vi.fn(() => true),
+  } as MediaQueryList;
+};
+
+Object.defineProperty(window, 'matchMedia', {
+  value: vi.fn().mockImplementation(createMediaQueryList),
+  writable: true,
+  configurable: true,
 });
+
+// Mock requestAnimationFrame (用于 Framer Motion)
+if (typeof window.requestAnimationFrame === 'undefined') {
+  (window as any).requestAnimationFrame = (callback: FrameRequestCallback) => {
+    return setTimeout(() => callback(Date.now()), 0);
+  };
+}
+
+if (typeof window.cancelAnimationFrame === 'undefined') {
+  (window as any).cancelAnimationFrame = (id: number) => {
+    clearTimeout(id);
+  };
+}
+
+// Mock PointerEvent (用于 Framer Motion)
+if (typeof window.PointerEvent === 'undefined') {
+  class MockPointerEvent extends MouseEvent {
+    pointerId: number = 0;
+    pointerType: string = 'mouse';
+    constructor(type: string, params?: PointerEventInit) {
+      super(type, params);
+    }
+  }
+  (window as any).PointerEvent = MockPointerEvent;
+}
 
 // Mock URL.createObjectURL
 URL.createObjectURL = vi.fn(() => 'blob:mock-url');

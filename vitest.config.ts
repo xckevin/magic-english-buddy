@@ -1,27 +1,19 @@
-/// <reference types="vitest" />
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
-import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react()] as any,
   test: {
-    // 测试环境
     environment: 'jsdom',
-
-    // 全局设置
     globals: true,
-
-    // 设置文件
     setupFiles: ['./src/__tests__/setup.ts'],
-
-    // 包含的测试文件
     include: ['src/**/*.{test,spec}.{ts,tsx}', 'src/__tests__/**/*.{test,spec}.{ts,tsx}'],
-
-    // 排除的文件
     exclude: ['node_modules', 'dist', 'e2e/**/*'],
-
-    // 覆盖率配置
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -38,7 +30,6 @@ export default defineConfig({
         'src/**/*.test.{ts,tsx}',
         'src/**/*.spec.{ts,tsx}',
       ],
-      // 覆盖率阈值
       thresholds: {
         statements: 70,
         branches: 60,
@@ -46,18 +37,10 @@ export default defineConfig({
         lines: 70,
       },
     },
-
-    // 超时设置
     testTimeout: 10000,
-
-    // Mock 配置
     mockReset: true,
     restoreMocks: true,
-
-    // 并发
     pool: 'forks',
-
-    // 报告
     reporters: ['verbose', 'html'],
     outputFile: {
       html: './test-results/index.html',
@@ -65,9 +48,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      // Mock framer-motion 在测试环境中
-      'framer-motion': path.resolve(__dirname, './src/__tests__/mocks/framer-motion.ts'),
+      '@': resolve(__dirname, './src'),
+      'framer-motion': resolve(__dirname, './src/__tests__/mocks/framer-motion.ts'),
     },
   },
 });

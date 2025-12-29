@@ -34,30 +34,52 @@ type TabType = 'overview' | 'cards' | 'achievements' | 'sync';
 
 const ScrollPage: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser } = useAppStore();
+  const { currentUserId } = useAppStore();
 
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [progress, setProgress] = useState<UserProgress | null>(null);
   const [buddyState, setBuddyState] = useState<BuddyState | null>(null);
   const [evolutionInfo, setEvolutionInfo] = useState<{ canEvolve: boolean; progress: number }>({ canEvolve: false, progress: 0 });
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // 加载数据
   useEffect(() => {
     const loadData = async () => {
-      if (!currentUser) return;
+      setIsLoading(true);
+      
+      // 如果没有currentUserId，尝试从数据库获取最近的用户
+      let userId = currentUserId;
+      if (!userId) {
+        const lastUser = await db.users.orderBy('createdAt').reverse().first();
+        if (lastUser) {
+          userId = lastUser.id;
+          setUser(lastUser);
+        }
+      } else {
+        const currentUser = await db.users.get(userId);
+        setUser(currentUser || null);
+      }
 
-      const userProgress = await db.userProgress.get(currentUser.id);
+      if (!userId) {
+        setIsLoading(false);
+        return;
+      }
+
+      const userProgress = await db.userProgress.get(userId);
       setProgress(userProgress || null);
 
-      const buddy = await getBuddyState(currentUser.id);
+      const buddy = await getBuddyState(userId);
       setBuddyState(buddy);
 
-      const evoInfo = await checkEvolution(currentUser.id);
+      const evoInfo = await checkEvolution(userId);
       setEvolutionInfo({ canEvolve: evoInfo.canEvolve, progress: evoInfo.progress });
+      
+      setIsLoading(false);
     };
 
     loadData();
-  }, [currentUser]);
+  }, [currentUserId]);
 
   // 标签页
   const tabs: Array<{ id: TabType; label: string; icon: string }> = [
@@ -78,7 +100,12 @@ const ScrollPage: React.FC = () => {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
             >
-              {buddyState && (
+              {isLoading ? (
+                <div className={styles.loadingBuddy}>
+                  <span className={styles.loadingEmoji}>🥚</span>
+                  <p>加载中...</p>
+                </div>
+              ) : buddyState ? (
                 <>
                   <BuddyAvatar
                     stage={buddyState.stage}
@@ -88,7 +115,7 @@ const ScrollPage: React.FC = () => {
                     context="complete"
                   />
                   <div className={styles.buddyInfo}>
-                    <h3>{currentUser?.buddyName || '小伙伴'}</h3>
+                    <h3>{user?.buddyName || '小伙伴'}</h3>
                     <div className={styles.evolutionBar}>
                       <div className={styles.evolutionLabel}>进化进度</div>
                       <div className={styles.evolutionTrack}>
@@ -107,6 +134,14 @@ const ScrollPage: React.FC = () => {
                     )}
                   </div>
                 </>
+              ) : (
+                <div className={styles.emptyBuddy}>
+                  <BuddyAvatar stage={1} mood="neutral" size="xl" />
+                  <div className={styles.buddyInfo}>
+                    <h3>小伙伴</h3>
+                    <p className={styles.emptyText}>开始冒险来唤醒你的伙伴吧！</p>
+                  </div>
+                </div>
               )}
             </motion.div>
 
@@ -209,8 +244,13 @@ const ScrollPage: React.FC = () => {
       case 'sync':
         return (
           <div className={styles.syncSection}>
-            {currentUser && (
-              <QRSync userId={currentUser.id} userName={currentUser.name} />
+            {user ? (
+              <QRSync userId={user.id} userName={user.name} />
+            ) : (
+              <div className={styles.emptyState}>
+                <span className={styles.emptyIcon}>📱</span>
+                <p>请先完成引导流程</p>
+              </div>
             )}
           </div>
         );

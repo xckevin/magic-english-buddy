@@ -17,7 +17,7 @@
 }
 
 .canvas {
-  position: relative;
+  position: absolute;
   cursor: grab;
   transform-origin: top left;
 }

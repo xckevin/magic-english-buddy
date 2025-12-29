@@ -18,7 +18,9 @@ export const mockUser = {
     language: 'zh-CN' as const,
     ttsSpeed: 1.0 as const,
     soundEnabled: true,
-    vibrationEnabled: true
+    vibrationEnabled: true,
+    autoPlayTTS: true,
+    showTranslation: false,
   }
 };
 

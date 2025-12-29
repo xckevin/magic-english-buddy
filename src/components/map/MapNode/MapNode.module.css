@@ -16,36 +16,58 @@
   cursor: not-allowed;
 }
 
+/* ============ 激活状态 ============ */
+
+.node.active .body {
+  animation: breathe 1.5s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.node:not(.locked):hover .body {
+  transform: scale(1.1);
+}
+
+.node:not(.locked):active .body {
+  transform: scale(0.95);
+}
+
 /* ============ 光圈 ============ */
 
 .pulse {
   position: absolute;
-  width: 60px;
-  height: 60px;
   border-radius: 50%;
   z-index: -1;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
 }
 
 /* ============ 节点主体 ============ */
 
 .body {
   position: relative;
-  width: 56px;
-  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   border: 3px solid;
-  transition: all 0.2s ease;
-}
-
-.node:not(.locked):hover .body {
-  transform: translateY(-2px);
+  transition: transform 0.2s ease;
 }
 
 .icon {
-  font-size: 28px;
   line-height: 1;
 }
 
@@ -55,12 +77,9 @@
   position: absolute;
   top: -4px;
   right: -4px;
-  width: 20px;
-  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
   font-weight: bold;
   color: white;
   background: #10B981;

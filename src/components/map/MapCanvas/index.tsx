@@ -1,10 +1,10 @@
 /**
  * MapCanvas 组件
- * 可缩放、可拖动的地图画布
+ * 马里奥风格地图画布 - 响应式网格布局
  */
 
-import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
+import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
+import { motion, useMotionValue, animate } from 'framer-motion';
 import type { MapNode } from '@/db';
 import { MapNodeComponent } from '../MapNode';
 import { MapPath } from '../MapPath';
@@ -16,9 +16,9 @@ interface MapCanvasProps {
   nodes: MapNode[];
   /** 当前激活的节点 ID */
   activeNodeId?: string;
-  /** 画布宽度 */
+  /** 画布宽度 (已弃用，自动计算) */
   width?: number;
-  /** 画布高度 */
+  /** 画布高度 (已弃用，自动计算) */
   height?: number;
   /** 节点点击回调 */
   onNodeClick?: (node: MapNode) => void;
@@ -26,69 +26,152 @@ interface MapCanvasProps {
   showFog?: boolean;
 }
 
+// 布局配置
+const LAYOUT_CONFIG = {
+  minNodesPerRow: 3,
+  maxNodesPerRow: 5,
+  minRowsVisible: 3,
+  maxRowsVisible: 6,
+  nodeMinSize: 52,
+  nodeMaxSize: 80,
+  horizontalPadding: 24,
+  verticalPadding: 80, // 头部和底部留白
+  rowGap: 0.4, // 行间距系数（相对于节点大小）
+};
+
 export const MapCanvas: React.FC<MapCanvasProps> = ({
   nodes,
   activeNodeId,
-  width = 400,
-  height = 1500,
   onNodeClick,
   showFog = true,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   
   // 拖动位置
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   
-  // 缩放
-  const scale = useMotionValue(1);
-  
   // 约束范围
   const constraintsRef = useRef({ top: 0, bottom: 0, left: 0, right: 0 });
+  
+  // 监听容器尺寸变化
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    const updateSize = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setContainerSize({ width: rect.width, height: rect.height });
+      }
+    };
+    
+    updateSize();
+    
+    const resizeObserver = new ResizeObserver(updateSize);
+    resizeObserver.observe(containerRef.current);
+    
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  // 计算响应式布局
+  const layout = useMemo(() => {
+    if (containerSize.width === 0 || nodes.length === 0) {
+      return { nodesPerRow: 4, nodeSize: 56, rowHeight: 100, positions: [], canvasHeight: 0 };
+    }
+
+    const { width, height } = containerSize;
+    const availableWidth = width - LAYOUT_CONFIG.horizontalPadding * 2;
+    const availableHeight = height - LAYOUT_CONFIG.verticalPadding;
+    
+    // 计算每行节点数：根据屏幕宽度决定
+    // 小屏幕（<500px）: 3个，中屏幕（500-900px）: 4个，大屏幕（>900px）: 5个
+    let nodesPerRow: number;
+    if (width < 500) {
+      nodesPerRow = LAYOUT_CONFIG.minNodesPerRow; // 3
+    } else if (width < 900) {
+      nodesPerRow = 4;
+    } else {
+      nodesPerRow = LAYOUT_CONFIG.maxNodesPerRow; // 5
+    }
+    
+    // 计算节点大小：确保在最小和最大之间
+    const idealNodeSize = availableWidth / nodesPerRow * 0.6;
+    const nodeSize = Math.min(
+      LAYOUT_CONFIG.nodeMaxSize,
+      Math.max(LAYOUT_CONFIG.nodeMinSize, idealNodeSize)
+    );
+    
+    // 计算行高
+    const totalRows = Math.ceil(nodes.length / nodesPerRow);
+    const rowHeight = nodeSize * (1 + LAYOUT_CONFIG.rowGap) + 30; // +30 for labels
+    
+    // 计算画布总高度
+    const canvasHeight = Math.max(
+      availableHeight,
+      totalRows * rowHeight + LAYOUT_CONFIG.verticalPadding
+    );
+    
+    // 计算每个节点的位置（蛇形布局）
+    const positions = nodes.map((node, index) => {
+      const row = Math.floor(index / nodesPerRow);
+      const colInRow = index % nodesPerRow;
+      
+      // 蛇形：偶数行从左到右，奇数行从右到左
+      const col = row % 2 === 0 ? colInRow : (nodesPerRow - 1 - colInRow);
+      
+      // 计算水平位置
+      const totalNodesWidth = nodesPerRow * nodeSize;
+      const totalGapWidth = availableWidth - totalNodesWidth;
+      const gap = totalGapWidth / (nodesPerRow + 1);
+      const xPos = LAYOUT_CONFIG.horizontalPadding + gap + col * (nodeSize + gap) + nodeSize / 2;
+      
+      // 计算垂直位置
+      const yPos = LAYOUT_CONFIG.verticalPadding / 2 + row * rowHeight + nodeSize / 2;
+      
+      return { x: xPos, y: yPos };
+    });
+    
+    return { nodesPerRow, nodeSize, rowHeight, positions, canvasHeight };
+  }, [containerSize, nodes.length]);
+
+  // 计算画布尺寸
+  const canvasWidth = containerSize.width;
+  const canvasHeight = layout.canvasHeight;
 
   // 计算约束
   useEffect(() => {
-    if (containerRef.current) {
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const maxX = 0;
-      const minX = -(width * scale.get() - containerRect.width);
-      const maxY = 0;
-      const minY = -(height * scale.get() - containerRect.height);
-      
-      constraintsRef.current = {
-        top: minY,
-        bottom: maxY,
-        left: minX,
-        right: maxX,
-      };
-    }
-  }, [width, height, scale]);
+    if (containerSize.width === 0) return;
+    
+    const minY = Math.min(0, -(canvasHeight - containerSize.height));
+    const maxY = 0;
+    
+    constraintsRef.current = {
+      top: minY,
+      bottom: maxY,
+      left: 0,
+      right: 0,
+    };
+  }, [containerSize, canvasHeight]);
 
   // 自动滚动到当前激活节点
   useEffect(() => {
-    if (activeNodeId && containerRef.current) {
-      const activeNode = nodes.find(n => n.id === activeNodeId);
-      if (activeNode) {
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const targetY = -(activeNode.position.y - containerRect.height / 2);
-        const targetX = -(activeNode.position.x - containerRect.width / 2);
+    if (activeNodeId && containerSize.width > 0 && layout.positions.length > 0) {
+      const activeIndex = nodes.findIndex(n => n.id === activeNodeId);
+      if (activeIndex >= 0) {
+        const pos = layout.positions[activeIndex];
+        const targetY = -(pos.y - containerSize.height / 2);
         
-        // 限制在约束范围内
         const clampedY = Math.max(
           constraintsRef.current.top,
           Math.min(constraintsRef.current.bottom, targetY)
         );
-        const clampedX = Math.max(
-          constraintsRef.current.left,
-          Math.min(constraintsRef.current.right, targetX)
-        );
         
         animate(y, clampedY, { duration: 0.5 });
-        animate(x, clampedX, { duration: 0.5 });
       }
     }
-  }, [activeNodeId, nodes, x, y]);
+  }, [activeNodeId, nodes, y, containerSize, layout.positions]);
 
   // 处理节点点击
   const handleNodeClick = useCallback((node: MapNode) => {
@@ -107,24 +190,36 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     setTimeout(() => setIsDragging(false), 50);
   }, []);
 
+  // 使用新布局位置的节点
+  const layoutNodes = useMemo(() => {
+    return nodes.map((node, index) => ({
+      ...node,
+      position: layout.positions[index] || { x: 0, y: 0 },
+    }));
+  }, [nodes, layout.positions]);
+
   // 获取节点连接
-  const connections = nodes.slice(1).map((node, index) => ({
-    from: nodes[index],
+  const connections = layoutNodes.slice(1).map((node, index) => ({
+    from: layoutNodes[index],
     to: node,
   }));
+
+  // 如果还没有尺寸，显示加载
+  if (containerSize.width === 0) {
+    return <div ref={containerRef} className={styles.container} />;
+  }
 
   return (
     <div ref={containerRef} className={styles.container}>
       <motion.div
         className={styles.canvas}
         style={{
-          width,
-          height,
-          x,
+          width: canvasWidth,
+          height: canvasHeight,
+          x: 0,
           y,
-          scale,
         }}
-        drag
+        drag="y"
         dragConstraints={constraintsRef.current}
         dragElastic={0.1}
         dragMomentum={true}
@@ -133,25 +228,25 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       >
         {/* 背景装饰 */}
         <div className={styles.background}>
-          {/* 装饰性树木 */}
-          {[...Array(15)].map((_, i) => (
+          {/* 装饰性树木 - 分散在地图上 */}
+          {[...Array(Math.ceil(canvasHeight / 200) * 3)].map((_, i) => (
             <div
               key={i}
               className={styles.tree}
               style={{
-                left: `${(i * 67) % 100}%`,
-                top: `${(i * 89) % 100}%`,
-                opacity: 0.3 + (i % 3) * 0.2,
-                transform: `scale(${0.5 + (i % 4) * 0.2})`,
+                left: `${10 + (i * 37) % 80}%`,
+                top: `${(i * 200 / canvasHeight * 100) % 100}%`,
+                opacity: 0.2 + (i % 3) * 0.1,
+                fontSize: `${24 + (i % 3) * 8}px`,
               }}
             >
-              🌲
+              {['🌲', '🌳', '🌴', '🍀'][i % 4]}
             </div>
           ))}
         </div>
 
         {/* 路径连接 */}
-        <svg className={styles.pathLayer} viewBox={`0 0 ${width} ${height}`}>
+        <svg className={styles.pathLayer} viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}>
           {connections.map(({ from, to }) => (
             <MapPath
               key={`${from.id}-${to.id}`}
@@ -165,12 +260,13 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 
         {/* 节点层 */}
         <div className={styles.nodeLayer}>
-          {nodes.map((node) => (
+          {layoutNodes.map((node) => (
             <MapNodeComponent
               key={node.id}
               node={node}
               isActive={node.id === activeNodeId}
-              onClick={() => handleNodeClick(node)}
+              onClick={() => handleNodeClick(nodes.find(n => n.id === node.id)!)}
+              size={layout.nodeSize}
             />
           ))}
         </div>
@@ -178,9 +274,9 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         {/* 迷雾遮罩 */}
         {showFog && (
           <FogOverlay
-            nodes={nodes}
-            width={width}
-            height={height}
+            nodes={layoutNodes}
+            width={canvasWidth}
+            height={canvasHeight}
           />
         )}
       </motion.div>

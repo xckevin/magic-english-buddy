@@ -34,12 +34,25 @@ const MapPage: React.FC = () => {
     magicPower: 0,
   });
 
+  // 数据版本号 - 当需要强制重新生成数据时递增
+  const DATA_VERSION = 2;
+
   // 加载地图数据
   useEffect(() => {
     const loadMapData = async () => {
       setLoading(true);
       try {
-        // 先检查数据库中是否有地图节点
+        // 检查数据版本
+        const versionKey = 'map_data_version_l1';
+        const currentVersion = localStorage.getItem(versionKey);
+        
+        // 如果版本不匹配，删除旧数据
+        if (currentVersion !== String(DATA_VERSION)) {
+          await db.mapNodes.where('regionId').equals('region_l1').delete();
+          localStorage.setItem(versionKey, String(DATA_VERSION));
+        }
+        
+        // 获取现有节点
         let nodes = await db.mapNodes.where('regionId').equals('region_l1').toArray();
         
         // 如果没有数据，生成并保存
@@ -48,6 +61,9 @@ const MapPage: React.FC = () => {
           await db.mapNodes.bulkPut(generatedNodes);
           nodes = generatedNodes;
         }
+        
+        // 按照节点 ID 排序，确保顺序正确（node_l1_01, node_l1_02, ...）
+        nodes.sort((a, b) => a.id.localeCompare(b.id));
         
         setMapNodes(nodes);
         

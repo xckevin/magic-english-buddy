@@ -7,7 +7,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/stores/useAppStore';
-import { db } from '@/db';
+import { db, createUser } from '@/db';
 import { useInitialization } from '@/hooks/useInitialization';
 import { useLongPress } from '@/hooks/useLongPress';
 import { MagicBackground, MagicEgg } from '@/components/onboarding';
@@ -21,7 +21,9 @@ type EggState = 'dormant' | 'awakening' | 'cracking' | 'hatched';
 const OnboardingPage: React.FC = () => {
   const navigate = useNavigate();
   const setCurrentUser = useAppStore((state) => state.setCurrentUser);
-  const { isLoading, isInitialized } = useInitialization();
+  const { state: initState } = useInitialization();
+  const isLoading = initState.isChecking || initState.isInitializing;
+  const isInitialized = initState.isComplete;
 
   // 引导步骤
   const [step, setStep] = useState<OnboardingStep>('welcome');
@@ -80,19 +82,9 @@ const OnboardingPage: React.FC = () => {
       return;
     }
 
-    const defaultUser = {
-      name: userName.trim(),
-      buddyName: buddyName.trim(),
-      level: 1,
-      magicPower: 0,
-      lastLogin: new Date(),
-      avatar: 'default-avatar.png',
-    };
-
     try {
-      const userId = await db.users.add(defaultUser);
-      const newUser = { ...defaultUser, id: userId };
-      setCurrentUser(newUser);
+      const newUser = await createUser(userName.trim(), buddyName.trim());
+      setCurrentUser(newUser.id);
       
       setStep('ready');
       setDialogue(`太棒了！${buddyName}准备好和你一起冒险了！`);
@@ -109,38 +101,23 @@ const OnboardingPage: React.FC = () => {
 
   // 跳过引导
   const handleSkip = useCallback(async () => {
-    const defaultUser = {
-      name: '小魔法师',
-      buddyName: '小精灵',
-      level: 1,
-      magicPower: 0,
-      lastLogin: new Date(),
-      avatar: 'default-avatar.png',
-    };
-
     try {
-      const userId = await db.users.add(defaultUser);
-      const newUser = { ...defaultUser, id: userId };
-      setCurrentUser(newUser);
+      const newUser = await createUser('小魔法师', '小精灵');
+      setCurrentUser(newUser.id);
       navigate('/map');
     } catch (error) {
       console.error('Failed to create default user:', error);
     }
   }, [setCurrentUser, navigate]);
 
-  // 加载中
-  if (isLoading) {
-    return <Loading />;
-  }
-
-  // 检查是否已有用户
+  // 检查是否已有用户 (必须在条件返回之前)
   useEffect(() => {
     const checkExistingUser = async () => {
       const userCount = await db.users.count();
       if (userCount > 0) {
-        const lastUser = await db.users.orderBy('lastLogin').reverse().first();
+        const lastUser = await db.users.orderBy('createdAt').reverse().first();
         if (lastUser) {
-          setCurrentUser(lastUser);
+          setCurrentUser(lastUser.id);
           navigate('/map');
         }
       }
@@ -149,6 +126,11 @@ const OnboardingPage: React.FC = () => {
       checkExistingUser();
     }
   }, [isInitialized, setCurrentUser, navigate]);
+
+  // 加载中
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return (
     <div className={styles.container}>

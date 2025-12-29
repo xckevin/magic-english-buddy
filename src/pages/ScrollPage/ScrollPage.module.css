@@ -225,3 +225,56 @@
 .syncSection {
   
 }
+
+/* ============ 空状态和加载状态 ============ */
+
+.loadingBuddy,
+.emptyBuddy {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.loadingBuddy {
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--space-6);
+}
+
+.loadingEmoji {
+  font-size: 48px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+.emptyText {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  margin-bottom: var(--space-4);
+  opacity: 0.5;
+}
+
+.emptyState p {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+}

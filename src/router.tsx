@@ -12,6 +12,7 @@ const MapPage = lazy(() => import('@/pages/MapPage'));
 const ReaderPage = lazy(() => import('@/pages/ReaderPage'));
 const QuizPage = lazy(() => import('@/pages/QuizPage'));
 const ScrollPage = lazy(() => import('@/pages/ScrollPage'));
+const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
 
 // 加载组件包装器
 const PageLoader = ({ children }: { children: React.ReactNode }) => (
@@ -68,6 +69,14 @@ export const router = createBrowserRouter(
       element: (
         <PageLoader>
           <ScrollPage />
+        </PageLoader>
+      ),
+    },
+    {
+      path: '/settings',
+      element: (
+        <PageLoader>
+          <SettingsPage />
         </PageLoader>
       ),
     },

@@ -89,14 +89,17 @@ const FloatingHeader: React.FC<FloatingHeaderProps> = memo(({ nodes }) => {
         >
           📜
         </motion.button>
+        {/* TODO: 设置页面完善后取消隐藏
         <motion.button
           className={styles.actionBtn}
+          onClick={() => navigate('/settings')}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           title="设置"
         >
           ⚙️
         </motion.button>
+        */}
       </div>
     </motion.header>
   );

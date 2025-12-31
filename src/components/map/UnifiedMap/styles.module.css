@@ -1,0 +1,563 @@
+/**
+ * UnifiedMap 组件样式
+ * 多邻国风格的垂直滚动地图
+ */
+
+/* ============ 容器 ============ */
+
+.container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: linear-gradient(180deg, #0a1628 0%, #1a2744 50%, #0a1628 100%);
+}
+
+.scrollContainer {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+}
+
+.scrollContainer::-webkit-scrollbar {
+  display: none;
+}
+
+.mapContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100px 0;
+  min-height: 100%;
+}
+
+/* 地图从下往上，反转顺序 */
+.mapContentReversed {
+  flex-direction: column-reverse;
+  padding-top: 160px;
+  padding-bottom: 120px;
+}
+
+/* ============ 节点 ============ */
+
+.nodeWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  width: 100%;
+  max-width: 300px;
+}
+
+.node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: linear-gradient(135deg, var(--node-color) 0%, var(--node-color-secondary) 100%);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+.nodeSm {
+  width: 56px;
+  height: 56px;
+}
+
+.nodeMd {
+  width: 68px;
+  height: 68px;
+}
+
+.nodeLg {
+  width: 84px;
+  height: 84px;
+}
+
+.nodeIcon {
+  font-size: 28px;
+  z-index: 2;
+}
+
+.nodeLg .nodeIcon {
+  font-size: 36px;
+}
+
+.nodeSm .nodeIcon {
+  font-size: 22px;
+}
+
+/* 节点状态 */
+
+.nodeUnlocked {
+  cursor: pointer;
+}
+
+.nodeLocked {
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.nodeCompleted {
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 0 3px var(--node-color),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.2);
+}
+
+.nodeActive {
+  box-shadow: 
+    0 4px 20px var(--node-color),
+    0 0 0 4px var(--node-color-secondary),
+    0 0 40px var(--node-color);
+  animation: activePulse 2s ease-in-out infinite;
+}
+
+@keyframes activePulse {
+  0%, 100% { 
+    box-shadow: 
+      0 4px 20px var(--node-color),
+      0 0 0 4px var(--node-color-secondary),
+      0 0 40px var(--node-color);
+  }
+  50% { 
+    box-shadow: 
+      0 4px 30px var(--node-color),
+      0 0 0 6px var(--node-color-secondary),
+      0 0 60px var(--node-color);
+  }
+}
+
+/* 发光效果 */
+
+.nodeGlow {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--node-color-secondary) 0%, transparent 70%);
+  opacity: 0.5;
+  animation: glowPulse 2s ease-in-out infinite;
+  z-index: 0;
+}
+
+@keyframes glowPulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 0.3; }
+}
+
+/* 完成标记 */
+
+.checkmark {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #22C55E;
+  border-radius: 50%;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.4);
+  z-index: 10;
+}
+
+/* 锁定图标 */
+
+.lockIcon {
+  position: absolute;
+  font-size: 20px;
+  opacity: 0.7;
+}
+
+/* Boss 特效 */
+
+.bossRing {
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 2px solid var(--node-color);
+  animation: bossRingPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes bossRingPulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 0; }
+}
+
+/* 节点标签 */
+
+.nodeLabel {
+  margin-top: 12px;
+  text-align: center;
+  max-width: 140px;
+}
+
+.nodeTitleCn {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.nodeType {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--node-color);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.nodeLabelLocked {
+  opacity: 0.5;
+}
+
+.nodeLabelLocked .nodeTitleCn {
+  color: #9CA3AF;
+}
+
+/* 当前节点指示器 */
+
+.activeIndicator {
+  position: absolute;
+  bottom: -50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.activeIndicator span:first-child {
+  font-size: 24px;
+}
+
+.activeText {
+  font-size: 12px;
+  font-weight: 600;
+  color: #FBBF24;
+  white-space: nowrap;
+}
+
+/* ============ 路径连接器 ============ */
+
+.pathConnector {
+  position: relative;
+  width: 4px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pathLine {
+  width: 100%;
+  height: 100%;
+  background: var(--path-color);
+  border-radius: 2px;
+  transform-origin: bottom;
+  overflow: hidden;
+}
+
+.pathLineActive {
+  box-shadow: 0 0 8px var(--path-color);
+}
+
+.pathLineInactive {
+  opacity: 0.3;
+}
+
+.pathLineCompleted {
+  background: linear-gradient(180deg, var(--path-color) 0%, var(--path-color) 100%);
+}
+
+.pathLineTransition {
+  height: 60px;
+  background: linear-gradient(180deg, 
+    var(--path-color) 0%, 
+    rgba(255, 255, 255, 0.3) 50%, 
+    var(--path-color) 100%
+  );
+}
+
+.pathFlow {
+  position: absolute;
+  width: 100%;
+  height: 20px;
+  background: linear-gradient(180deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.6) 50%, 
+    transparent 100%
+  );
+}
+
+.levelTransitionDot {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px currentColor;
+}
+
+/* ============ 级别分隔器 ============ */
+
+.levelDivider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+  padding: 16px 20px;
+  margin: 20px 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.08) 0%, 
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.levelDividerCurrent {
+  border-color: var(--level-color);
+  box-shadow: 0 0 20px rgba(var(--level-color), 0.3);
+}
+
+.levelDividerLocked {
+  opacity: 0.5;
+  filter: grayscale(0.5);
+}
+
+.levelIcon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  background: linear-gradient(135deg, var(--level-color) 0%, var(--level-color-secondary) 100%);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.levelInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.levelName {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.levelSubtitle {
+  display: block;
+  font-size: 12px;
+  color: #9CA3AF;
+  margin-top: 2px;
+}
+
+.levelProgress {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.progressBar {
+  width: 60px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--level-color) 0%, var(--level-color-secondary) 100%);
+  border-radius: 3px;
+}
+
+.progressText {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--level-color-secondary);
+}
+
+.currentLevelBadge {
+  position: absolute;
+  top: -8px;
+  right: 16px;
+  padding: 2px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--level-color);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ============ 顶部/底部渐变遮罩 ============ */
+
+.topGradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(180deg, 
+    rgba(10, 22, 40, 1) 0%, 
+    rgba(10, 22, 40, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+.bottomGradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(0deg, 
+    rgba(10, 22, 40, 1) 0%, 
+    rgba(10, 22, 40, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ============ 加载状态 ============ */
+
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 22, 40, 0.9);
+  z-index: 100;
+}
+
+.loadingSpinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #6B5CE7;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingText {
+  margin-top: 16px;
+  font-size: 14px;
+  color: #9CA3AF;
+}
+
+/* ============ 快速导航浮动按钮 ============ */
+
+.quickNav {
+  position: absolute;
+  right: 16px;
+  bottom: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 20;
+}
+
+.quickNavBtn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quickNavBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.quickNavBtn:active {
+  transform: scale(0.95);
+}
+
+/* ============ 背景装饰 ============ */
+
+.bgDecoration {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bgStar {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #fff;
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+/* ============ 响应式 ============ */
+
+@media (max-width: 380px) {
+  .nodeWrapper {
+    max-width: 260px;
+  }
+  
+  .levelDivider {
+    max-width: 280px;
+    padding: 12px 16px;
+  }
+  
+  .levelIcon {
+    width: 40px;
+    height: 40px;
+    font-size: 22px;
+  }
+  
+  .levelName {
+    font-size: 14px;
+  }
+}
+

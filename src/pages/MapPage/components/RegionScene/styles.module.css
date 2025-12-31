@@ -1,0 +1,524 @@
+/**
+ * RegionScene 样式
+ * 区域场景，包含主题背景和节点路径
+ */
+
+.scene {
+  position: relative;
+  flex-shrink: 0;
+  width: 100vw;
+  height: 100%;
+  overflow: hidden;
+}
+
+.sceneActive {
+  /* 当前活跃场景 */
+}
+
+.sceneLocked {
+  filter: grayscale(0.6);
+}
+
+/* ============ 背景层 ============ */
+
+.background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.bgGradient {
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(ellipse 80% 50% at 50% 100%, var(--theme-bg) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(0, 0, 0, 0.8) 0%, transparent 60%),
+    linear-gradient(180deg, #0a0f1a 0%, var(--theme-bg) 50%, #0a0f1a 100%);
+}
+
+.bgPattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.15;
+}
+
+/* 森林背景 */
+.bgPattern_forest {
+  background: 
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 10 L60 30 L40 30 Z' fill='%2322C55E'/%3E%3Cpath d='M50 25 L65 50 L35 50 Z' fill='%2322C55E'/%3E%3Crect x='47' y='50' width='6' height='15' fill='%23854D0E'/%3E%3C/svg%3E") repeat;
+  background-size: 60px 60px;
+  animation: patternFloat 20s linear infinite;
+}
+
+/* 山谷背景 */
+.bgPattern_valley {
+  background: 
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 50'%3E%3Cpath d='M0 50 L25 15 L50 50 L75 20 L100 50 Z' fill='%238B5CF6' opacity='0.5'/%3E%3C/svg%3E") repeat-x;
+  background-size: 200px 100px;
+  background-position: bottom;
+}
+
+/* 海洋背景 */
+.bgPattern_ocean {
+  background: 
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20'%3E%3Cpath d='M0 10 Q25 0 50 10 T100 10' stroke='%2306B6D4' fill='none' stroke-width='2'/%3E%3C/svg%3E") repeat;
+  background-size: 100px 30px;
+  animation: waveMove 8s linear infinite;
+}
+
+/* 云端背景 */
+.bgPattern_cloud {
+  background: 
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Cellipse cx='50' cy='40' rx='35' ry='20' fill='%23F472B6' opacity='0.3'/%3E%3Cellipse cx='30' cy='35' rx='20' ry='15' fill='%23F472B6' opacity='0.3'/%3E%3Cellipse cx='70' cy='35' rx='20' ry='15' fill='%23F472B6' opacity='0.3'/%3E%3C/svg%3E") repeat;
+  background-size: 150px 90px;
+  animation: cloudFloat 30s linear infinite;
+}
+
+/* 星空背景 */
+.bgPattern_stars {
+  background: 
+    radial-gradient(1px 1px at 20% 30%, white, transparent),
+    radial-gradient(1px 1px at 40% 70%, white, transparent),
+    radial-gradient(1px 1px at 50% 20%, white, transparent),
+    radial-gradient(2px 2px at 60% 50%, #FBBF24, transparent),
+    radial-gradient(1px 1px at 80% 10%, white, transparent),
+    radial-gradient(1px 1px at 70% 80%, white, transparent),
+    radial-gradient(2px 2px at 30% 60%, #FBBF24, transparent);
+  background-size: 200px 200px;
+  animation: starsTwinkle 4s ease-in-out infinite;
+}
+
+/* 时光背景 */
+.bgPattern_time {
+  background: 
+    repeating-conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(167, 139, 250, 0.1) 1deg, transparent 2deg);
+  animation: timeRotate 60s linear infinite;
+}
+
+/* 核心背景 */
+.bgPattern_core {
+  background: 
+    radial-gradient(circle at 50% 50%, rgba(244, 63, 94, 0.3) 0%, transparent 50%);
+  animation: corePulse 3s ease-in-out infinite;
+}
+
+@keyframes patternFloat {
+  0% { background-position: 0 0; }
+  100% { background-position: 60px 60px; }
+}
+
+@keyframes waveMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 100px 0; }
+}
+
+@keyframes cloudFloat {
+  0% { background-position: 0 0; }
+  100% { background-position: 150px 0; }
+}
+
+@keyframes starsTwinkle {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.25; }
+}
+
+@keyframes timeRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes corePulse {
+  0%, 100% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.25; transform: scale(1.1); }
+}
+
+/* 装饰粒子 */
+.decorations {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--theme-primary);
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: particleFloat 5s ease-in-out infinite;
+}
+
+@keyframes particleFloat {
+  0%, 100% { 
+    transform: translateY(0) scale(1); 
+    opacity: 0.3;
+  }
+  50% { 
+    transform: translateY(-20px) scale(1.5); 
+    opacity: 0.6;
+  }
+}
+
+/* ============ 区域标题 ============ */
+
+.regionHeader {
+  position: absolute;
+  top: 60px; /* 位于 FloatingHeader 下方 */
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+  z-index: 10;
+}
+
+.regionIcon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.regionInfo {
+  flex: 1;
+}
+
+.regionName {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+}
+
+.regionLevel {
+  font-size: 12px;
+  color: var(--theme-secondary);
+  font-weight: 600;
+}
+
+.regionProgress {
+  display: flex;
+  align-items: center;
+}
+
+.progressRing {
+  position: relative;
+  width: 44px;
+  height: 44px;
+}
+
+.progressSvg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.progressBg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 3;
+}
+
+.progressFill {
+  fill: none;
+  stroke: var(--theme-primary);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.5s ease;
+}
+
+.progressText {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+}
+
+/* ============ 节点路径 ============ */
+
+.pathContainer {
+  position: absolute;
+  inset: 0;
+  top: 140px; /* FloatingHeader(60) + RegionHeader(80) */
+  bottom: 160px; /* 增加底部空间，避免被指示器遮挡 */
+  z-index: 5;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+}
+
+.pathContainer::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.pathScroller {
+  position: relative;
+  width: 100%;
+  min-height: 100%;
+}
+
+.pathSvg {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  max-width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.pathBg {
+  stroke: rgba(255, 255, 255, 0.1);
+}
+
+.pathCompleted {
+  stroke: var(--theme-primary);
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px var(--theme-primary));
+}
+
+/* ============ 节点 ============ */
+
+.node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--node-color) 0%, var(--node-color-secondary) 100%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.node_sm {
+  width: 48px;
+  height: 48px;
+}
+
+.node_md {
+  width: 56px;
+  height: 56px;
+}
+
+.node_lg {
+  width: 68px;
+  height: 68px;
+}
+
+.nodeIcon {
+  font-size: 24px;
+  z-index: 2;
+}
+
+.node_lg .nodeIcon {
+  font-size: 32px;
+}
+
+.node_sm .nodeIcon {
+  font-size: 20px;
+}
+
+.nodeUnlocked {
+  cursor: pointer;
+}
+
+.nodeLocked {
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+}
+
+.nodeCompleted {
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.2);
+}
+
+.nodeActive {
+  animation: nodeActivePulse 2s ease-in-out infinite;
+}
+
+@keyframes nodeActivePulse {
+  0%, 100% { 
+    box-shadow: 
+      0 4px 20px var(--node-color),
+      0 0 0 4px var(--node-color-secondary),
+      0 0 40px var(--node-color);
+  }
+  50% { 
+    box-shadow: 
+      0 4px 30px var(--node-color),
+      0 0 0 8px var(--node-color-secondary),
+      0 0 60px var(--node-color);
+  }
+}
+
+.nodeGlow {
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--node-color-secondary) 0%, transparent 70%);
+  opacity: 0.5;
+  animation: glowPulse 2s ease-in-out infinite;
+  z-index: 0;
+}
+
+@keyframes glowPulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.3); opacity: 0.3; }
+}
+
+.nodeCheckmark {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  background: #22C55E;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.5);
+  z-index: 15;
+}
+
+.nodeLock {
+  position: absolute;
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+/* ============ 锁定遮罩 ============ */
+
+.lockedOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 20;
+}
+
+.lockedContent {
+  text-align: center;
+}
+
+.lockedIcon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.lockedText {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+/* ============ 边缘指示器 ============ */
+
+.edgeIndicatorLeft,
+.edgeIndicatorRight {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 32px;
+  color: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+  z-index: 15;
+  animation: edgePulse 2s ease-in-out infinite;
+}
+
+.edgeIndicatorLeft {
+  left: 8px;
+}
+
+.edgeIndicatorRight {
+  right: 8px;
+}
+
+@keyframes edgePulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+/* ============ 响应式 ============ */
+
+/* 平板 */
+@media (min-width: 768px) {
+  .scene {
+    width: 50vw;
+    min-width: 400px;
+  }
+  
+  .regionHeader {
+    padding: 20px 32px;
+  }
+  
+  .regionIcon {
+    width: 56px;
+    height: 56px;
+    font-size: 32px;
+  }
+  
+  .regionName {
+    font-size: 22px;
+  }
+  
+  .node_sm { width: 52px; height: 52px; }
+  .node_md { width: 64px; height: 64px; }
+  .node_lg { width: 76px; height: 76px; }
+  
+  .edgeIndicatorLeft,
+  .edgeIndicatorRight {
+    display: none;
+  }
+}
+
+/* PC */
+@media (min-width: 1024px) {
+  .scene {
+    width: 33.333vw;
+    min-width: 360px;
+  }
+  
+  .regionHeader {
+    padding: 24px 40px;
+  }
+  
+  .node_sm { width: 56px; height: 56px; }
+  .node_md { width: 68px; height: 68px; }
+  .node_lg { width: 84px; height: 84px; }
+}
+
+/* 大屏 */
+@media (min-width: 1440px) {
+  .scene {
+    width: 25vw;
+    min-width: 400px;
+  }
+}
+

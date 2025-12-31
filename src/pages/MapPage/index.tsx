@@ -1,106 +1,46 @@
 /**
  * MapPage 地图页面
- * 魔法地图探索，迷雾解锁，节点预览
+ * 沉浸式横向卷轴地图，按区域展示学习路径
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { useAppStore } from '@/stores/useAppStore';
-import { db, type MapNode } from '@/db';
-import { MapCanvas, NodePreview } from '@/components/map';
-import { generateL1MapNodes, l1RegionConfig } from '@/data/maps/l1-forest';
+import { motion, AnimatePresence } from 'framer-motion';
+import { db } from '@/db';
+import { getStoryById } from '@/data';
+import {
+  generateUnifiedMapData,
+  mergeNodeStates,
+  type UnifiedMapNode,
+} from '@/data/unifiedMap';
+import { HorizontalMap, FloatingHeader } from './components';
 import styles from './MapPage.module.css';
 
 const MapPage: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser } = useAppStore();
-
-  // 地图数据
-  const [mapNodes, setMapNodes] = useState<MapNode[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  // 地图数据（用于 Header 显示）
+  const [nodes, setNodes] = useState<UnifiedMapNode[]>([]);
   
   // 预览状态
-  const [selectedNode, setSelectedNode] = useState<MapNode | null>(null);
+  const [selectedNode, setSelectedNode] = useState<UnifiedMapNode | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  
-  // 当前激活节点
-  const [activeNodeId, setActiveNodeId] = useState<string>('');
 
-  // 统计数据
-  const [stats, setStats] = useState({
-    completedNodes: 0,
-    totalNodes: 0,
-    magicPower: 0,
-  });
-
-  // 数据版本号 - 当需要强制重新生成数据时递增
-  const DATA_VERSION = 2;
-
-  // 加载地图数据
+  // 加载节点数据
   useEffect(() => {
-    const loadMapData = async () => {
-      setLoading(true);
-      try {
-        // 检查数据版本
-        const versionKey = 'map_data_version_l1';
-        const currentVersion = localStorage.getItem(versionKey);
-        
-        // 如果版本不匹配，删除旧数据
-        if (currentVersion !== String(DATA_VERSION)) {
-          await db.mapNodes.where('regionId').equals('region_l1').delete();
-          localStorage.setItem(versionKey, String(DATA_VERSION));
-        }
-        
-        // 获取现有节点
-        let nodes = await db.mapNodes.where('regionId').equals('region_l1').toArray();
-        
-        // 如果没有数据，生成并保存
-        if (nodes.length === 0) {
-          const generatedNodes = generateL1MapNodes();
-          await db.mapNodes.bulkPut(generatedNodes);
-          nodes = generatedNodes;
-        }
-        
-        // 按照节点 ID 排序，确保顺序正确（node_l1_01, node_l1_02, ...）
-        nodes.sort((a, b) => a.id.localeCompare(b.id));
-        
-        setMapNodes(nodes);
-        
-        // 计算统计
-        const completed = nodes.filter(n => n.completed).length;
-        const total = nodes.length;
-        const power = nodes
-          .filter(n => n.completed)
-          .reduce((sum, n) => sum + (n.rewards?.magicPower || 0), 0);
-        
-        setStats({
-          completedNodes: completed,
-          totalNodes: total,
-          magicPower: power,
-        });
-        
-        // 设置当前激活节点（第一个未完成的解锁节点）
-        const currentNode = nodes.find(n => n.unlocked && !n.completed);
-        if (currentNode) {
-          setActiveNodeId(currentNode.id);
-        } else {
-          // 如果全部完成，激活最后一个
-          const lastNode = nodes[nodes.length - 1];
-          if (lastNode) setActiveNodeId(lastNode.id);
-        }
-      } catch (error) {
-        console.error('Failed to load map data:', error);
-      } finally {
-        setLoading(false);
-      }
+    const loadNodes = async () => {
+      const mapData = generateUnifiedMapData();
+      const dbNodes = await db.mapNodes.toArray();
+      const mergedNodes = dbNodes.length > 0
+        ? mergeNodeStates(mapData.nodes, dbNodes)
+        : mapData.nodes;
+      setNodes(mergedNodes);
     };
-
-    loadMapData();
+    loadNodes();
   }, []);
 
   // 节点点击
-  const handleNodeClick = useCallback((node: MapNode) => {
+  const handleNodeClick = useCallback((node: UnifiedMapNode) => {
     setSelectedNode(node);
     setIsPreviewOpen(true);
   }, []);
@@ -112,10 +52,9 @@ const MapPage: React.FC = () => {
   }, []);
 
   // 开始节点
-  const handleStartNode = useCallback((node: MapNode) => {
+  const handleStartNode = useCallback((node: UnifiedMapNode) => {
     handleClosePreview();
     
-    // 根据节点类型导航
     if (node.type === 'story' || node.type === 'boss') {
       navigate(`/reader/${node.storyId}`);
     } else if (node.type === 'challenge' || node.type === 'bonus') {
@@ -123,80 +62,160 @@ const MapPage: React.FC = () => {
     }
   }, [navigate, handleClosePreview]);
 
-  if (loading) {
-    return (
-      <div className={styles.loadingContainer}>
-        <div className={styles.spinner} />
-        <p>正在绘制魔法地图...</p>
-      </div>
-    );
-  }
-
   return (
     <div className={styles.container}>
-      {/* 头部状态栏 */}
-      <header className={styles.header}>
-        <div className={styles.userSection}>
-          <div className={styles.avatar}>
-            {currentUser?.buddyName?.charAt(0) || '🐣'}
-          </div>
-          <div className={styles.userInfo}>
-            <span className={styles.greeting}>{currentUser?.name || '小魔法师'}</span>
-            <span className={styles.regionName}>{l1RegionConfig.nameCn}</span>
-          </div>
-        </div>
-        <div className={styles.statsSection}>
-          <div className={styles.statItem}>
-            <span className={styles.statIcon}>⭐</span>
-            <span className={styles.statValue}>{stats.completedNodes}/{stats.totalNodes}</span>
-          </div>
-          <div className={styles.statItem}>
-            <span className={styles.statIcon}>✨</span>
-            <span className={styles.statValue}>{stats.magicPower}</span>
-          </div>
-        </div>
-      </header>
+      {/* 悬浮顶栏 */}
+      <FloatingHeader nodes={nodes} />
 
-      {/* 地图画布 */}
+      {/* 横向滚动地图 */}
       <main className={styles.mapArea}>
-        <MapCanvas
-          nodes={mapNodes}
-          activeNodeId={activeNodeId}
-          width={400}
-          height={1500}
-          onNodeClick={handleNodeClick}
-          showFog={true}
-        />
+        <HorizontalMap onNodeClick={handleNodeClick} />
       </main>
 
-      {/* 节点预览 */}
-      <NodePreview
-        node={selectedNode}
-        isOpen={isPreviewOpen}
-        onClose={handleClosePreview}
-        onStart={handleStartNode}
-      />
-
-      {/* 底部导航 */}
-      <nav className={styles.bottomNav}>
-        <button className={`${styles.navItem} ${styles.active}`}>
-          <span className={styles.navIcon}>🗺️</span>
-          <span className={styles.navLabel}>地图</span>
-        </button>
-        <button className={styles.navItem} onClick={() => navigate('/scroll')}>
-          <span className={styles.navIcon}>📜</span>
-          <span className={styles.navLabel}>卷轴</span>
-        </button>
-        <button className={styles.navItem}>
-          <span className={styles.navIcon}>📚</span>
-          <span className={styles.navLabel}>魔典</span>
-        </button>
-        <button className={styles.navItem}>
-          <span className={styles.navIcon}>⚙️</span>
-          <span className={styles.navLabel}>设置</span>
-        </button>
-      </nav>
+      {/* 节点预览弹窗 */}
+      <AnimatePresence>
+        {isPreviewOpen && selectedNode && (
+          <NodePreviewModal
+            node={selectedNode}
+            onClose={handleClosePreview}
+            onStart={() => handleStartNode(selectedNode)}
+          />
+        )}
+      </AnimatePresence>
     </div>
+  );
+};
+
+// 节点预览弹窗组件
+interface NodePreviewModalProps {
+  node: UnifiedMapNode;
+  onClose: () => void;
+  onStart: () => void;
+}
+
+const NodePreviewModal: React.FC<NodePreviewModalProps> = ({ node, onClose, onStart }) => {
+  const story = node.storyId ? getStoryById(node.storyId) : null;
+  
+  // 节点类型标签
+  const typeLabels: Record<string, { label: string; color: string }> = {
+    story: { label: '故事', color: '#6B5CE7' },
+    boss: { label: 'Boss 关卡', color: '#F59E0B' },
+    challenge: { label: '挑战', color: '#EF4444' },
+    bonus: { label: '奖励关卡', color: '#10B981' },
+  };
+  
+  const typeInfo = typeLabels[node.type] || typeLabels.story;
+
+  // 区域名称映射
+  const themeNames: Record<string, string> = {
+    forest: '萌芽之森',
+    valley: '回声山谷',
+    ocean: '深海秘境',
+    cloud: '云端城堡',
+    stars: '星空迷宫',
+    time: '时光长廊',
+    core: '魔力核心',
+  };
+
+  return (
+    <motion.div
+      className={styles.previewOverlay}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <motion.div
+        className={styles.previewCard}
+        initial={{ y: 100, opacity: 0, scale: 0.9 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 100, opacity: 0, scale: 0.9 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* 关闭按钮 */}
+        <button className={styles.previewClose} onClick={onClose}>
+          ✕
+        </button>
+
+        {/* 节点图标 */}
+        <div 
+          className={styles.previewIcon}
+          style={{ '--icon-color': typeInfo.color } as React.CSSProperties}
+        >
+          {node.emoji || '📖'}
+        </div>
+
+        {/* 类型标签 */}
+        <span 
+          className={styles.previewType}
+          style={{ backgroundColor: typeInfo.color }}
+        >
+          {typeInfo.label}
+        </span>
+
+        {/* 标题 */}
+        <h2 className={styles.previewTitle}>{node.titleCn}</h2>
+        <p className={styles.previewSubtitle}>{node.title}</p>
+
+        {/* 故事信息 */}
+        {story && (
+          <div className={styles.previewMeta}>
+            <div className={styles.previewMetaItem}>
+              <span>📝</span>
+              <span>{story.metadata.wordCount} 词</span>
+            </div>
+            <div className={styles.previewMetaItem}>
+              <span>⏱️</span>
+              <span>约 {story.metadata.estimatedTime} 分钟</span>
+            </div>
+            <div className={styles.previewMetaItem}>
+              <span>✨</span>
+              <span>+{node.rewards.magicPower} 魔力</span>
+            </div>
+          </div>
+        )}
+
+        {/* 级别信息 */}
+        <div className={styles.previewLevel}>
+          Level {node.level} · {themeNames[node.theme] || node.theme}
+        </div>
+
+        {/* 操作按钮 */}
+        <div className={styles.previewActions}>
+          {node.completed ? (
+            <motion.button 
+              className={`${styles.previewBtn} ${styles.previewBtnSecondary}`}
+              onClick={onStart}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              再次挑战
+            </motion.button>
+          ) : node.unlocked ? (
+            <motion.button 
+              className={`${styles.previewBtn} ${styles.previewBtnPrimary}`}
+              onClick={onStart}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              开始学习
+            </motion.button>
+          ) : (
+            <button className={`${styles.previewBtn} ${styles.previewBtnDisabled}`} disabled>
+              🔒 未解锁
+            </button>
+          )}
+        </div>
+
+        {/* 解锁提示 */}
+        {!node.unlocked && (
+          <p className={styles.previewHint}>
+            完成前置关卡后解锁
+          </p>
+        )}
+      </motion.div>
+    </motion.div>
   );
 };
 

@@ -1,0 +1,180 @@
+/**
+ * HorizontalMap 样式
+ * 横向滚动地图容器
+ */
+
+.container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0a0f1a;
+}
+
+/* ============ 滚动容器 ============ */
+
+.scrollWrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  touch-action: pan-x;
+}
+
+.scrollContent {
+  display: flex;
+  height: 100%;
+  will-change: transform;
+}
+
+/* ============ 导航箭头 ============ */
+
+.navArrows {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 30;
+  display: none;
+}
+
+.navArrow {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.2s ease;
+}
+
+.navArrow:hover {
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+}
+
+.navArrowLeft {
+  left: 20px;
+}
+
+.navArrowRight {
+  right: 20px;
+}
+
+/* ============ 滑动提示 ============ */
+
+.swipeHint {
+  position: absolute;
+  bottom: 180px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border-radius: 24px;
+  z-index: 45;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  animation: swipeHintPulse 2s ease-in-out infinite;
+}
+
+.swipeIcon {
+  font-size: 18px;
+  animation: swipeIconMove 1.5s ease-in-out infinite;
+}
+
+@keyframes swipeHintPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+@keyframes swipeIconMove {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(10px); }
+}
+
+/* ============ 加载状态 ============ */
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: #0a0f1a;
+}
+
+.loadingSpinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #6B5CE7;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingText {
+  font-size: 14px;
+  color: #9CA3AF;
+}
+
+/* ============ 响应式 ============ */
+
+/* 平板 */
+@media (min-width: 768px) {
+  .navArrows {
+    display: block;
+  }
+  
+  .swipeHint {
+    display: none;
+  }
+}
+
+/* PC */
+@media (min-width: 1024px) {
+  .navArrow {
+    width: 56px;
+    height: 56px;
+    font-size: 36px;
+  }
+  
+  .navArrowLeft {
+    left: 32px;
+  }
+  
+  .navArrowRight {
+    right: 32px;
+  }
+}
+
+/* 大屏 */
+@media (min-width: 1440px) {
+  .navArrowLeft {
+    left: 48px;
+  }
+  
+  .navArrowRight {
+    right: 48px;
+  }
+}
+

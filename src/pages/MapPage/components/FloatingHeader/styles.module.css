@@ -1,0 +1,224 @@
+/**
+ * FloatingHeader 样式
+ * 悬浮顶栏
+ */
+
+.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  padding-top: calc(12px + var(--safe-area-top, 0px));
+  background: rgba(10, 15, 26, 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  z-index: 50;
+}
+
+/* ============ 用户区域 ============ */
+
+.userSection {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  background: linear-gradient(135deg, #6B5CE7 0%, #8B5CF6 100%);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(107, 92, 231, 0.4);
+  cursor: pointer;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.userName {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  line-height: 1.2;
+}
+
+.userLevel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.levelBadge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #FBBF24;
+  padding: 1px 6px;
+  background: rgba(251, 191, 36, 0.2);
+  border-radius: 6px;
+}
+
+/* ============ 统计区域 ============ */
+
+.statsSection {
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  cursor: default;
+  transition: background 0.2s ease;
+}
+
+.statItem:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.statIcon {
+  font-size: 16px;
+}
+
+.statValue {
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  line-height: 1.2;
+}
+
+.statLabel {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ============ 操作区域 ============ */
+
+.actionsSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actionBtn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.actionBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ============ 响应式 ============ */
+
+/* 平板 */
+@media (min-width: 768px) {
+  .header {
+    padding: 16px 24px;
+  }
+  
+  .statsSection {
+    display: flex;
+  }
+  
+  .avatar {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
+  
+  .userName {
+    font-size: 15px;
+  }
+  
+  .actionBtn {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+}
+
+/* PC */
+@media (min-width: 1024px) {
+  .header {
+    padding: 16px 32px;
+  }
+  
+  .avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+    border-radius: 14px;
+  }
+  
+  .userName {
+    font-size: 16px;
+  }
+  
+  .levelBadge {
+    font-size: 11px;
+    padding: 2px 8px;
+  }
+  
+  .statItem {
+    padding: 8px 16px;
+    flex-direction: row;
+    gap: 8px;
+  }
+  
+  .statIcon {
+    font-size: 18px;
+  }
+  
+  .statValue {
+    font-size: 16px;
+  }
+  
+  .statLabel {
+    font-size: 11px;
+  }
+  
+  .actionBtn {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+    border-radius: 12px;
+  }
+}
+
+/* 大屏 */
+@media (min-width: 1440px) {
+  .header {
+    padding: 20px 48px;
+  }
+  
+  .statsSection {
+    gap: 16px;
+  }
+}
+

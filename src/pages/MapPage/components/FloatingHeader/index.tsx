@@ -1,0 +1,108 @@
+/**
+ * FloatingHeader - 悬浮顶栏组件
+ * 半透明毛玻璃效果的顶部状态栏
+ */
+
+import { memo } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { useAppStore } from '@/stores/useAppStore';
+import { getTotalProgress, type UnifiedMapNode } from '@/data/unifiedMap';
+import styles from './styles.module.css';
+
+interface FloatingHeaderProps {
+  nodes: UnifiedMapNode[];
+}
+
+const FloatingHeader: React.FC<FloatingHeaderProps> = memo(({ nodes }) => {
+  const navigate = useNavigate();
+  const { currentUser } = useAppStore();
+  
+  const totalProgress = getTotalProgress(nodes);
+  
+  // 模拟数据
+  const streakDays = 7;
+  const magicPower = 1250;
+
+  return (
+    <motion.header
+      className={styles.header}
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      {/* 左侧 - 用户信息 */}
+      <div className={styles.userSection}>
+        <motion.div 
+          className={styles.avatar}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {currentUser?.buddyName?.charAt(0) || '🐣'}
+        </motion.div>
+        <div className={styles.userInfo}>
+          <span className={styles.userName}>{currentUser?.name || '小魔法师'}</span>
+          <div className={styles.userLevel}>
+            <span className={styles.levelBadge}>Lv.{Math.floor(totalProgress.completed / 10) + 1}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 中间 - 统计数据 */}
+      <div className={styles.statsSection}>
+        <motion.div 
+          className={styles.statItem}
+          whileHover={{ scale: 1.05 }}
+        >
+          <span className={styles.statIcon}>🔥</span>
+          <span className={styles.statValue}>{streakDays}</span>
+          <span className={styles.statLabel}>连续</span>
+        </motion.div>
+        
+        <motion.div 
+          className={styles.statItem}
+          whileHover={{ scale: 1.05 }}
+        >
+          <span className={styles.statIcon}>✨</span>
+          <span className={styles.statValue}>{magicPower}</span>
+          <span className={styles.statLabel}>魔力</span>
+        </motion.div>
+        
+        <motion.div 
+          className={styles.statItem}
+          whileHover={{ scale: 1.05 }}
+        >
+          <span className={styles.statIcon}>📚</span>
+          <span className={styles.statValue}>{totalProgress.completed}</span>
+          <span className={styles.statLabel}>已读</span>
+        </motion.div>
+      </div>
+
+      {/* 右侧 - 操作按钮 */}
+      <div className={styles.actionsSection}>
+        <motion.button
+          className={styles.actionBtn}
+          onClick={() => navigate('/scroll')}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          title="守护者卷轴"
+        >
+          📜
+        </motion.button>
+        <motion.button
+          className={styles.actionBtn}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          title="设置"
+        >
+          ⚙️
+        </motion.button>
+      </div>
+    </motion.header>
+  );
+});
+
+FloatingHeader.displayName = 'FloatingHeader';
+
+export default FloatingHeader;
+

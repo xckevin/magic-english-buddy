@@ -1,0 +1,228 @@
+/**
+ * RegionIndicator 样式
+ * 底部区域指示器
+ */
+
+.container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  padding-bottom: calc(16px + var(--safe-area-bottom, 0px));
+  background: linear-gradient(0deg, rgba(10, 15, 26, 0.95) 0%, transparent 100%);
+  z-index: 40;
+  pointer-events: none; /* 让背景不拦截点击 */
+}
+
+.inner {
+  pointer-events: auto; /* 只有inner响应点击 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+/* ============ 圆点指示器 ============ */
+
+.dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dot {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dot:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dotContent {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  z-index: 2;
+}
+
+.dotCurrent {
+  width: 40px;
+  height: 40px;
+  background: var(--dot-color);
+  box-shadow: 0 2px 12px var(--dot-color);
+}
+
+.dotCurrent .dotContent {
+  font-size: 18px;
+  color: white;
+}
+
+.dotLocked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dotLocked .dotContent {
+  font-size: 12px;
+}
+
+.dotCompleted {
+  background: rgba(34, 197, 94, 0.2);
+  border: 2px solid #22C55E;
+}
+
+.dotCompleted .dotContent {
+  color: #22C55E;
+}
+
+/* 进度环 */
+.progressRing {
+  position: absolute;
+  inset: -2px;
+  transform: rotate(-90deg);
+}
+
+.progressBg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 2;
+}
+
+.progressFill {
+  fill: none;
+  stroke: var(--dot-color);
+  stroke-width: 2;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.3s ease;
+}
+
+/* 当前指示器动画 */
+.currentIndicator {
+  position: absolute;
+  inset: -4px;
+  border: 2px solid var(--dot-color-secondary);
+  border-radius: 50%;
+  animation: currentPulse 2s ease-in-out infinite;
+}
+
+@keyframes currentPulse {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% { 
+    transform: scale(1.15);
+    opacity: 0.4;
+  }
+}
+
+/* ============ 区域名称 ============ */
+
+.regionName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+}
+
+.regionEmoji {
+  font-size: 16px;
+}
+
+.regionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+
+.regionProgress {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+/* ============ 响应式 ============ */
+
+/* 平板 */
+@media (min-width: 768px) {
+  .container {
+    padding: 20px;
+  }
+  
+  .dots {
+    gap: 12px;
+    padding: 10px 24px;
+  }
+  
+  .dot {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .dotCurrent {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .dotContent {
+    font-size: 16px;
+  }
+  
+  .dotCurrent .dotContent {
+    font-size: 22px;
+  }
+  
+  .regionName {
+    padding: 8px 20px;
+  }
+  
+  .regionTitle {
+    font-size: 16px;
+  }
+}
+
+/* PC */
+@media (min-width: 1024px) {
+  .container {
+    padding: 24px;
+  }
+  
+  .dots {
+    gap: 16px;
+    padding: 12px 32px;
+  }
+  
+  .dot {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .dotCurrent {
+    width: 52px;
+    height: 52px;
+  }
+}
+

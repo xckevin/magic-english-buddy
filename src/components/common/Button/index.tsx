@@ -11,7 +11,7 @@ import styles from './Button.module.css';
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
-interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'disabled'> {
+interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'disabled' | 'onAnimationStart' | 'onDragStart' | 'onDragEnd' | 'onDrag'> {
   /** 按钮变体 */
   variant?: ButtonVariant;
   /** 按钮尺寸 */
@@ -66,13 +66,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         className={clsx(
           styles.button,
-          styles[variant],
-          styles[size],
-          {
-            [styles.fullWidth]: fullWidth,
-            [styles.disabled]: isDisabled,
-            [styles.loading]: loading,
-          },
+          styles[variant as keyof typeof styles],
+          styles[size as keyof typeof styles],
+          fullWidth && styles.fullWidth,
+          isDisabled && styles.disabled,
+          loading && styles.loading,
           className
         )}
         disabled={isDisabled}

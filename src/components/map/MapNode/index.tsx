@@ -3,7 +3,7 @@
  * 地图上的单个节点，支持不同状态和类型
  */
 
-import React, { memo } from 'react';
+import { memo } from 'react';
 import type { MapNode } from '@/db';
 import styles from './MapNode.module.css';
 
@@ -42,6 +42,13 @@ const typeStyles: Record<string, { bg: string; border: string; glow: string }> =
   },
 };
 
+// 默认样式
+const defaultStyle = {
+  bg: 'linear-gradient(135deg, #6B5CE7 0%, #8B7CF7 100%)',
+  border: '#9B8CF7',
+  glow: 'rgba(107, 92, 231, 0.5)',
+};
+
 export const MapNodeComponent = memo<MapNodeProps>(({
   node,
   isActive = false,
@@ -49,10 +56,10 @@ export const MapNodeComponent = memo<MapNodeProps>(({
   size = 56,
 }) => {
   const nodeType = node.type || 'story';
-  const style = typeStyles[nodeType] || typeStyles.story;
+  const style = typeStyles[nodeType] ?? defaultStyle;
   const isLocked = !node.unlocked;
   const isCompleted = node.completed;
-  
+
   // 根据size计算各元素尺寸
   const iconSize = Math.round(size * 0.5);
   const pulseSize = Math.round(size * 1.1);
@@ -72,7 +79,7 @@ export const MapNodeComponent = memo<MapNodeProps>(({
       {isActive && !isLocked && (
         <div
           className={styles.pulse}
-          style={{ 
+          style={{
             background: style.glow,
             width: pulseSize,
             height: pulseSize,
@@ -98,7 +105,7 @@ export const MapNodeComponent = memo<MapNodeProps>(({
 
         {/* 完成标记 */}
         {isCompleted && (
-          <div 
+          <div
             className={styles.completeMark}
             style={{
               width: markSize,

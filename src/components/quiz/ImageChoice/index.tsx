@@ -24,14 +24,15 @@ export const ImageChoice: React.FC<ImageChoiceProps> = ({
 
   // 播放音频
   const playAudio = useCallback(() => {
-    if (question.audioQuestion) {
+    if (question.audioQuestion && typeof window !== 'undefined' && window.speechSynthesis) {
       setIsPlaying(true);
-      // 模拟音频播放
+      // 使用 Web Speech API 播放音频
       const utterance = new SpeechSynthesisUtterance(question.question);
       utterance.lang = 'en-US';
       utterance.rate = 0.8;
       utterance.onend = () => setIsPlaying(false);
-      speechSynthesis.speak(utterance);
+      utterance.onerror = () => setIsPlaying(false);
+      window.speechSynthesis.speak(utterance);
     }
   }, [question]);
 
@@ -52,11 +53,16 @@ export const ImageChoice: React.FC<ImageChoiceProps> = ({
     }, 300);
   }, [selectedOption, onAnswer]);
 
+  // 提示信息状态
+  const [hintMessage, setHintMessage] = useState<string | null>(null);
+
   // 使用提示
   const handleHint = useCallback(() => {
     onHint();
-    // 排除一个错误选项（简化实现）
-    alert('💡 提示：仔细听单词的发音！(-5 魔力值)');
+    // 显示提示信息
+    setHintMessage('💡 提示：仔细听单词的发音！(-5 魔力值)');
+    // 3秒后隐藏
+    setTimeout(() => setHintMessage(null), 3000);
   }, [onHint]);
 
   return (
@@ -105,8 +111,18 @@ export const ImageChoice: React.FC<ImageChoiceProps> = ({
         ))}
       </div>
 
-      {/* 提示按钮 */}
+      {/* 提示按钮和消息 */}
       <div className={styles.hintSection}>
+        {hintMessage && (
+          <motion.div
+            className={styles.hintMessage}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+          >
+            {hintMessage}
+          </motion.div>
+        )}
         <button className={styles.hintBtn} onClick={handleHint}>
           💡 提示 (-5 MP)
         </button>

@@ -58,9 +58,7 @@ export const ReaderControls = memo<ReaderControlsProps>(({
     <div className={styles.controls}>
       {/* 翻译按钮 */}
       <button
-        className={clsx(styles.controlBtn, styles.translationBtn, {
-          [styles.active]: showTranslation,
-        })}
+        className={clsx(styles.controlBtn, styles.translationBtn, showTranslation && styles.active)}
         onClick={onTranslationToggle}
         title={showTranslation ? '隐藏翻译' : '显示翻译'}
       >
@@ -80,9 +78,7 @@ export const ReaderControls = memo<ReaderControlsProps>(({
 
       {/* 播放/暂停按钮（主按钮） */}
       <motion.button
-        className={clsx(styles.controlBtn, styles.playBtn, {
-          [styles.playing]: isPlaying && !isPaused,
-        })}
+        className={clsx(styles.controlBtn, styles.playBtn, (isPlaying && !isPaused) && styles.playing)}
         onClick={onPlayPause}
         whileTap={{ scale: 0.95 }}
       >
@@ -100,9 +96,7 @@ export const ReaderControls = memo<ReaderControlsProps>(({
 
       {/* 跟读按钮 */}
       <button
-        className={clsx(styles.controlBtn, styles.recordBtn, {
-          [styles.recording]: isRecording,
-        })}
+        className={clsx(styles.controlBtn, styles.recordBtn, isRecording && styles.recording)}
         onClick={onRecordToggle}
         title={isRecording ? '停止录音' : '开始跟读'}
       >

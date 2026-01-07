@@ -39,7 +39,7 @@ const toastVariants = {
     opacity: 1, 
     y: 0, 
     scale: 1,
-    transition: { type: 'spring', damping: 20, stiffness: 300 }
+    transition: { type: 'spring' as const, damping: 20, stiffness: 300 }
   },
   exit: { opacity: 0, y: -20, scale: 0.9, transition: { duration: 0.2 } },
 };
@@ -163,7 +163,10 @@ export const ToastContainer: React.FC = () => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   useEffect(() => {
-    return toast.subscribe(setToasts);
+    const unsubscribe = toast.subscribe(setToasts);
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const content = (

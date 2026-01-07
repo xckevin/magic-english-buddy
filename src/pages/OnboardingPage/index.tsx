@@ -36,7 +36,7 @@ const OnboardingPage: React.FC = () => {
   const [dialogue, setDialogue] = useState('');
 
   // 长按孵化
-  const { progress, handlers, reset } = useLongPress({
+  const { progress, handlers, reset: _reset } = useLongPress({ // eslint-disable-line @typescript-eslint/no-unused-vars
     duration: 3000,
     onStart: () => {
       setEggState('awakening');

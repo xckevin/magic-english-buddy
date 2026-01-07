@@ -3,7 +3,7 @@
  * Buddy 头像显示，支持不同阶段和心情
  */
 
-import React, { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   type BuddyStage, 
@@ -71,7 +71,7 @@ export const BuddyAvatar = memo<BuddyAvatarProps>(({
       transition: {
         repeat: Infinity,
         duration: 2,
-        ease: 'easeInOut',
+        ease: 'easeInOut' as const,
       },
     },
     tap: {

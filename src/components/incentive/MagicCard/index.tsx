@@ -3,8 +3,8 @@
  * 魔法卡牌（单词卡）展示
  */
 
-import React, { memo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { memo, useState } from 'react';
+import { motion } from 'framer-motion';
 import styles from './MagicCard.module.css';
 
 type CardRarity = 'white' | 'green' | 'blue' | 'gold';

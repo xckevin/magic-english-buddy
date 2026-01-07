@@ -67,7 +67,7 @@ const sampleQuestions: QuizItem[] = [
 const QuizPage: React.FC = () => {
   const navigate = useNavigate();
   const { storyId } = useParams<{ storyId: string }>();
-  const { currentUser } = useAppStore();
+  const currentUserId = useAppStore((state) => state.currentUserId);
 
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState<QuizItem[]>([]);
@@ -104,10 +104,10 @@ const QuizPage: React.FC = () => {
   const handleComplete = useCallback(async (result: QuizResultData) => {
     try {
       // 保存结果到数据库
-      if (currentUser && storyId) {
+      if (currentUserId && storyId) {
         await db.quizHistory.add({
           id: crypto.randomUUID(),
-          userId: currentUser.id,
+          userId: currentUserId,
           storyId,
           quizType: 'story_quiz',
           questions: result.answers.map(a => ({
@@ -123,9 +123,9 @@ const QuizPage: React.FC = () => {
         });
 
         // 更新用户进度
-        const progress = await db.userProgress.get(currentUser.id);
+        const progress = await db.userProgress.get(currentUserId);
         if (progress) {
-          await db.userProgress.update(currentUser.id, {
+          await db.userProgress.update(currentUserId, {
             magicPower: progress.magicPower + result.earnedMagicPower,
           });
         }
@@ -154,7 +154,7 @@ const QuizPage: React.FC = () => {
       console.error('Failed to save quiz result:', error);
       navigate('/map');
     }
-  }, [currentUser, storyId, navigate]);
+  }, [currentUserId, storyId, navigate]);
 
   // 退出
   const handleExit = useCallback(() => {

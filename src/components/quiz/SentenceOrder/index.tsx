@@ -14,22 +14,31 @@ interface SentenceOrderProps {
   onHint: () => void;
 }
 
+// 带唯一ID的单词类型
+interface WordWithId {
+  id: string;
+  word: string;
+}
+
 export const SentenceOrder: React.FC<SentenceOrderProps> = ({
   question,
   onAnswer,
   onHint,
 }) => {
-  // 打乱的单词
+  // 打乱的单词 - 为每个单词生成唯一ID，防止重复单词key冲突
   const shuffledWords = question.shuffledWords || [];
   
-  // 当前排序
-  const [orderedWords, setOrderedWords] = useState<string[]>(shuffledWords);
+  // 当前排序（带唯一ID）
+  const [orderedWords, setOrderedWords] = useState<WordWithId[]>(
+    () => shuffledWords.map((word, index) => ({ id: `word-${index}`, word }))
+  );
   const [submitted, setSubmitted] = useState(false);
 
   // 提交答案
   const handleSubmit = useCallback(() => {
     setSubmitted(true);
-    onAnswer(orderedWords);
+    // 提取单词数组
+    onAnswer(orderedWords.map(w => w.word));
   }, [orderedWords, onAnswer]);
 
   // 使用提示
@@ -40,8 +49,10 @@ export const SentenceOrder: React.FC<SentenceOrderProps> = ({
     if (correctOrder.length > 0) {
       const firstWord = correctOrder[0];
       setOrderedWords(prev => {
-        const filtered = prev.filter(w => w !== firstWord);
-        return [firstWord, ...filtered];
+        const targetItem = prev.find(w => w.word === firstWord);
+        if (!targetItem) return prev;
+        const filtered = prev.filter(w => w.id !== targetItem.id);
+        return [targetItem, ...filtered];
       });
     }
   }, [onHint, question.correctOrder]);
@@ -62,15 +73,15 @@ export const SentenceOrder: React.FC<SentenceOrderProps> = ({
           onReorder={setOrderedWords}
           className={styles.wordList}
         >
-          {orderedWords.map((word, index) => (
+          {orderedWords.map((item, index) => (
             <Reorder.Item
-              key={word}
-              value={word}
+              key={item.id}
+              value={item}
               className={styles.wordItem}
               whileDrag={{ scale: 1.1, zIndex: 10 }}
             >
               <span className={styles.wordIndex}>{index + 1}</span>
-              <span className={styles.wordText}>{word}</span>
+              <span className={styles.wordText}>{item.word}</span>
             </Reorder.Item>
           ))}
         </Reorder.Group>
@@ -82,7 +93,7 @@ export const SentenceOrder: React.FC<SentenceOrderProps> = ({
       <div className={styles.preview}>
         <p className={styles.previewLabel}>当前句子：</p>
         <p className={styles.previewText}>
-          {orderedWords.join(' ')}
+          {orderedWords.map(w => w.word).join(' ')}
         </p>
       </div>
 

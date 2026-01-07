@@ -106,7 +106,7 @@ function getWordBaseForms(word: string): string[] {
  * 清理单词（移除标点）
  */
 function cleanWord(word: string): string {
-  return word.replace(/[.,!?;:'"()\[\]{}]/g, '').toLowerCase().trim();
+  return word.replace(/[.,!?;:'"()[\]{}]/g, '').toLowerCase().trim();
 }
 
 class DictionaryService {

@@ -95,6 +95,8 @@ export interface Story {
     magicPower: number;
     cards: string[];
   };
+  /** 节点类型：用于地图显示 */
+  nodeType?: 'story' | 'boss' | 'bonus' | 'challenge';
   metadata: {
     wordCount: number;
     estimatedTime: number;
@@ -268,7 +270,7 @@ export const generateId = (): string => {
  * 获取当前日期字符串 (YYYY-MM-DD)
  */
 export const getTodayString = (): string => {
-  return new Date().toISOString().split('T')[0];
+  return new Date().toISOString().split('T')[0] ?? new Date().toISOString().slice(0, 10);
 };
 
 /**
@@ -344,11 +346,22 @@ export const updateUserActivity = async (userId: string): Promise<void> => {
 
   if (progress) {
     const lastDate = progress.lastStudyDate;
-    const isConsecutive = isConsecutiveDay(lastDate, today);
-
+    
+    // 如果今天已经更新过，不再增加连续天数
+    if (lastDate === today) {
+      // 今天已经学习过，只更新活跃时间
+      await db.users.update(userId, {
+        lastActiveAt: Date.now(),
+      });
+      return;
+    }
+    
+    const dayDiff = getDayDifference(lastDate, today);
+    
     await db.userProgress.update(userId, {
       lastStudyDate: today,
-      streakDays: isConsecutive ? progress.streakDays + 1 : 1,
+      // 如果是连续的第二天，增加连续天数；否则重置为1
+      streakDays: dayDiff === 1 ? progress.streakDays + 1 : 1,
     });
   }
 
@@ -358,14 +371,14 @@ export const updateUserActivity = async (userId: string): Promise<void> => {
 };
 
 /**
- * 检查是否连续天数
+ * 计算两个日期之间的天数差
  */
-const isConsecutiveDay = (lastDate: string, today: string): boolean => {
-  const last = new Date(lastDate);
-  const current = new Date(today);
-  const diffTime = current.getTime() - last.getTime();
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays === 1;
+const getDayDifference = (dateStr1: string, dateStr2: string): number => {
+  // 使用 UTC 时间避免时区问题
+  const date1 = new Date(dateStr1 + 'T00:00:00Z');
+  const date2 = new Date(dateStr2 + 'T00:00:00Z');
+  const diffTime = date2.getTime() - date1.getTime();
+  return Math.floor(diffTime / (1000 * 60 * 60 * 24));
 };
 
 export default db;

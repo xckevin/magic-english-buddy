@@ -3,7 +3,7 @@
  * 支持离线数据通过二维码传输
  */
 
-import { db, type User, type UserProgress } from '@/db';
+import { db } from '@/db';
 
 // 同步数据结构
 export interface SyncData {

@@ -49,8 +49,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   
-  // 拖动位置
-  const x = useMotionValue(0);
+  // 拖动位置（只使用垂直滚动）
   const y = useMotionValue(0);
   
   // 约束范围
@@ -114,7 +113,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     );
     
     // 计算每个节点的位置（蛇形布局）
-    const positions = nodes.map((node, index) => {
+    const positions = nodes.map((_node, index) => {
       const row = Math.floor(index / nodesPerRow);
       const colInRow = index % nodesPerRow;
       
@@ -134,7 +133,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     });
     
     return { nodesPerRow, nodeSize, rowHeight, positions, canvasHeight };
-  }, [containerSize, nodes.length]);
+  }, [containerSize, nodes]);
 
   // 计算画布尺寸
   const canvasWidth = containerSize.width;
@@ -159,8 +158,8 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   useEffect(() => {
     if (activeNodeId && containerSize.width > 0 && layout.positions.length > 0) {
       const activeIndex = nodes.findIndex(n => n.id === activeNodeId);
-      if (activeIndex >= 0) {
-        const pos = layout.positions[activeIndex];
+      const pos = layout.positions[activeIndex];
+      if (activeIndex >= 0 && pos) {
         const targetY = -(pos.y - containerSize.height / 2);
         
         const clampedY = Math.max(
@@ -199,10 +198,10 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   }, [nodes, layout.positions]);
 
   // 获取节点连接
-  const connections = layoutNodes.slice(1).map((node, index) => ({
-    from: layoutNodes[index],
-    to: node,
-  }));
+  const connections = layoutNodes.slice(1).map((node, index) => {
+    const fromNode = layoutNodes[index];
+    return fromNode ? { from: fromNode, to: node } : null;
+  }).filter((conn): conn is { from: typeof layoutNodes[0]; to: typeof layoutNodes[0] } => conn !== null);
 
   // 如果还没有尺寸，显示加载
   if (containerSize.width === 0) {

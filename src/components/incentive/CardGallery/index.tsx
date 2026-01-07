@@ -3,7 +3,7 @@
  * 卡牌图鉴展示页面
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MagicCard } from '../MagicCard';
 import type { CardData } from '@/services/cardCollectionService';
@@ -40,9 +40,10 @@ export const CardGallery: React.FC<CardGalleryProps> = ({
     switch (sortBy) {
       case 'recent':
         return b.obtainedAt - a.obtainedAt;
-      case 'rarity':
+      case 'rarity': {
         const rarityOrder: CardRarity[] = ['gold', 'blue', 'green', 'white'];
         return rarityOrder.indexOf(a.rarity) - rarityOrder.indexOf(b.rarity);
+      }
       case 'mastery':
         return b.masteryLevel - a.masteryLevel;
       default:

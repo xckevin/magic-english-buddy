@@ -3,7 +3,7 @@
  * 迷雾遮罩效果，只显示已解锁区域
  */
 
-import React, { memo, useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import type { MapNode } from '@/db';
 import styles from './FogOverlay.module.css';

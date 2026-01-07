@@ -3,8 +3,8 @@
  * 单词拼装题型 - 拖拽字母组成单词
  */
 
-import React, { useState, useCallback } from 'react';
-import { motion, Reorder } from 'framer-motion';
+import React, { useState, useCallback, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import type { QuizItem } from '@/db';
 import styles from './WordBuilder.module.css';
 
@@ -19,13 +19,18 @@ export const WordBuilder: React.FC<WordBuilderProps> = ({
   onAnswer,
   onHint,
 }) => {
-  // 打乱的字母
-  const shuffledLetters = question.shuffledWords || [];
+  // 打乱的字母 - 使用 useMemo 确保只在 question 变化时重新计算
+  const shuffledLetters = useMemo(() => 
+    question.shuffledWords || [], 
+    [question.shuffledWords]
+  );
   
   // 已选择的字母
   const [selectedLetters, setSelectedLetters] = useState<string[]>([]);
-  // 剩余可选字母
-  const [availableLetters, setAvailableLetters] = useState<string[]>(shuffledLetters);
+  // 剩余可选字母 - 使用初始化函数避免每次渲染重新计算
+  const [availableLetters, setAvailableLetters] = useState<string[]>(() => 
+    question.shuffledWords || []
+  );
 
   // 选择字母
   const handleSelectLetter = useCallback((letter: string, index: number) => {
@@ -36,6 +41,7 @@ export const WordBuilder: React.FC<WordBuilderProps> = ({
   // 移除字母
   const handleRemoveLetter = useCallback((index: number) => {
     const letter = selectedLetters[index];
+    if (!letter) return;
     setSelectedLetters(prev => prev.filter((_, i) => i !== index));
     setAvailableLetters(prev => [...prev, letter]);
   }, [selectedLetters]);
@@ -57,8 +63,8 @@ export const WordBuilder: React.FC<WordBuilderProps> = ({
     onHint();
     // 显示第一个字母
     const correctAnswer = question.correctAnswer || '';
-    if (correctAnswer.length > 0 && selectedLetters.length === 0) {
-      const firstLetter = correctAnswer[0];
+    const firstLetter = correctAnswer[0];
+    if (correctAnswer.length > 0 && selectedLetters.length === 0 && firstLetter) {
       const letterIndex = availableLetters.indexOf(firstLetter);
       if (letterIndex !== -1) {
         handleSelectLetter(firstLetter, letterIndex);

@@ -19,11 +19,13 @@ export default [
         }
       },
       globals: {
+        // Browser globals
         window: 'readonly',
         document: 'readonly',
         navigator: 'readonly',
         console: 'readonly',
         localStorage: 'readonly',
+        sessionStorage: 'readonly',
         indexedDB: 'readonly',
         fetch: 'readonly',
         URL: 'readonly',
@@ -44,12 +46,41 @@ export default [
         MediaRecorder: 'readonly',
         SpeechSynthesis: 'readonly',
         SpeechSynthesisUtterance: 'readonly',
+        SpeechSynthesisVoice: 'readonly',
         crypto: 'readonly',
         atob: 'readonly',
         btoa: 'readonly',
         Image: 'readonly',
         Audio: 'readonly',
-        process: 'readonly'
+        process: 'readonly',
+        alert: 'readonly',
+        confirm: 'readonly',
+        prompt: 'readonly',
+        // React
+        React: 'readonly',
+        // DOM Types
+        HTMLElement: 'readonly',
+        HTMLDivElement: 'readonly',
+        HTMLButtonElement: 'readonly',
+        HTMLInputElement: 'readonly',
+        HTMLAudioElement: 'readonly',
+        HTMLCanvasElement: 'readonly',
+        Element: 'readonly',
+        Event: 'readonly',
+        MouseEvent: 'readonly',
+        KeyboardEvent: 'readonly',
+        TouchEvent: 'readonly',
+        Touch: 'readonly',
+        PointerEvent: 'readonly',
+        ResizeObserver: 'readonly',
+        IntersectionObserver: 'readonly',
+        MutationObserver: 'readonly',
+        MediaStream: 'readonly',
+        MediaQueryList: 'readonly',
+        MediaQueryListEvent: 'readonly',
+        // Node.js
+        global: 'readonly',
+        NodeJS: 'readonly'
       }
     },
     plugins: {

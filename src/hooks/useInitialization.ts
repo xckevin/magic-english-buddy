@@ -32,7 +32,7 @@ interface InitializationResult {
  */
 export const useInitialization = (): InitializationResult => {
   const navigate = useNavigate();
-  const { setCurrentUser, isFirstLaunch, setFirstLaunchComplete } = useAppStore();
+  const { setCurrentUser, isFirstLaunch } = useAppStore();
 
   const [state, setState] = useState<InitializationState>({
     isChecking: true,

@@ -5,7 +5,6 @@
 
 import type { Story, DictionaryEntry, MapNode } from '@/db';
 import {
-  allStories,
   allDictionary,
   getStoryById,
   getStoriesByRegion,

@@ -3,7 +3,7 @@
  * Quiz 练习容器，管理题目流程和状态
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { QuizItem } from '@/db';
 import { QuizProgress } from '../QuizProgress';
@@ -44,7 +44,7 @@ type QuizState = 'playing' | 'feedback' | 'result';
 
 export const QuizContainer: React.FC<QuizContainerProps> = ({
   questions,
-  storyId,
+  storyId: _storyId, // 保留供后续扩展使用
   onComplete,
   onExit,
 }) => {
@@ -63,6 +63,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
 
   // 提交答案
   const handleAnswer = useCallback((userAnswer: string | string[]) => {
+    if (!currentQuestion) return;
     const correct = checkAnswer(currentQuestion, userAnswer);
     setIsCorrect(correct);
     setAnswers(prev => [...prev, {
@@ -179,7 +180,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
           </motion.div>
         )}
 
-        {quizState === 'feedback' && (
+        {quizState === 'feedback' && currentQuestion && (
           <motion.div
             key="feedback"
             className={styles.feedbackArea}

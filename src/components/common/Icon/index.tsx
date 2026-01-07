@@ -140,7 +140,7 @@ export const Icon: React.FC<IconProps> = ({
 
   return (
     <span
-      className={clsx(styles.icon, { [styles.clickable]: onClick }, className)}
+      className={clsx(styles.icon, onClick && styles.clickable, className)}
       style={{ color }}
       onClick={onClick}
     >

@@ -5,7 +5,7 @@
  */
 
 import type { MapNode, MapRegion } from '@/db';
-import { levelDataMap, allRegions } from './index';
+import { levelDataMap } from './index';
 import type { LevelNumber } from './index';
 
 // 重新导出 LevelNumber 供外部使用
@@ -168,11 +168,11 @@ export const findActiveNode = (nodes: UnifiedMapNode[]): UnifiedMapNode | null =
   // 如果全部完成，返回最后一个已完成的
   const completedNodes = nodes.filter(n => n.completed);
   if (completedNodes.length > 0) {
-    return completedNodes[completedNodes.length - 1];
+    return completedNodes[completedNodes.length - 1] ?? null;
   }
   
   // 否则返回第一个节点
-  return nodes[0] || null;
+  return nodes[0] ?? null;
 };
 
 /**

@@ -3,10 +3,11 @@
  * 半透明毛玻璃效果的顶部状态栏
  */
 
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/stores/useAppStore';
+import { db, type User } from '@/db';
 import { getTotalProgress, type UnifiedMapNode } from '@/data/unifiedMap';
 import styles from './styles.module.css';
 
@@ -16,7 +17,15 @@ interface FloatingHeaderProps {
 
 const FloatingHeader: React.FC<FloatingHeaderProps> = memo(({ nodes }) => {
   const navigate = useNavigate();
-  const { currentUser } = useAppStore();
+  const { currentUserId } = useAppStore();
+  const [user, setUser] = useState<User | null>(null);
+  
+  // 加载用户数据
+  useEffect(() => {
+    if (currentUserId) {
+      db.users.get(currentUserId).then(u => setUser(u ?? null));
+    }
+  }, [currentUserId]);
   
   const totalProgress = getTotalProgress(nodes);
   
@@ -38,10 +47,10 @@ const FloatingHeader: React.FC<FloatingHeaderProps> = memo(({ nodes }) => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          {currentUser?.buddyName?.charAt(0) || '🐣'}
+          {user?.buddyName?.charAt(0) || '🐣'}
         </motion.div>
         <div className={styles.userInfo}>
-          <span className={styles.userName}>{currentUser?.name || '小魔法师'}</span>
+          <span className={styles.userName}>{user?.name || '小魔法师'}</span>
           <div className={styles.userLevel}>
             <span className={styles.levelBadge}>Lv.{Math.floor(totalProgress.completed / 10) + 1}</span>
           </div>

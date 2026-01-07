@@ -3,8 +3,14 @@
  * 包含所有必要的 Provider
  */
 
+/// <reference lib="dom" />
+/// <reference lib="dom.iterable" />
+
+/* eslint-disable no-undef */
+
 import React, { ReactElement } from 'react';
-import { render, RenderOptions, RenderResult } from '@testing-library/react';
+import { render, RenderOptions, RenderResult, waitFor } from '@testing-library/react';
+import { expect } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 
 // 所有 Provider 的包装器
@@ -37,7 +43,6 @@ export { customRender as render };
 
 // 额外的测试工具
 export const waitForLoadingToFinish = async () => {
-  const { waitFor } = await import('@testing-library/react');
   await waitFor(() => {
     expect(document.querySelector('[data-testid="loading"]')).not.toBeInTheDocument();
   }, { timeout: 5000 });

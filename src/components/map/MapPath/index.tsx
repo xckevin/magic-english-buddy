@@ -3,7 +3,7 @@
  * 节点之间的连接路径
  */
 
-import React, { memo, useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { motion } from 'framer-motion';
 
 interface MapPathProps {

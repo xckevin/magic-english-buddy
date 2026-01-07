@@ -54,10 +54,11 @@ export const WordHighlight = memo<WordHighlightProps>(({
 
   return (
     <motion.span
-      className={clsx(styles.word, {
-        [styles.highlighted]: isHighlighted,
-        [styles.learned]: isLearned,
-      })}
+      className={clsx(
+        styles.word,
+        isHighlighted && styles.highlighted,
+        isLearned && styles.learned
+      )}
       variants={variants}
       animate={isHighlighted ? 'highlighted' : 'normal'}
       onClick={handleClick}

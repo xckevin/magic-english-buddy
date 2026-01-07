@@ -16,9 +16,12 @@ interface MapNodeProps {
   style?: React.CSSProperties;
 }
 
+// 默认样式配置
+const defaultTypeStyle = { color: '#6B5CE7', icon: '📖', size: 'md' as const };
+
 const MapNode: React.FC<MapNodeProps> = memo(({ node, isActive, onClick, style }) => {
   const visual = getNodeVisualConfig(node);
-  const typeStyle = nodeTypeStyles[node.type] || nodeTypeStyles.story;
+  const typeStyle = nodeTypeStyles[node.type] ?? defaultTypeStyle;
   
   const handleClick = useCallback(() => {
     if (node.unlocked) {
@@ -31,7 +34,7 @@ const MapNode: React.FC<MapNodeProps> = memo(({ node, isActive, onClick, style }
     sm: styles.nodeSm,
     md: styles.nodeMd,
     lg: styles.nodeLg,
-  }[typeStyle.size];
+  }[typeStyle.size] ?? styles.nodeMd;
   
   return (
     <motion.div

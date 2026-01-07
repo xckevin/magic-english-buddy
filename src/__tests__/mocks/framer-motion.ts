@@ -3,38 +3,47 @@
  * 用于测试环境中模拟 framer-motion 组件
  */
 
+/// <reference lib="dom" />
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import React from 'react';
 import { vi } from 'vitest';
 
+// 支持的 HTML 标签类型
+type MotionTag = 'div' | 'span' | 'button' | 'a' | 'ul' | 'li' | 'img' | 'svg' | 'path' | 'circle' | 
+  'section' | 'article' | 'header' | 'footer' | 'nav' | 'main' | 'aside' | 'form' | 'input' | 
+  'label' | 'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+
 // Mock motion 组件 - 简单地渲染 HTML 元素
-const createMotionComponent = (tag: keyof JSX.IntrinsicElements) => {
+const createMotionComponent = (tag: MotionTag) => {
   return React.forwardRef<any, any>((props, ref) => {
     const {
       // 过滤掉 framer-motion 特有的 props
-      initial,
-      animate,
-      exit,
-      variants,
-      transition,
-      whileHover,
-      whileTap,
-      whileFocus,
-      whileDrag,
-      whileInView,
-      drag,
-      dragConstraints,
-      dragElastic,
-      dragMomentum,
-      dragTransition,
-      dragControls,
-      dragListener,
-      onDragStart,
-      onDrag,
-      onDragEnd,
-      layout,
-      layoutId,
-      onAnimationStart,
-      onAnimationComplete,
+      initial: _initial,
+      animate: _animate,
+      exit: _exit,
+      variants: _variants,
+      transition: _transition,
+      whileHover: _whileHover,
+      whileTap: _whileTap,
+      whileFocus: _whileFocus,
+      whileDrag: _whileDrag,
+      whileInView: _whileInView,
+      drag: _drag,
+      dragConstraints: _dragConstraints,
+      dragElastic: _dragElastic,
+      dragMomentum: _dragMomentum,
+      dragTransition: _dragTransition,
+      dragControls: _dragControls,
+      dragListener: _dragListener,
+      onDragStart: _onDragStart,
+      onDrag: _onDrag,
+      onDragEnd: _onDragEnd,
+      layout: _layout,
+      layoutId: _layoutId,
+      onAnimationStart: _onAnimationStart,
+      onAnimationComplete: _onAnimationComplete,
       ...rest
     } = props;
     return React.createElement(tag, { ...rest, ref });

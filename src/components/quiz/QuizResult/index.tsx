@@ -21,7 +21,6 @@ export const QuizResult: React.FC<QuizResultProps> = ({
   onRetry,
 }) => {
   const isPassed = result.score >= 60;
-  const isExcellent = result.score >= 90;
 
   // 获取评价
   const getGrade = () => {

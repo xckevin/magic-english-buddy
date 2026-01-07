@@ -202,8 +202,9 @@ export const getRegionIdByLevel = (level: LevelNumber): string => {
  */
 export const getLevelFromRegionId = (regionId: string): LevelNumber | null => {
   const match = regionId.match(/region_l(\d)/);
-  if (match) {
-    const level = parseInt(match[1], 10) as LevelNumber;
+  const matchedDigit = match?.[1];
+  if (matchedDigit) {
+    const level = parseInt(matchedDigit, 10) as LevelNumber;
     if (level >= 1 && level <= 7) {
       return level;
     }

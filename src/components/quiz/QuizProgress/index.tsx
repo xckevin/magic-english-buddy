@@ -3,7 +3,7 @@
  * 进度指示器
  */
 
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import styles from './QuizProgress.module.css';
 

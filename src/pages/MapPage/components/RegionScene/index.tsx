@@ -38,7 +38,7 @@ const RegionScene: React.FC<RegionSceneProps> = memo(({
   nodes,
   progress,
   isUnlocked,
-  isCurrent,
+  isCurrent: _isCurrent, // eslint-disable-line @typescript-eslint/no-unused-vars
   isActive,
   activeNodeId,
   onNodeClick,

@@ -2,6 +2,9 @@
  * MapNode 组件测试
  */
 
+/// <reference lib="dom" />
+/* eslint-disable no-undef */
+
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '../../utils/render';
 import { MapNodeComponent } from '@/components/map/MapNode';

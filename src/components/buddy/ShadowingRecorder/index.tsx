@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { audioRecorderService, type RecordingState } from '@/services/audioRecorderService';
 import styles from './ShadowingRecorder.module.css';
 

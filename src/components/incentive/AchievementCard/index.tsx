@@ -3,7 +3,7 @@
  * 成就卡片展示
  */
 
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import styles from './AchievementCard.module.css';
 
@@ -27,7 +27,7 @@ interface AchievementCardProps {
 }
 
 export const AchievementCard = memo<AchievementCardProps>(({
-  name,
+  name: _name, // 英文名称，保留供未来使用
   nameCn,
   description,
   icon,

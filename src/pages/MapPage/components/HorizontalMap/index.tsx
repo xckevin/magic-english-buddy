@@ -224,7 +224,8 @@ const HorizontalMap: React.FC<HorizontalMapProps> = ({ onNodeClick }) => {
     if (!scrollRef.current) return;
     
     const regionWidth = scrollRef.current.offsetWidth;
-    const currentX = scrollX.get();
+    // scrollX.get() 保留以备将来使用
+    void scrollX.get();
     const velocity = info.velocity.x;
     const offset = info.offset.x;
     

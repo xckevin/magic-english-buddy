@@ -222,19 +222,41 @@ class ReadingProgressService {
       if (node) {
         await db.mapNodes.update(node.id, { 
           completed: true,
-          completedAt: Date.now()
         });
         
-        // 解锁后续节点
-        if (node.nextNodes && node.nextNodes.length > 0) {
-          for (const nextNodeId of node.nextNodes) {
-            await db.mapNodes.update(nextNodeId, { unlocked: true });
+        // 解锁后续节点：查找所有将当前节点作为前置条件的节点
+        const dependentNodes = await db.mapNodes
+          .filter(n => n.prerequisites?.includes(node.id))
+          .toArray();
+        
+        for (const nextNode of dependentNodes) {
+          // 检查该节点的所有前置条件是否都已完成
+          const allPrereqsCompleted = await this.checkAllPrerequisitesCompleted(nextNode.prerequisites);
+          if (allPrereqsCompleted) {
+            await db.mapNodes.update(nextNode.id, { unlocked: true });
           }
         }
       }
     } catch (error) {
       console.error('Failed to mark story as completed:', error);
     }
+  }
+
+  /**
+   * 检查所有前置条件是否已完成
+   */
+  private async checkAllPrerequisitesCompleted(prerequisites: string[]): Promise<boolean> {
+    if (!prerequisites || prerequisites.length === 0) {
+      return true;
+    }
+    
+    for (const prereqId of prerequisites) {
+      const prereqNode = await db.mapNodes.get(prereqId);
+      if (!prereqNode || !prereqNode.completed) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**

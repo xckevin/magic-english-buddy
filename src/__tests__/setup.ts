@@ -3,6 +3,13 @@
  * 在所有测试之前运行
  */
 
+/// <reference lib="dom" />
+/// <reference lib="dom.iterable" />
+/// <reference types="node" />
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-undef */
+
 import { expect, afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';

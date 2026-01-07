@@ -113,7 +113,7 @@ export const MagicEgg: React.FC<MagicEggProps> = ({
       opacity: 1,
       y: 0,
       transition: {
-        type: 'spring',
+        type: 'spring' as const,
         damping: 15,
         stiffness: 200,
         delay: 0.3,

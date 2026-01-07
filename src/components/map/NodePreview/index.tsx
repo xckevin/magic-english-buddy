@@ -3,7 +3,7 @@
  * 点击节点时弹出的预览面板
  */
 
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { MapNode } from '@/db';
 import { Button } from '@/components/common';
@@ -19,6 +19,9 @@ interface NodePreviewProps {
   /** 开始按钮回调 */
   onStart: (node: MapNode) => void;
 }
+
+// 默认配置
+const defaultConfig = { label: '故事', color: '#6B5CE7', icon: '📖' };
 
 // 节点类型配置
 const typeConfig: Record<string, { label: string; color: string; icon: string }> = {
@@ -36,7 +39,7 @@ export const NodePreview = memo<NodePreviewProps>(({
 }) => {
   if (!node) return null;
 
-  const config = typeConfig[node.type || 'story'] || typeConfig.story;
+  const config = typeConfig[node.type || 'story'] ?? defaultConfig;
   
   // 获取奖励描述
   const getRewardText = () => {

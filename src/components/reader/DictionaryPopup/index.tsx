@@ -73,7 +73,7 @@ export const DictionaryPopup: React.FC<DictionaryPopupProps> = ({
       opacity: 1, 
       y: 0, 
       scale: 1,
-      transition: { type: 'spring', damping: 25, stiffness: 300 }
+      transition: { type: 'spring' as const, damping: 25, stiffness: 300 }
     },
     exit: { opacity: 0, y: 20, scale: 0.95 }
   };

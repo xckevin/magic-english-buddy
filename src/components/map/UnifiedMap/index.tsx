@@ -11,7 +11,7 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { db, type MapNode as DBMapNode } from '@/db';
+import { db } from '@/db';
 import {
   generateUnifiedMapData,
   mergeNodeStates,
@@ -145,7 +145,6 @@ const UnifiedMap: React.FC<UnifiedMapProps> = ({ onNodeClick, loading: externalL
     if (nodes.length === 0) return null;
 
     const items: React.ReactNode[] = [];
-    let currentSectionIndex = 0;
 
     // 反转节点顺序（从高到低显示，但视觉上从下往上）
     const reversedNodes = [...nodes].reverse();
@@ -173,17 +172,17 @@ const UnifiedMap: React.FC<UnifiedMapProps> = ({ onNodeClick, loading: externalL
       }
 
       // 添加连接线（不是最后一个节点时）
-      if (index < reversedNodes.length - 1) {
-        const nextNode = reversedNodes[index + 1];
+      const nextNode = reversedNodes[index + 1];
+      if (index < reversedNodes.length - 1 && nextNode) {
         const isActive = node.unlocked || nextNode.unlocked;
-        const isCompleted = node.completed && nextNode.completed;
+        const isCompleted = Boolean(node.completed && nextNode.completed);
         
         items.push(
           <PathConnector
             key={`path-${node.id}`}
             fromNode={nextNode}
             toNode={node}
-            isActive={isActive}
+            isActive={Boolean(isActive)}
             isCompleted={isCompleted}
           />
         );

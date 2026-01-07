@@ -3,7 +3,7 @@
  * 可用于包裹全局 Provider
  */
 
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useAppStore } from '@/stores/useAppStore';
 

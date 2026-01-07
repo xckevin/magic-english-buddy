@@ -235,6 +235,19 @@
   background: rgba(239, 68, 68, 0.1);
 }
 
+.actionHighlight {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.actionHighlight:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(139, 92, 246, 0.25) 100%);
+}
+
+.actionHighlight .actionIcon {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%);
+}
+
 .actionIcon {
   width: 40px;
   height: 40px;

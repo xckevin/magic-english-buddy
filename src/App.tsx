@@ -6,6 +6,7 @@
 import React, { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useAppStore } from '@/stores/useAppStore';
+import { InstallPrompt } from '@/components/common';
 
 const App: React.FC = () => {
   const setOffline = useAppStore((state) => state.setOffline);
@@ -24,7 +25,13 @@ const App: React.FC = () => {
     };
   }, [setOffline]);
 
-  return <Outlet />;
+  return (
+    <>
+      <Outlet />
+      {/* PWA 安装引导 */}
+      <InstallPrompt />
+    </>
+  );
 };
 
 export default App;

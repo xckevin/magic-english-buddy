@@ -7,6 +7,8 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore, useSettings } from '@/stores/useAppStore';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { InstallPrompt } from '@/components/common';
 import { db } from '@/db';
 import styles from './SettingsPage.module.css';
 
@@ -142,10 +144,12 @@ const SettingsPage: React.FC = () => {
     const navigate = useNavigate();
     const settings = useSettings();
     const { updateSettings, resetSettings } = useAppStore();
+    const { canInstall, isInstalled, isStandalone } = usePWAInstall();
 
     // 弹窗状态
     const [showResetDialog, setShowResetDialog] = useState(false);
     const [showClearDataDialog, setShowClearDataDialog] = useState(false);
+    const [showInstallPrompt, setShowInstallPrompt] = useState(false);
     const [isClearing, setIsClearing] = useState(false);
 
     // 处理设置更新
@@ -252,6 +256,28 @@ const SettingsPage: React.FC = () => {
                     </div>
                 </section>
 
+                {/* 应用安装 - 仅在未安装时显示 */}
+                {canInstall && !isInstalled && !isStandalone && (
+                    <section className={styles.section}>
+                        <h2 className={styles.sectionTitle}>📲 应用安装</h2>
+                        <div className={styles.sectionContent}>
+                            <motion.button
+                                className={`${styles.actionButton} ${styles.actionHighlight}`}
+                                onClick={() => setShowInstallPrompt(true)}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                <span className={styles.actionIcon}>✨</span>
+                                <span className={styles.actionText}>
+                                    <strong>添加到桌面</strong>
+                                    <small>像原生应用一样快速启动</small>
+                                </span>
+                                <span className={styles.actionArrow}>›</span>
+                            </motion.button>
+                        </div>
+                    </section>
+                )}
+
                 {/* 数据管理 */}
                 <section className={styles.section}>
                     <h2 className={styles.sectionTitle}>📦 数据管理</h2>
@@ -335,6 +361,13 @@ const SettingsPage: React.FC = () => {
                 onConfirm={handleClearData}
                 onCancel={() => setShowClearDataDialog(false)}
                 danger
+            />
+
+            {/* PWA 安装引导弹窗 */}
+            <InstallPrompt
+                open={showInstallPrompt}
+                onClose={() => setShowInstallPrompt(false)}
+                onInstalled={() => setShowInstallPrompt(false)}
             />
         </div>
     );

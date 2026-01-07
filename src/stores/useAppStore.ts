@@ -35,6 +35,9 @@ interface AppState {
   // 网络状态
   isOffline: boolean;
 
+  // PWA 安装状态
+  pwaInstallDismissed: boolean;
+
   // 当前阅读状态
   currentStoryId: string | null;
   currentParagraphIndex: number;
@@ -78,6 +81,9 @@ interface AppActions {
   setQuizIndex: (index: number) => void;
   setQuizAnswer: (questionId: string, answer: string | string[]) => void;
   resetQuizState: () => void;
+
+  // PWA 安装
+  setPwaInstallDismissed: (dismissed: boolean) => void;
 }
 
 // ============ 默认值 ============
@@ -98,6 +104,7 @@ const initialState: AppState = {
   isLoading: false,
   loadingMessage: '',
   isOffline: typeof navigator !== 'undefined' ? !navigator.onLine : false,
+  pwaInstallDismissed: false,
   currentStoryId: null,
   currentParagraphIndex: 0,
   activeWordIndex: null,
@@ -208,6 +215,12 @@ export const useAppStore = create<AppState & AppActions>()(
           state.currentQuizIndex = 0;
           state.quizAnswers = {};
         }),
+
+      // PWA 安装
+      setPwaInstallDismissed: (dismissed) =>
+        set((state) => {
+          state.pwaInstallDismissed = dismissed;
+        }),
     })),
     {
       name: 'magic-english-storage',
@@ -216,6 +229,7 @@ export const useAppStore = create<AppState & AppActions>()(
         currentUserId: state.currentUserId,
         isFirstLaunch: state.isFirstLaunch,
         settings: state.settings,
+        pwaInstallDismissed: state.pwaInstallDismissed,
       }),
     }
   )

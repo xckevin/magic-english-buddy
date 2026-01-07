@@ -47,7 +47,7 @@ class TTSService {
 
   constructor() {
     // 安全检查：某些浏览器/环境可能不支持 speechSynthesis
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis) {
       this.synthesis = window.speechSynthesis;
       this.loadVoices();
 
@@ -339,7 +339,7 @@ class TTSService {
    * 检查是否支持 TTS
    */
   isSupported(): boolean {
-    return 'speechSynthesis' in window;
+    return typeof window !== 'undefined' && 'speechSynthesis' in window && !!window.speechSynthesis;
   }
 }
 

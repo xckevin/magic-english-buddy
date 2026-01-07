@@ -4,7 +4,11 @@
 
 .background {
   position: fixed;
-  inset: 0;
+  /* 兼容旧浏览器 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
@@ -14,7 +18,11 @@
 
 .gradient {
   position: absolute;
-  inset: 0;
+  /* 兼容旧浏览器 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: linear-gradient(
     180deg,
     #0a0a1a 0%,
@@ -28,7 +36,11 @@
 
 .stars {
   position: absolute;
-  inset: 0;
+  /* 兼容旧浏览器 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
 
 /* ============ 极光 ============ */

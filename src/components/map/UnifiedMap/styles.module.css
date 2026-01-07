@@ -143,7 +143,11 @@
 
 .nodeGlow {
   position: absolute;
-  inset: -8px;
+  /* 兼容旧浏览器 */
+  top: -8px;
+  right: -8px;
+  bottom: -8px;
+  left: -8px;
   border-radius: 50%;
   background: radial-gradient(circle, var(--node-color-secondary) 0%, transparent 70%);
   opacity: 0.5;
@@ -188,7 +192,11 @@
 
 .bossRing {
   position: absolute;
-  inset: -12px;
+  /* 兼容旧浏览器 */
+  top: -12px;
+  right: -12px;
+  bottom: -12px;
+  left: -12px;
   border-radius: 50%;
   border: 2px solid var(--node-color);
   animation: bossRingPulse 1.5s ease-in-out infinite;
@@ -450,7 +458,11 @@
 
 .loadingOverlay {
   position: absolute;
-  inset: 0;
+  /* 兼容旧浏览器 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -518,7 +530,11 @@
 
 .bgDecoration {
   position: absolute;
-  inset: 0;
+  /* 兼容旧浏览器 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   pointer-events: none;
   overflow: hidden;
 }

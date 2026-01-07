@@ -4,7 +4,11 @@
 
 .overlay {
   position: fixed;
-  inset: 0;
+  /* 兼容旧浏览器 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -84,7 +88,11 @@
 
 .packGlow {
   position: absolute;
-  inset: -10px;
+  /* 兼容旧浏览器 */
+  top: -10px;
+  right: -10px;
+  bottom: -10px;
+  left: -10px;
   background: radial-gradient(circle at center, var(--color-primary) 0%, transparent 70%);
   opacity: 0.3;
   animation: packPulse 2s ease-in-out infinite;

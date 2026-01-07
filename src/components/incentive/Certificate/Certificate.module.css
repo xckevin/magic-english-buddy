@@ -28,7 +28,11 @@
 
 .border {
   position: absolute;
-  inset: var(--space-4);
+  /* 兼容旧浏览器 */
+  top: var(--space-4);
+  right: var(--space-4);
+  bottom: var(--space-4);
+  left: var(--space-4);
   border: 2px solid rgba(107, 92, 231, 0.3);
   border-radius: var(--radius-xl);
   pointer-events: none;

@@ -56,6 +56,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   const constraintsRef = useRef({ top: 0, bottom: 0, left: 0, right: 0 });
   
   // 监听容器尺寸变化
+  // 兼容不支持 ResizeObserver 的浏览器（如旧版微信 WebView）
   useEffect(() => {
     if (!containerRef.current) return;
     
@@ -68,10 +69,20 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     
     updateSize();
     
-    const resizeObserver = new ResizeObserver(updateSize);
-    resizeObserver.observe(containerRef.current);
-    
-    return () => resizeObserver.disconnect();
+    // 优先使用 ResizeObserver
+    if (typeof ResizeObserver !== 'undefined') {
+      const resizeObserver = new ResizeObserver(updateSize);
+      resizeObserver.observe(containerRef.current);
+      return () => resizeObserver.disconnect();
+    } else {
+      // Fallback: 使用 window resize 事件
+      window.addEventListener('resize', updateSize);
+      window.addEventListener('orientationchange', updateSize);
+      return () => {
+        window.removeEventListener('resize', updateSize);
+        window.removeEventListener('orientationchange', updateSize);
+      };
+    }
   }, []);
 
   // 计算响应式布局

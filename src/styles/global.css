@@ -193,7 +193,8 @@ ol {
 .relative { position: relative; }
 .absolute { position: absolute; }
 .fixed { position: fixed; }
-.inset-0 { inset: 0; }
+/* 兼容旧浏览器，不使用 inset 简写 */
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
 
 /* 溢出 */
 .overflow-hidden { overflow: hidden; }

@@ -68,7 +68,11 @@
 
 .eggTexture {
   position: absolute;
-  inset: 0;
+  /* 兼容旧浏览器 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -131,7 +135,11 @@
 
 .particles {
   position: absolute;
-  inset: 0;
+  /* 兼容旧浏览器 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   pointer-events: none;
 }
 

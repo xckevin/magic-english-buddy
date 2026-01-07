@@ -47,7 +47,11 @@
 
 .glow {
   position: absolute;
-  inset: 0;
+  /* 兼容旧浏览器 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: var(--color-primary);
   border-radius: var(--radius-lg);
   opacity: 0.5;

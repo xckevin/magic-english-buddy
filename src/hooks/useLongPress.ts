@@ -51,7 +51,7 @@ export const useLongPress = (options: UseLongPressOptions = {}): UseLongPressRes
   const [isPressed, setIsPressed] = useState(false);
   
   const startTimeRef = useRef<number | null>(null);
-  const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalIdRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const completedRef = useRef(false);
 
   // 清理定时器

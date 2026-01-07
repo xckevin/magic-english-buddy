@@ -96,7 +96,11 @@
 /* 进度环 */
 .progressRing {
   position: absolute;
-  inset: -2px;
+  /* 兼容旧浏览器 */
+  top: -2px;
+  right: -2px;
+  bottom: -2px;
+  left: -2px;
   transform: rotate(-90deg);
 }
 
@@ -117,7 +121,11 @@
 /* 当前指示器动画 */
 .currentIndicator {
   position: absolute;
-  inset: -4px;
+  /* 兼容旧浏览器 */
+  top: -4px;
+  right: -4px;
+  bottom: -4px;
+  left: -4px;
   border: 2px solid var(--dot-color-secondary);
   border-radius: 50%;
   animation: currentPulse 2s ease-in-out infinite;

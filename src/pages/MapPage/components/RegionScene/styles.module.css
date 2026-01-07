@@ -23,13 +23,21 @@
 
 .background {
   position: absolute;
-  inset: 0;
+  /* 兼容旧浏览器 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 0;
 }
 
 .bgGradient {
   position: absolute;
-  inset: 0;
+  /* 兼容旧浏览器 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: 
     radial-gradient(ellipse 80% 50% at 50% 100%, var(--theme-bg) 0%, transparent 70%),
     radial-gradient(ellipse 60% 40% at 50% 0%, rgba(0, 0, 0, 0.8) 0%, transparent 60%),
@@ -38,7 +46,11 @@
 
 .bgPattern {
   position: absolute;
-  inset: 0;
+  /* 兼容旧浏览器 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   opacity: 0.15;
 }
 
@@ -135,7 +147,11 @@
 /* 装饰粒子 */
 .decorations {
   position: absolute;
-  inset: 0;
+  /* 兼容旧浏览器 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   pointer-events: none;
 }
 
@@ -237,7 +253,11 @@
 
 .progressText {
   position: absolute;
-  inset: 0;
+  /* 兼容旧浏览器 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -250,7 +270,9 @@
 
 .pathContainer {
   position: absolute;
-  inset: 0;
+  /* 兼容旧浏览器 */
+  right: 0;
+  left: 0;
   top: 140px; /* FloatingHeader(60) + RegionHeader(80) */
   bottom: 160px; /* 增加底部空间，避免被指示器遮挡 */
   z-index: 5;
@@ -372,7 +394,11 @@
 
 .nodeGlow {
   position: absolute;
-  inset: -12px;
+  /* 兼容旧浏览器 */
+  top: -12px;
+  right: -12px;
+  bottom: -12px;
+  left: -12px;
   border-radius: 50%;
   background: radial-gradient(circle, var(--node-color-secondary) 0%, transparent 70%);
   opacity: 0.5;
@@ -413,7 +439,11 @@
 
 .lockedOverlay {
   position: absolute;
-  inset: 0;
+  /* 兼容旧浏览器 */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -16,7 +16,7 @@ class AudioRecorderService {
   private audioChunks: Blob[] = [];
   private stream: MediaStream | null = null;
   private startTime: number = 0;
-  private durationInterval: NodeJS.Timeout | null = null;
+  private durationInterval: ReturnType<typeof setInterval> | null = null;
 
   private state: RecordingState = {
     isRecording: false,
@@ -27,6 +27,19 @@ class AudioRecorderService {
   };
 
   private listeners: Set<(state: RecordingState) => void> = new Set();
+
+  /**
+   * 检查浏览器是否支持录音功能
+   * 兼容旧浏览器和微信 WebView
+   */
+  isSupported(): boolean {
+    return (
+      typeof MediaRecorder !== 'undefined' &&
+      typeof navigator !== 'undefined' &&
+      typeof navigator.mediaDevices !== 'undefined' &&
+      typeof navigator.mediaDevices.getUserMedia === 'function'
+    );
+  }
 
   /**
    * 订阅状态变化
@@ -61,6 +74,12 @@ class AudioRecorderService {
    * 开始录音
    */
   async start(): Promise<boolean> {
+    // 检查浏览器支持
+    if (!this.isSupported()) {
+      console.warn('AudioRecorder: 当前浏览器不支持录音功能');
+      return false;
+    }
+
     try {
       // 获取麦克风权限
       this.stream = await navigator.mediaDevices.getUserMedia({ 

@@ -17,11 +17,14 @@
     "test:run": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed",
-    "test:e2e:debug": "playwright test --debug",
-    "test:all": "pnpm test:run && pnpm test:e2e"
+    "test:e2e": "pnpm build && playwright test",
+    "test:e2e:ui": "pnpm build && playwright test --ui",
+    "test:e2e:headed": "pnpm build && playwright test --headed",
+    "test:e2e:debug": "pnpm build && playwright test --debug",
+    "test:all": "pnpm test:run && pnpm test:e2e",
+    "audit:content": "node scripts/audit-content.mjs",
+    "audio:prepare": "node scripts/export-audio-input.mjs",
+    "audio:generate": "uv run --python 3.13 scripts/generate-audio.py"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

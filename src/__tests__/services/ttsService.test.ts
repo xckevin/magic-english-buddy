@@ -3,7 +3,14 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ttsService } from '@/services/ttsService';
+import { TTSService, isTTSAbortError, ttsService } from '@/services/ttsService';
+
+// This suite exercises the system-voice fallback. Bundled playback has separate
+// Web Audio tests and real production-browser coverage.
+vi.mock('@/services/bundledAudioService', async importOriginal => ({
+  ...(await importOriginal<typeof import('@/services/bundledAudioService')>()),
+  getBundledSpeech: () => null,
+}));
 
 describe('TTSService', () => {
   beforeEach(() => {
@@ -69,7 +76,7 @@ describe('TTSService', () => {
     it('应该调用 speechSynthesis.speak', () => {
       const speakSpy = vi.spyOn(window.speechSynthesis, 'speak');
       
-      ttsService.speak('Hello');
+      void ttsService.speak('Hello').catch(() => undefined);
       
       expect(speakSpy).toHaveBeenCalled();
     });
@@ -77,7 +84,7 @@ describe('TTSService', () => {
     it('应该创建 SpeechSynthesisUtterance', () => {
       const speakSpy = vi.spyOn(window.speechSynthesis, 'speak');
       
-      ttsService.speak('Test text');
+      void ttsService.speak('Test text').catch(() => undefined);
       
       expect(speakSpy).toHaveBeenCalledWith(expect.any(SpeechSynthesisUtterance));
     });
@@ -87,7 +94,7 @@ describe('TTSService', () => {
     it('应该朗读单个单词', () => {
       const speakSpy = vi.spyOn(window.speechSynthesis, 'speak');
       
-      ttsService.speakWord('apple');
+      void ttsService.speakWord('apple').catch(() => undefined);
       
       expect(speakSpy).toHaveBeenCalled();
     });
@@ -172,6 +179,39 @@ describe('TTSService', () => {
       
       // 可能返回语音对象或 null
       expect(voice === null || typeof voice === 'object').toBe(true);
+    });
+  });
+
+  describe('cancellation and ownership', () => {
+    it('settles a cancelled playback with AbortError', async () => {
+      const service = new TTSService();
+      const playback = service.speak('Hello', { owner: 'reader' });
+
+      service.stop('reader');
+
+      await expect(playback).rejects.toSatisfy(isTTSAbortError);
+    });
+
+    it('ignores a terminal callback from an utterance superseded by a newer one', async () => {
+      const service = new TTSService();
+      const events = vi.fn();
+      service.subscribe(events);
+      const speak = vi.mocked(window.speechSynthesis.speak);
+
+      const first = service.speak('First', { owner: 'reader' });
+      const firstUtterance = speak.mock.calls.at(-1)?.[0] as SpeechSynthesisUtterance;
+      const second = service.speak('Second', { owner: 'shadowing' });
+      const secondUtterance = speak.mock.calls.at(-1)?.[0] as SpeechSynthesisUtterance;
+
+      void first.catch(() => undefined);
+      firstUtterance.onend?.({} as SpeechSynthesisEvent);
+      secondUtterance.onstart?.({} as SpeechSynthesisEvent);
+      secondUtterance.onend?.({} as SpeechSynthesisEvent);
+      await expect(second).resolves.toBeUndefined();
+
+      expect(events).toHaveBeenCalledTimes(2);
+      expect(events).toHaveBeenNthCalledWith(1, { type: 'start', owner: 'shadowing' });
+      expect(events).toHaveBeenNthCalledWith(2, { type: 'end', owner: 'shadowing' });
     });
   });
 });

@@ -6,6 +6,8 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import type { QuizItem } from '@/db';
+import { ttsService } from '@/services/ttsService';
+import { getQuizEmoji } from '../quizIllustrations';
 import styles from './ImageChoice.module.css';
 
 interface ImageChoiceProps {
@@ -28,33 +30,25 @@ export const ImageChoice: React.FC<ImageChoiceProps> = ({ question, onAnswer, on
     () => () => {
       if (answerTimerRef.current) clearTimeout(answerTimerRef.current);
       if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
-      window.speechSynthesis?.cancel();
+      ttsService.stop('quiz');
     },
     []
   );
 
   // 播放音频
-  const playAudio = useCallback(() => {
+  const playAudio = useCallback(async () => {
     if (isPlaying) return;
     setAudioError(null);
-    if (typeof window === 'undefined' || !window.speechSynthesis) {
-      setAudioError('当前设备不能播放语音，请直接看英文单词再选择图片。');
-      return;
-    }
     try {
       setIsPlaying(true);
-      const utterance = new SpeechSynthesisUtterance(question.question);
-      utterance.lang = 'en-US';
-      utterance.rate = 0.8;
-      utterance.onend = () => setIsPlaying(false);
-      utterance.onerror = () => {
-        setIsPlaying(false);
+      ttsService.setRate(0.8);
+      await ttsService.speak(question.question, { owner: 'quiz' });
+    } catch (error) {
+      if (!(error instanceof Error && error.name === 'AbortError')) {
         setAudioError('语音没有播放成功，请直接看英文单词再选择图片。');
-      };
-      window.speechSynthesis.speak(utterance);
-    } catch {
+      }
+    } finally {
       setIsPlaying(false);
-      setAudioError('语音没有播放成功，请直接看英文单词再选择图片。');
     }
   }, [isPlaying, question]);
 
@@ -121,13 +115,13 @@ export const ImageChoice: React.FC<ImageChoiceProps> = ({ question, onAnswer, on
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            {option.image ? (
+            {getQuizEmoji(option.image) ? (
               <div className={styles.optionImage}>
-                <span className={styles.emoji}>{option.image}</span>
+                <span className={styles.emoji} aria-hidden="true">{getQuizEmoji(option.image)}</span>
                 <span className={styles.optionText}>{option.text || option.value}</span>
               </div>
             ) : (
-              <div className={styles.optionText}>{option.text}</div>
+              <div className={styles.optionText}>{option.text || option.value}</div>
             )}
           </motion.button>
         ))}

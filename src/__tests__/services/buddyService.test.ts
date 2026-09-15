@@ -148,6 +148,9 @@ describe('BuddyService', () => {
       // 验证阶段已更新
       const progress = await db.userProgress.get(mockUserProgress.id);
       expect(progress?.buddyStage).toBe(3);
+      expect(await db.achievements.get(`${mockUserProgress.id}_first_evolution`)).toMatchObject({
+        claimed: false,
+      });
     });
 
     it('魔力值不足时不应该进化', async () => {
@@ -215,5 +218,4 @@ describe('BuddyService', () => {
     });
   });
 });
-
 

@@ -111,6 +111,39 @@
   cursor: pointer;
 }
 
+.paragraphPicker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  color: var(--ink-muted, var(--text-muted));
+  font-size: var(--text-sm);
+}
+
+.paragraphPicker button {
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  color: var(--color-primary);
+  background: var(--surface-card, var(--bg-card));
+  border: 1px solid var(--line, var(--border-dark));
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.paragraphPicker button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.shadowingText {
+  margin: var(--space-3) 0 0;
+  color: var(--ink, var(--text-light));
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  text-align: center;
+}
+
 .footer {
   flex-shrink: 0;
   max-height: 50dvh;
@@ -229,6 +262,7 @@
   .backBtn,
   .speedBtn,
   .panelHeading button,
+  .paragraphPicker button,
   .completeBtn,
   .errorActions button,
   .actionError button

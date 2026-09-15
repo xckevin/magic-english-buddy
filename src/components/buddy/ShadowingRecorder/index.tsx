@@ -1,7 +1,7 @@
 /** A small, child-friendly record-and-replay panel for shadowing practice. */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { audioRecorderService, type RecordingState } from '@/services/audioRecorderService';
-import { ttsService } from '@/services/ttsService';
+import { isTTSAbortError, ttsService } from '@/services/ttsService';
 import styles from './ShadowingRecorder.module.css';
 
 interface ShadowingRecorderProps {
@@ -28,16 +28,21 @@ export const ShadowingRecorder: React.FC<ShadowingRecorderProps> = ({
   const [isPlayingDemo, setIsPlayingDemo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [originalAudio] = useState(() => (originalAudioUrl ? new Audio(originalAudioUrl) : null));
-  const [recordedAudio, setRecordedAudio] = useState<HTMLAudioElement | null>(null);
+  const recordedAudioRef = useRef<HTMLAudioElement | null>(null);
+  const onRecordCompleteRef = useRef(onRecordComplete);
   const originalVolume = useRef(1);
   const recordedVolume = useRef(1);
   const demoPlaying = useRef(false);
   const stopAllPlaybackRef = useRef<() => void>(() => undefined);
 
+  useEffect(() => {
+    onRecordCompleteRef.current = onRecordComplete;
+  }, [onRecordComplete]);
+
   const restoreVolumes = useCallback(() => {
     if (originalAudio) originalAudio.volume = originalVolume.current;
-    if (recordedAudio) recordedAudio.volume = recordedVolume.current;
-  }, [originalAudio, recordedAudio]);
+    if (recordedAudioRef.current) recordedAudioRef.current.volume = recordedVolume.current;
+  }, [originalAudio]);
 
   const stopAudio = useCallback((audio: HTMLAudioElement | null, reset = true) => {
     if (!audio) return;
@@ -47,11 +52,11 @@ export const ShadowingRecorder: React.FC<ShadowingRecorderProps> = ({
 
   const stopAllPlayback = useCallback(() => {
     stopAudio(originalAudio);
-    stopAudio(recordedAudio);
+    stopAudio(recordedAudioRef.current);
     restoreVolumes();
     setIsPlayingOriginal(false);
     setIsPlayingRecorded(false);
-  }, [originalAudio, recordedAudio, restoreVolumes, stopAudio]);
+  }, [originalAudio, restoreVolumes, stopAudio]);
   stopAllPlaybackRef.current = stopAllPlayback;
 
   useEffect(() => {
@@ -60,32 +65,43 @@ export const ShadowingRecorder: React.FC<ShadowingRecorderProps> = ({
       unsubscribe();
       audioRecorderService.dispose();
       stopAllPlaybackRef.current();
-      if (demoPlaying.current) ttsService.stop();
+      if (demoPlaying.current) ttsService.stop('shadowing');
     };
   }, []);
 
   useEffect(() => {
     if (!recordingState.audioUrl) return;
     const audio = new Audio(recordingState.audioUrl);
+    recordedAudioRef.current = audio;
     audio.onended = () => {
       setIsPlayingRecorded(false);
       restoreVolumes();
     };
-    setRecordedAudio(audio);
-    if (recordingState.audioBlob) onRecordComplete?.(recordingState.audioBlob);
-    return () => audio.pause();
-  }, [recordingState.audioUrl, recordingState.audioBlob, onRecordComplete, restoreVolumes]);
+    if (recordingState.audioBlob) onRecordCompleteRef.current?.(recordingState.audioBlob);
+    return () => {
+      audio.pause();
+      if (recordedAudioRef.current === audio) recordedAudioRef.current = null;
+    };
+  }, [recordingState.audioUrl, recordingState.audioBlob, restoreVolumes]);
+
+  useEffect(() => {
+    if (recordingState.error) setError(recordingState.error);
+  }, [recordingState.error]);
 
   const handleStartRecording = useCallback(async () => {
     setError(null);
+    stopAllPlayback();
+    ttsService.stop();
+    demoPlaying.current = false;
+    setIsPlayingDemo(false);
     const success = await audioRecorderService.start();
     if (!success) setError('无法使用麦克风。请允许录音权限，然后再试一次。');
-  }, []);
+  }, [stopAllPlayback]);
 
   const handleStopRecording = useCallback(() => audioRecorderService.stop(), []);
 
   const handlePlayOriginal = useCallback(async () => {
-    if (!originalAudio) return;
+    if (!originalAudio || recordingState.isRecording) return;
     setError(null);
     if (isPlayingOriginal) {
       stopAudio(originalAudio);
@@ -94,6 +110,11 @@ export const ShadowingRecorder: React.FC<ShadowingRecorderProps> = ({
       return;
     }
     try {
+      stopAudio(recordedAudioRef.current);
+      ttsService.stop();
+      demoPlaying.current = false;
+      setIsPlayingDemo(false);
+      setIsPlayingRecorded(false);
       originalVolume.current = originalAudio.volume;
       await originalAudio.play();
       setIsPlayingOriginal(true);
@@ -105,30 +126,32 @@ export const ShadowingRecorder: React.FC<ShadowingRecorderProps> = ({
       setIsPlayingOriginal(false);
       setError('示范音频暂时无法播放，请稍后再试。');
     }
-  }, [isPlayingOriginal, originalAudio, restoreVolumes, stopAudio]);
+  }, [isPlayingOriginal, originalAudio, recordingState.isRecording, restoreVolumes, stopAudio]);
 
   const handlePlayDemo = useCallback(async () => {
-    if (!originalText) return;
+    if (!originalText || recordingState.isRecording) return;
     setError(null);
     if (isPlayingDemo) {
-      ttsService.stop();
+      ttsService.stop('shadowing');
       demoPlaying.current = false;
       setIsPlayingDemo(false);
       return;
     }
     try {
+      stopAllPlayback();
       demoPlaying.current = true;
       setIsPlayingDemo(true);
-      await ttsService.speak(originalText);
-    } catch {
-      setError('语音示范暂时不可用，请稍后再试。');
+      await ttsService.speak(originalText, { owner: 'shadowing' });
+    } catch (error) {
+      if (!isTTSAbortError(error)) setError('语音示范暂时不可用，请稍后再试。');
     } finally {
       demoPlaying.current = false;
       setIsPlayingDemo(false);
     }
-  }, [isPlayingDemo, originalText]);
+  }, [isPlayingDemo, originalText, recordingState.isRecording, stopAllPlayback]);
 
   const handlePlayRecorded = useCallback(async () => {
+    const recordedAudio = recordedAudioRef.current;
     if (!recordedAudio) return;
     setError(null);
     if (isPlayingRecorded) {
@@ -138,6 +161,11 @@ export const ShadowingRecorder: React.FC<ShadowingRecorderProps> = ({
       return;
     }
     try {
+      stopAudio(originalAudio);
+      ttsService.stop();
+      demoPlaying.current = false;
+      setIsPlayingDemo(false);
+      setIsPlayingOriginal(false);
       recordedVolume.current = recordedAudio.volume;
       await recordedAudio.play();
       setIsPlayingRecorded(true);
@@ -145,12 +173,16 @@ export const ShadowingRecorder: React.FC<ShadowingRecorderProps> = ({
       setIsPlayingRecorded(false);
       setError('你的录音暂时无法播放，请再试一次。');
     }
-  }, [isPlayingRecorded, recordedAudio, restoreVolumes, stopAudio]);
+  }, [isPlayingRecorded, originalAudio, restoreVolumes, stopAudio]);
 
   const handleDualPlay = useCallback(async () => {
+    const recordedAudio = recordedAudioRef.current;
     if (!originalAudio || !recordedAudio) return;
     setError(null);
     stopAllPlayback();
+    ttsService.stop();
+    demoPlaying.current = false;
+    setIsPlayingDemo(false);
     originalAudio.currentTime = 0;
     recordedAudio.currentTime = 0;
     originalVolume.current = originalAudio.volume;
@@ -166,12 +198,12 @@ export const ShadowingRecorder: React.FC<ShadowingRecorderProps> = ({
     // A partially-started pair is harder to understand than a clear retry state.
     stopAllPlayback();
     setError('对比播放没有完整开始，请稍后再试。');
-  }, [originalAudio, recordedAudio, stopAllPlayback]);
+  }, [originalAudio, stopAllPlayback]);
 
   const handleReset = useCallback(() => {
     stopAllPlayback();
     audioRecorderService.reset();
-    setRecordedAudio(null);
+    recordedAudioRef.current = null;
     setError(null);
   }, [stopAllPlayback]);
 
@@ -190,7 +222,7 @@ export const ShadowingRecorder: React.FC<ShadowingRecorderProps> = ({
         ) : recordingState.audioUrl ? (
           <span className={styles.completedText}>录好了，可以回放</span>
         ) : (
-          <span className={styles.hintText}>先听示范，再按住自己的声音</span>
+          <span className={styles.hintText}>先听示范，再录下自己的声音</span>
         )}
       </div>
       {showWaveform && recordingState.isRecording && (
@@ -211,6 +243,7 @@ export const ShadowingRecorder: React.FC<ShadowingRecorderProps> = ({
           <button
             className={`${styles.controlBtn} ${isPlayingOriginal ? styles.active : ''}`}
             onClick={() => void handlePlayOriginal()}
+            disabled={recordingState.isRecording}
           >
             <span aria-hidden="true">{isPlayingOriginal ? '⏸' : '🔊'}</span>
             <span>听原音</span>
@@ -220,6 +253,7 @@ export const ShadowingRecorder: React.FC<ShadowingRecorderProps> = ({
           <button
             className={`${styles.controlBtn} ${isPlayingDemo ? styles.active : ''}`}
             onClick={() => void handlePlayDemo()}
+            disabled={recordingState.isRecording}
           >
             <span aria-hidden="true">{isPlayingDemo ? '⏸' : '🔊'}</span>
             <span>{isPlayingDemo ? '停止示范' : '听示范'}</span>

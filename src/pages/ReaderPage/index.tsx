@@ -3,7 +3,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/stores/useAppStore';
 import { db, type Story } from '@/db';
-import { ttsService } from '@/services/ttsService';
+import { isTTSAbortError, ttsService } from '@/services/ttsService';
+import { audioRecorderService } from '@/services/audioRecorderService';
 import { readingProgressService } from '@/services/readingProgressService';
 import { convertToCard } from '@/services/cardCollectionService';
 import { StoryContent, ReaderControls, DictionaryPopup } from '@/components/reader';
@@ -75,6 +76,9 @@ const ReaderPage: React.FC = () => {
 
   useEffect(() => {
     unsubscribeRef.current = ttsService.subscribe(event => {
+      // Web Speech has one queue shared with the dictionary and shadowing panel.
+      // Only the reader's own utterances may control the reader transport state.
+      if (event.owner !== 'reader') return;
       switch (event.type) {
         case 'start':
           setPlaybackError(null);
@@ -124,16 +128,24 @@ const ReaderPage: React.FC = () => {
       else ttsService.pause();
       return;
     }
+    // A reader-wide narration must never be captured by an open shadowing recorder.
+    // stop() is synchronous; unmounting the panel then disposes its local playback.
+    audioRecorderService.stop();
+    setIsShadowingOpen(false);
     try {
       ttsService.setRate(speed);
-      await ttsService.speak(story.content.map(paragraph => paragraph.text).join(' '));
-    } catch {
-      setPlaybackError('播放没有开始，请确认设备允许语音播放后重试。');
+      await ttsService.speak(story.content.map(paragraph => paragraph.text).join(' '), {
+        owner: 'reader',
+      });
+    } catch (error) {
+      if (!isTTSAbortError(error)) {
+        setPlaybackError('播放没有开始，请确认设备允许语音播放后重试。');
+      }
     }
   }, [story, isPlaying, isPaused, speed]);
 
   const handleStop = useCallback(() => {
-    ttsService.stop();
+    ttsService.stop('reader');
     setIsPlaying(false);
     setIsPaused(false);
     setCurrentWordIndex(-1);
@@ -143,6 +155,16 @@ const ReaderPage: React.FC = () => {
     setSpeed(newSpeed);
     ttsService.setRate(newSpeed);
   }, []);
+
+  const selectShadowingParagraph = useCallback(
+    (paragraphIndex: number) => {
+      if (!story?.content?.[paragraphIndex]) return;
+      handleStop();
+      setCurrentParagraphIndex(paragraphIndex);
+      readingProgressService.updateParagraph(paragraphIndex);
+    },
+    [handleStop, story]
+  );
 
   const openDictionary = useCallback(
     (word: string) => {
@@ -259,8 +281,27 @@ const ReaderPage: React.FC = () => {
               <h2>跟读练习</h2>
               <button onClick={() => setIsShadowingOpen(false)}>收起</button>
             </div>
-            <p className={styles.readingHint}>先听这一小段，再试着跟读。录音仅用于本次回放。</p>
+            <p className={styles.readingHint}>先听这一小段，再试着跟读。切换段落后需要重新录音。</p>
+            <div className={styles.paragraphPicker} aria-label="选择跟读段落">
+              <button
+                onClick={() => selectShadowingParagraph(currentParagraphIndex - 1)}
+                disabled={currentParagraphIndex === 0}
+              >
+                上一段
+              </button>
+              <span aria-live="polite">
+                第 {currentParagraphIndex + 1} / {story.content.length} 段
+              </span>
+              <button
+                onClick={() => selectShadowingParagraph(currentParagraphIndex + 1)}
+                disabled={currentParagraphIndex >= story.content.length - 1}
+              >
+                下一段
+              </button>
+            </div>
+            <p className={styles.shadowingText}>{story.content[currentParagraphIndex]?.text}</p>
             <ShadowingRecorder
+              key={`${story.id}-${currentParagraphIndex}`}
               originalText={
                 story.content[currentParagraphIndex]?.text ??
                 story.content.map(paragraph => paragraph.text).join(' ')

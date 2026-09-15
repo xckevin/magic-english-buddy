@@ -4,9 +4,9 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { db, type QuizItem } from '@/db';
+import type { QuizItem } from '@/db';
 import { QuizContainer, type QuizResultData } from '@/components/quiz';
-import { readingProgressService } from '@/services/readingProgressService';
+import { completeStoryQuiz, getLessonAccess } from '@/services/learningCompletionService';
 import { Modal } from '@/components/common/Modal';
 import { Loading } from '@/components/common';
 import { useAppStore } from '@/stores/useAppStore';
@@ -19,6 +19,8 @@ const QuizPage: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState<QuizItem[]>([]);
+  const [isReview, setIsReview] = useState(false);
+  const [storyRewardMagicPower, setStoryRewardMagicPower] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [exitConfirmationOpen, setExitConfirmationOpen] = useState(false);
   const saveInFlightRef = useRef(false);
@@ -33,16 +35,27 @@ const QuizPage: React.FC = () => {
           setLoadError('没有找到这篇故事，暂时不能开始练习。');
           return;
         }
-        const story = await db.stories.get(storyId);
-        if (!story) {
-          setLoadError('这篇故事已经不存在了。');
+        if (!currentUserId) {
+          setLoadError('请先创建学习档案，再开始练习。');
           return;
         }
+        const access = await getLessonAccess(currentUserId, storyId);
+        if (!access.allowed || !access.story) {
+          setLoadError(
+            access.reason === 'locked'
+              ? '这篇故事还没有解锁。请从地图上的下一关开始。'
+              : '这篇故事暂时不可用。'
+          );
+          return;
+        }
+        const story = access.story;
         if (!story.quiz?.length) {
           setLoadError('这篇故事的练习正在准备中。');
           return;
         }
         setQuestions(story.quiz);
+        setIsReview(access.isReview);
+        setStoryRewardMagicPower(story.rewards.magicPower);
       } catch (error) {
         console.error('Failed to load questions:', error);
         setLoadError('练习加载失败，请重试。');
@@ -52,7 +65,7 @@ const QuizPage: React.FC = () => {
     };
 
     loadQuestions();
-  }, [storyId]);
+  }, [currentUserId, storyId]);
 
   const retryLoad = useCallback(() => {
     window.location.reload();
@@ -65,37 +78,19 @@ const QuizPage: React.FC = () => {
       saveInFlightRef.current = true;
       try {
         if (!currentUserId || !storyId) throw new Error('Missing learning profile');
-        {
-          await db.transaction('rw', [db.quizHistory, db.userProgress, db.mapNodes], async () => {
-            await db.quizHistory.add({
-              id: crypto.randomUUID(),
-              userId: currentUserId,
-              storyId,
-              quizType: 'story_quiz',
-              questions: result.answers.map(a => ({
-                questionId: a.questionId,
-                userAnswer: a.userAnswer,
-                correctAnswer:
-                  questions.find(q => q.id === a.questionId)?.correctOrder ??
-                  questions.find(q => q.id === a.questionId)?.correctAnswer ??
-                  '',
-                isCorrect: a.isCorrect,
-                timeSpent: 0,
-              })),
-              score: result.score,
-              earnedMagicPower: result.earnedMagicPower,
-              completedAt: Date.now(),
-            });
-            const progress = await db.userProgress.get(currentUserId);
-            if (!progress) throw new Error('Learning profile not found');
-            {
-              await db.userProgress.update(currentUserId, {
-                magicPower: progress.magicPower + result.earnedMagicPower,
-              });
-            }
-            if (result.score >= 60) await readingProgressService.markStoryCompleted(storyId);
-          });
-        }
+        await completeStoryQuiz({
+          userId: currentUserId,
+          storyId,
+          score: result.score,
+          quizMagicPower: result.earnedMagicPower,
+          answers: result.answers.map(answer => ({
+            ...answer,
+            correctAnswer:
+              questions.find(question => question.id === answer.questionId)?.correctOrder ??
+              questions.find(question => question.id === answer.questionId)?.correctAnswer ??
+              '',
+          })),
+        });
         navigate('/map');
       } catch (error) {
         console.error('Failed to save quiz result:', error);
@@ -148,6 +143,8 @@ const QuizPage: React.FC = () => {
       <QuizContainer
         questions={questions}
         storyId={storyId || 'unknown'}
+        isReview={isReview}
+        storyRewardMagicPower={storyRewardMagicPower}
         onComplete={handleComplete}
         onExit={handleExit}
       />

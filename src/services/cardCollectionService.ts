@@ -110,59 +110,106 @@ export const convertToCard = async (
   meaningCn: string,
   emoji: string
 ): Promise<CardData | null> => {
-  const vocabId = `${userId}_${word}`;
-  const existing = await db.userVocabulary.get(vocabId);
-  
-  if (existing?.isCard) {
-    // 已经是卡牌，升级掌握度
-    const newMastery = Math.min(3, existing.masteryLevel + 1) as 0 | 1 | 2 | 3;
-    await db.userVocabulary.update(vocabId, {
-      masteryLevel: newMastery,
-      correctCount: existing.correctCount + 1,
-      lastReviewed: Date.now(),
-    });
-    
+  const normalizedWord = word.toLowerCase();
+  const vocabId = `${userId}_${normalizedWord}`;
+
+  return db.transaction('rw', db.userVocabulary, async () => {
+    const existing = await db.userVocabulary.get(vocabId);
+    if (existing?.isCard) {
+      // Saving a word is not a review event. Repeated taps must not increase
+      // correctness, mastery, or alter the original collection time.
+      return {
+        id: vocabId,
+        word: existing.word,
+        meaningCn,
+        emoji,
+        rarity: existing.cardRarity || 'white',
+        masteryLevel: existing.masteryLevel,
+        obtainedAt: existing.firstSeen,
+      };
+    }
+
+    if (existing) {
+      // A vocabulary record may predate the card collection feature. Turn it
+      // into a card without overwriting its review history or mastery state.
+      const rarity = existing.cardRarity || rollRarity();
+      await db.userVocabulary.update(vocabId, { isCard: true, cardRarity: rarity });
+      return {
+        id: vocabId,
+        word: existing.word,
+        meaningCn,
+        emoji,
+        rarity,
+        masteryLevel: existing.masteryLevel,
+        obtainedAt: existing.firstSeen,
+        isNew: true,
+      };
+    }
+
+    // New cards retain the existing collection defaults.
+    const rarity = rollRarity();
+    const now = Date.now();
+    const newVocab: UserVocabulary = {
+      id: vocabId,
+      userId,
+      word: normalizedWord,
+      firstSeen: now,
+      lastReviewed: now,
+      correctCount: 1,
+      wrongCount: 0,
+      masteryLevel: 1,
+      nextReviewDate: new Date(now + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      isCard: true,
+      cardRarity: rarity,
+    };
+    await db.userVocabulary.add(newVocab);
     return {
       id: vocabId,
-      word,
+      word: normalizedWord,
       meaningCn,
       emoji,
-      rarity: existing.cardRarity || 'white',
-      masteryLevel: newMastery,
-      obtainedAt: existing.firstSeen,
+      rarity,
+      masteryLevel: 1,
+      obtainedAt: now,
+      isNew: true,
     };
-  }
-  
-  // 新卡牌
-  const rarity = rollRarity();
+  });
+};
+
+/**
+ * Award story cards inside an enclosing learning-completion transaction.
+ * Existing cards are deliberately left unchanged: replaying or a previous
+ * manual lookup must never increase mastery or reroll rarity.
+ */
+export const grantStoryRewardCardsInTransaction = async (
+  userId: string,
+  words: string[]
+): Promise<string[]> => {
+  const awarded: string[] = [];
   const now = Date.now();
-  
-  const newVocab: UserVocabulary = {
-    id: vocabId,
-    userId,
-    word,
-    firstSeen: now,
-    lastReviewed: now,
-    correctCount: 1,
-    wrongCount: 0,
-    masteryLevel: 1,
-    nextReviewDate: new Date(now + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    isCard: true,
-    cardRarity: rarity,
-  };
-  
-  await db.userVocabulary.add(newVocab);
-  
-  return {
-    id: vocabId,
-    word,
-    meaningCn,
-    emoji,
-    rarity,
-    masteryLevel: 1,
-    obtainedAt: now,
-    isNew: true,
-  };
+  for (const sourceWord of words) {
+    const word = sourceWord.toLowerCase();
+    const vocabId = `${userId}_${word}`;
+    const existing = await db.userVocabulary.get(vocabId);
+    if (existing?.isCard) continue;
+    const cardRarity = rollRarity();
+    const vocabulary: UserVocabulary = {
+      id: vocabId,
+      userId,
+      word,
+      firstSeen: existing?.firstSeen ?? now,
+      lastReviewed: now,
+      correctCount: Math.max(1, existing?.correctCount ?? 0),
+      wrongCount: existing?.wrongCount ?? 0,
+      masteryLevel: Math.max(1, existing?.masteryLevel ?? 0) as 0 | 1 | 2 | 3,
+      nextReviewDate: new Date(now + 24 * 60 * 60 * 1000).toISOString().split('T')[0]!,
+      isCard: true,
+      cardRarity,
+    };
+    await db.userVocabulary.put(vocabulary);
+    awarded.push(word);
+  }
+  return awarded;
 };
 
 /**
@@ -231,8 +278,8 @@ export default {
   rollRarity,
   getUserCards,
   convertToCard,
+  grantStoryRewardCardsInTransaction,
   getCardStats,
   getCollectionProgress,
   RARITY_CONFIG,
 };
-

@@ -198,6 +198,24 @@ export const checkAndUnlockAchievements = async (
     bossesDefeated?: number;
     perfectQuizzes?: number;
   }
+): Promise<Achievement[]> =>
+  db.transaction('rw', db.achievements, async () =>
+    checkAndUnlockAchievementsInTransaction(userId, stats)
+  );
+
+/** Must be called from an enclosing transaction when achievements accompany a reward. */
+export const checkAndUnlockAchievementsInTransaction = async (
+  userId: string,
+  stats: {
+    storiesCompleted?: number;
+    wordsLearned?: number;
+    streakDays?: number;
+    totalCards?: number;
+    goldCards?: number;
+    buddyStage?: number;
+    bossesDefeated?: number;
+    perfectQuizzes?: number;
+  }
 ): Promise<Achievement[]> => {
   const unlockedAchievements = await getUserAchievements(userId);
   const unlockedIds = new Set(unlockedAchievements.map(a => a.achievementId));
@@ -257,25 +275,20 @@ export const checkAndUnlockAchievements = async (
  */
 export const claimAchievementReward = async (
   achievementId: string
-): Promise<number> => {
-  const achievement = await db.achievements.get(achievementId);
-  if (!achievement || achievement.claimed) return 0;
-
-  const def = ACHIEVEMENTS.find(a => a.id === achievement.achievementId);
-  if (!def) return 0;
-
-  await db.achievements.update(achievementId, { claimed: true });
-  
-  // 增加魔力值
-  const progress = await db.userProgress.get(achievement.userId);
-  if (progress) {
+): Promise<number> =>
+  db.transaction('rw', [db.achievements, db.userProgress], async () => {
+    const achievement = await db.achievements.get(achievementId);
+    if (!achievement || achievement.claimed) return 0;
+    const def = ACHIEVEMENTS.find(a => a.id === achievement.achievementId);
+    if (!def) return 0;
+    const progress = await db.userProgress.get(achievement.userId);
+    if (!progress) throw new Error('Learning profile not found');
+    await db.achievements.update(achievementId, { claimed: true });
     await db.userProgress.update(achievement.userId, {
       magicPower: progress.magicPower + def.reward.magicPower,
     });
-  }
-
-  return def.reward.magicPower;
-};
+    return def.reward.magicPower;
+  });
 
 /**
  * 获取成就定义
@@ -288,7 +301,7 @@ export default {
   ACHIEVEMENTS,
   getUserAchievements,
   checkAndUnlockAchievements,
+  checkAndUnlockAchievementsInTransaction,
   claimAchievementReward,
   getAchievementDefinition,
 };
-

@@ -341,6 +341,7 @@ export const createTestDatabase = async () => {
   await db.quizHistory.clear();
   await db.mapNodes.clear();
   await db.mapRegions.clear();
+  await db.achievements.clear();
   
   return db;
 };
@@ -358,4 +359,3 @@ export const seedTestDatabase = async () => {
   
   return db;
 };
-

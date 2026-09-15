@@ -4,127 +4,16 @@
  */
 
 import { db, type DictionaryEntry } from '@/db';
-
-// 常见词形变化规则
-const WORD_FORMS: Record<string, (word: string) => string[]> = {
-  // 动词过去式/过去分词 -ed
-  ed: (word) => {
-    if (word.endsWith('ed')) {
-      const base = word.slice(0, -2);
-      return [
-        base,                    // played -> play
-        base + 'e',              // liked -> like
-        base.slice(0, -1),       // stopped -> stop (双写)
-        base.replace(/i$/, 'y'), // cried -> cry
-      ];
-    }
-    return [];
-  },
-  // 动词进行时 -ing
-  ing: (word) => {
-    if (word.endsWith('ing')) {
-      const base = word.slice(0, -3);
-      return [
-        base,                    // playing -> play
-        base + 'e',              // liking -> like
-        base.slice(0, -1),       // running -> run (双写)
-      ];
-    }
-    return [];
-  },
-  // 名词复数 -s/-es
-  plural: (word) => {
-    if (word.endsWith('ies')) {
-      return [word.slice(0, -3) + 'y']; // babies -> baby
-    }
-    if (word.endsWith('es')) {
-      return [
-        word.slice(0, -2),       // boxes -> box
-        word.slice(0, -1),       // likes -> like
-      ];
-    }
-    if (word.endsWith('s')) {
-      return [word.slice(0, -1)]; // cats -> cat
-    }
-    return [];
-  },
-  // 动词第三人称 -s/-es
-  thirdPerson: (word) => {
-    if (word.endsWith('ies')) {
-      return [word.slice(0, -3) + 'y']; // flies -> fly
-    }
-    if (word.endsWith('es')) {
-      return [word.slice(0, -2)]; // goes -> go
-    }
-    if (word.endsWith('s')) {
-      return [word.slice(0, -1)]; // runs -> run
-    }
-    return [];
-  },
-  // 形容词比较级/最高级
-  comparative: (word) => {
-    if (word.endsWith('er')) {
-      const base = word.slice(0, -2);
-      return [
-        base,                    // bigger -> big
-        base + 'e',              // nicer -> nice
-        base.slice(0, -1),       // bigger -> big (双写)
-      ];
-    }
-    if (word.endsWith('est')) {
-      const base = word.slice(0, -3);
-      return [
-        base,                    // biggest -> big
-        base + 'e',              // nicest -> nice
-      ];
-    }
-    return [];
-  },
-};
-
-/**
- * 获取单词的所有可能原形
- */
-function getWordBaseForms(word: string): string[] {
-  const normalized = word.toLowerCase().trim();
-  const forms = new Set<string>([normalized]);
-
-  // 应用所有词形变化规则
-  for (const transform of Object.values(WORD_FORMS)) {
-    const baseForms = transform(normalized);
-    baseForms.forEach(form => {
-      if (form && form.length > 0) {
-        forms.add(form);
-      }
-    });
-  }
-
-  return Array.from(forms);
-}
-
-/**
- * 清理单词（移除标点）
- */
-function cleanWord(word: string): string {
-  return word.replace(/[.,!?;:'"()[\]{}]/g, '').toLowerCase().trim();
-}
+import { getDictionaryLookupForms, normalizeDictionaryWord } from '@/data/dictionary/wordForms';
 
 class DictionaryService {
   /**
    * 查询单词
    */
   async lookup(word: string): Promise<DictionaryEntry | null> {
-    const cleaned = cleanWord(word);
-    if (!cleaned) return null;
-
-    // 直接查询
-    let entry = await db.dictionary.get(cleaned);
-    if (entry) return entry;
-
-    // 尝试词形还原
-    const baseForms = getWordBaseForms(cleaned);
-    for (const form of baseForms) {
-      entry = await db.dictionary.get(form);
+    const forms = getDictionaryLookupForms(word);
+    for (const form of forms) {
+      const entry = await db.dictionary.get(form);
       if (entry) return entry;
     }
 
@@ -151,7 +40,7 @@ class DictionaryService {
    * 搜索单词（前缀匹配）
    */
   async search(prefix: string, limit = 10): Promise<DictionaryEntry[]> {
-    const cleaned = cleanWord(prefix);
+    const cleaned = normalizeDictionaryWord(prefix);
     if (!cleaned) return [];
 
     const entries = await db.dictionary
@@ -167,7 +56,7 @@ class DictionaryService {
    * 模糊搜索（包含匹配）
    */
   async fuzzySearch(query: string, limit = 20): Promise<DictionaryEntry[]> {
-    const cleaned = cleanWord(query);
+    const cleaned = normalizeDictionaryWord(query);
     if (!cleaned || cleaned.length < 2) return [];
 
     // 首先尝试前缀匹配
@@ -254,4 +143,3 @@ class DictionaryService {
 // 单例导出
 export const dictionaryService = new DictionaryService();
 export default dictionaryService;
-

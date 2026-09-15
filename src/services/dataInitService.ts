@@ -8,7 +8,7 @@ import { allStories, allDictionary, allRegions } from '@/data';
 import { generateUnifiedMapData } from '@/data/unifiedMap';
 
 const INIT_KEY = 'magic_english_data_initialized';
-const INIT_VERSION = '3.1.0';
+const INIT_VERSION = '3.2.0';
 
 /**
  * 检查是否需要初始化

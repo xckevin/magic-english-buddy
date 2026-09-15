@@ -4,8 +4,10 @@
  */
 
 import type { DictionaryEntry } from '@/db';
+import { storyCoreDictionary } from './story-core-words';
 
 export const l1Dictionary: DictionaryEntry[] = [
+  ...storyCoreDictionary,
   // ============ 代词 ============
   { word: 'I', phonetic: '/aɪ/', meaningCn: '我', meaningEn: 'first person singular', partOfSpeech: 'pron.', examples: ['I am happy.', 'I like apples.'], emoji: '👆', level: 1, frequency: 100 },
   { word: 'you', phonetic: '/juː/', meaningCn: '你', meaningEn: 'second person', partOfSpeech: 'pron.', examples: ['You are kind.', 'I love you.'], emoji: '👉', level: 1, frequency: 100 },
@@ -192,4 +194,3 @@ export const l1Dictionary: DictionaryEntry[] = [
 ];
 
 export default l1Dictionary;
-

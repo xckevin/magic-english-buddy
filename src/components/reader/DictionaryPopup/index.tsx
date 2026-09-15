@@ -6,7 +6,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Modal } from '@/components/common/Modal';
 import { dictionaryService } from '@/services/dictionaryService';
-import { ttsService } from '@/services/ttsService';
+import { isTTSAbortError, ttsService } from '@/services/ttsService';
 import type { DictionaryEntry } from '@/db';
 import styles from './DictionaryPopup.module.css';
 
@@ -66,8 +66,8 @@ export const DictionaryPopup: React.FC<DictionaryPopupProps> = ({
     setAudioError(null);
     try {
       await ttsService.speakWord(word);
-    } catch {
-      setAudioError('发音暂时不可用，请稍后再试。');
+    } catch (error) {
+      if (!isTTSAbortError(error)) setAudioError('发音暂时不可用，请稍后再试。');
     } finally {
       setIsPlaying(false);
     }

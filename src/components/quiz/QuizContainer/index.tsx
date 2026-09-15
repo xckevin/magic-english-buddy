@@ -24,6 +24,10 @@ interface QuizContainerProps {
   onComplete: (result: QuizResultData) => Promise<void>;
   /** 退出回调 */
   onExit: () => void;
+  /** Completed lessons keep quiz history but do not award repeat rewards. */
+  isReview?: boolean;
+  /** Fixed story reward that is granted together with a first passing quiz. */
+  storyRewardMagicPower?: number;
 }
 
 export interface QuizResultData {
@@ -47,6 +51,8 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
   storyId: _storyId, // 保留供后续扩展使用
   onComplete,
   onExit,
+  isReview = false,
+  storyRewardMagicPower = 0,
 }) => {
   // 状态
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -121,7 +127,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
 
     // 魔力值计算：每题正确 +3，错误 0，提示 -5
-    const earnedMagicPower = Math.max(0, correctCount * 3 - hintsUsed * 5);
+    const earnedMagicPower = isReview ? 0 : Math.max(0, correctCount * 3 - hintsUsed * 5);
 
     return {
       totalQuestions: questions.length,
@@ -132,7 +138,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
       timeSpent,
       answers,
     };
-  }, [answers, questions.length, startTime, hintsUsed]);
+  }, [answers, questions.length, startTime, hintsUsed, isReview]);
 
   // 完成 Quiz
   const handleFinish = useCallback(async () => {
@@ -228,6 +234,8 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
           >
             <QuizResult
               result={calculateResult()}
+              isReview={isReview}
+              storyRewardMagicPower={storyRewardMagicPower}
               onFinish={handleFinish}
               isSaving={isSaving}
               saveError={saveError}

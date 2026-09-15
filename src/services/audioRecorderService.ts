@@ -11,6 +11,7 @@ export interface RecordingState {
   duration: number;
   audioBlob: Blob | null;
   audioUrl: string | null;
+  error: string | null;
 }
 
 export class AudioRecorderService {
@@ -30,6 +31,7 @@ export class AudioRecorderService {
     duration: 0,
     audioBlob: null,
     audioUrl: null,
+    error: null,
   };
 
   private listeners = new Set<(state: RecordingState) => void>();
@@ -131,9 +133,9 @@ export class AudioRecorderService {
 
       recorder.onstop = () => {
         const shouldKeepRecording = this.activeSession === sessionId;
-        this.clearDurationTimer();
         this.releaseStream(stream);
         if (!shouldKeepRecording) return;
+        this.clearDurationTimer();
 
         const audioBlob = new Blob(this.audioChunks, { type: this.getSupportedMimeType() });
         this.activeSession = null;
@@ -144,6 +146,26 @@ export class AudioRecorderService {
           isPaused: false,
           audioBlob,
           audioUrl: URL.createObjectURL(audioBlob),
+        };
+        this.notify();
+      };
+
+      // A recorder can fail after permission has been granted (for example when
+      // its input track changes). Without this, the UI remains in “recording”
+      // state and the microphone stream/timer may never be released.
+      recorder.onerror = () => {
+        if (this.activeSession !== sessionId) return;
+        this.clearDurationTimer();
+        this.releaseStream(stream);
+        this.activeSession = null;
+        this.mediaRecorder = null;
+        this.state = {
+          ...this.state,
+          isRecording: false,
+          isPaused: false,
+          audioBlob: null,
+          audioUrl: null,
+          error: '录音已中断，请重新开始。',
         };
         this.notify();
       };
@@ -161,6 +183,7 @@ export class AudioRecorderService {
         duration: 0,
         audioBlob: null,
         audioUrl: null,
+        error: null,
       };
       this.notify();
       return true;
@@ -218,6 +241,7 @@ export class AudioRecorderService {
       duration: 0,
       audioBlob: null,
       audioUrl: null,
+      error: null,
     };
     this.notify();
   }

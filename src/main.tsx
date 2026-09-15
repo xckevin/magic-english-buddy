@@ -35,11 +35,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>
 );
 
-// PWA 注册
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/magic-english-buddy/sw.js').catch(error => {
-      console.warn('SW registration failed:', error);
-    });
-  });
-}
+// vite-plugin-pwa injects the production service-worker registration.

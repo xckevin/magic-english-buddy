@@ -4,10 +4,16 @@
  * 支持单词级别高亮同步、语速控制、暂停/恢复
  */
 
+import { BundledSpeechPlayer, getBundledSpeech } from './bundledAudioService';
+
+export type TTSOwner = 'reader' | 'shadowing' | 'dictionary' | 'quiz' | 'default';
+
 type TTSEventCallback = (event: TTSEvent) => void;
 
-interface TTSEvent {
+export interface TTSEvent {
   type: 'start' | 'end' | 'word' | 'pause' | 'resume' | 'error';
+  /** Identifies the screen that initiated this utterance. */
+  owner: TTSOwner;
   wordIndex?: number;
   word?: string;
   charIndex?: number;
@@ -22,6 +28,24 @@ interface TTSOptions {
   voice?: string; // 指定语音名称
 }
 
+export interface SpeakOptions {
+  owner?: TTSOwner;
+}
+
+interface ActivePlayback {
+  sessionId: number;
+  owner: TTSOwner;
+  utterance: SpeechSynthesisUtterance;
+  resolve: () => void;
+  reject: (reason: Error) => void;
+}
+
+export const isTTSAbortError = (error: unknown): boolean =>
+  error instanceof DOMException && error.name === 'AbortError';
+
+const cancelledError = (): DOMException =>
+  new DOMException('Speech playback was cancelled', 'AbortError');
+
 interface WordBoundary {
   word: string;
   start: number; // 字符起始位置
@@ -29,7 +53,7 @@ interface WordBoundary {
   index: number; // 单词索引
 }
 
-class TTSService {
+export class TTSService {
   private synthesis: SpeechSynthesis | null = null;
   private utterance: SpeechSynthesisUtterance | null = null;
   private voices: SpeechSynthesisVoice[] = [];
@@ -38,6 +62,11 @@ class TTSService {
   private currentWordIndex = 0;
   private wordBoundaries: WordBoundary[] = [];
   private listeners: Set<TTSEventCallback> = new Set();
+  private activePlayback: ActivePlayback | null = null;
+  private nextSessionId = 0;
+  private bundledPlayer = new BundledSpeechPlayer();
+  private bundledOwner: TTSOwner | null = null;
+  private bundledSession = 0;
   private options: TTSOptions = {
     rate: 1,
     pitch: 1,
@@ -145,12 +174,17 @@ class TTSService {
    */
   setRate(rate: number): void {
     this.options.rate = Math.max(0.5, Math.min(2, rate));
+    if (this.bundledOwner) {
+      this.bundledPlayer.setRate(this.options.rate);
+      return;
+    }
 
     // 如果正在播放，需要重新开始
     if (this.isPlaying && this.utterance) {
       const currentText = this.utterance.text;
+      const owner = this.activePlayback?.owner ?? 'default';
       this.stop();
-      this.speak(currentText);
+      void this.speak(currentText, { owner }).catch(() => undefined);
     }
   }
 
@@ -169,10 +203,64 @@ class TTSService {
     this.listeners.forEach(callback => callback(event));
   }
 
+  private isActive(sessionId: number): boolean {
+    return this.activePlayback?.sessionId === sessionId;
+  }
+
+  /**
+   * Web Speech exposes one global queue. Cancel its active utterance and settle
+   * the corresponding promise ourselves, because cancel() does not provide a
+   * completion callback that callers can await reliably.
+   */
+  private cancelActivePlayback(): void {
+    this.bundledOwner = null;
+    this.bundledSession = 0;
+    this.bundledPlayer.stop();
+    const active = this.activePlayback;
+    this.activePlayback = null;
+    if (active) active.reject(cancelledError());
+    this.synthesis?.cancel();
+    this.isPlaying = false;
+    this.isPaused = false;
+    this.currentWordIndex = 0;
+    this.utterance = null;
+  }
+
   /**
    * 播放文本
    */
-  speak(text: string): Promise<void> {
+  speak(text: string, options: SpeakOptions = {}): Promise<void> {
+    const clips = getBundledSpeech(text);
+    if (!clips) return this.speakNative(text, options);
+    this.cancelActivePlayback();
+    const owner = options.owner ?? 'default';
+    const sessionId = ++this.nextSessionId;
+    this.bundledOwner = owner;
+    this.bundledSession = sessionId;
+    return this.bundledPlayer.play(clips, this.getRate(), event => {
+      if (this.bundledSession !== sessionId) return;
+      if (event.type === 'start') { this.isPlaying = true; this.isPaused = false; }
+      if (event.type === 'end') { this.isPlaying = false; this.isPaused = false; }
+      if (event.type === 'pause') this.isPaused = true;
+      if (event.type === 'resume') this.isPaused = false;
+      if (event.wordIndex !== undefined) this.currentWordIndex = event.wordIndex;
+      this.emit({ ...event, owner });
+    }).catch(error => {
+      if (isTTSAbortError(error) || this.bundledSession !== sessionId) throw error;
+      // A missing/corrupt cached asset can still be read by the system voice.
+      this.bundledOwner = null;
+      this.isPlaying = false;
+      this.isPaused = false;
+      return this.speakNative(text, options);
+    }).finally(() => {
+      if (this.bundledSession === sessionId) {
+        this.bundledOwner = null;
+        this.bundledSession = 0;
+      }
+    });
+  }
+
+  private speakNative(text: string, { owner = 'default' }: SpeakOptions = {}): Promise<void> {
     return new Promise((resolve, reject) => {
       // 检查 TTS 是否可用
       if (!this.synthesis) {
@@ -180,52 +268,62 @@ class TTSService {
         return;
       }
 
-      // 停止之前的播放
-      this.stop();
+      // SpeechSynthesis has one global queue, so a newer request supersedes the old one.
+      this.cancelActivePlayback();
 
       // 解析单词边界
       this.wordBoundaries = this.parseWordBoundaries(text);
       this.currentWordIndex = 0;
 
       // 创建新的 utterance
-      this.utterance = new SpeechSynthesisUtterance(text);
+      const utterance = new SpeechSynthesisUtterance(text);
+      this.utterance = utterance;
 
       // 应用选项
-      this.utterance.rate = this.options.rate || 1;
-      this.utterance.pitch = this.options.pitch || 1;
-      this.utterance.volume = this.options.volume || 1;
-      this.utterance.lang = this.options.lang || 'en-US';
+      utterance.rate = this.options.rate || 1;
+      utterance.pitch = this.options.pitch || 1;
+      utterance.volume = this.options.volume || 1;
+      utterance.lang = this.options.lang || 'en-US';
 
       // 设置语音
       const voice = this.getRecommendedVoice();
       if (voice) {
-        this.utterance.voice = voice;
+        utterance.voice = voice;
       }
 
+      const sessionId = ++this.nextSessionId;
+      this.activePlayback = { sessionId, owner, utterance, resolve, reject };
+
       // 事件处理
-      this.utterance.onstart = () => {
+      utterance.onstart = () => {
+        if (!this.isActive(sessionId)) return;
         this.isPlaying = true;
         this.isPaused = false;
-        this.emit({ type: 'start' });
+        this.emit({ type: 'start', owner });
       };
 
-      this.utterance.onend = () => {
+      utterance.onend = () => {
+        if (!this.isActive(sessionId)) return;
+        this.activePlayback = null;
         this.isPlaying = false;
         this.isPaused = false;
-        this.emit({ type: 'end' });
+        this.emit({ type: 'end', owner });
         resolve();
       };
 
-      this.utterance.onerror = event => {
+      utterance.onerror = event => {
+        if (!this.isActive(sessionId)) return;
+        this.activePlayback = null;
         this.isPlaying = false;
         this.isPaused = false;
         const errorMsg = event.error || 'Unknown TTS error';
-        this.emit({ type: 'error', error: errorMsg });
+        this.emit({ type: 'error', owner, error: errorMsg });
         reject(new Error(errorMsg));
       };
 
       // 单词边界事件（不是所有浏览器都支持）
-      this.utterance.onboundary = event => {
+      utterance.onboundary = event => {
+        if (!this.isActive(sessionId)) return;
         if (event.name === 'word') {
           const wordIndex = this.findWordIndexByCharIndex(event.charIndex);
           this.currentWordIndex = wordIndex;
@@ -233,6 +331,7 @@ class TTSService {
 
           this.emit({
             type: 'word',
+            owner,
             wordIndex,
             word: boundary?.word,
             charIndex: event.charIndex,
@@ -241,51 +340,31 @@ class TTSService {
       };
 
       // 开始播放
-      this.synthesis.speak(this.utterance);
+      this.synthesis.speak(utterance);
     });
   }
 
   /**
    * 播放单个单词
    */
-  speakWord(word: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      // 检查 TTS 是否可用
-      if (!this.synthesis) {
-        reject(new Error('TTS not supported'));
-        return;
-      }
-
-      // 取消之前的播放但不重置状态
-      this.synthesis.cancel();
-
-      const utterance = new SpeechSynthesisUtterance(word);
-      utterance.rate = (this.options.rate || 1) * 0.9; // 单词稍慢
-      utterance.pitch = this.options.pitch || 1;
-      utterance.volume = this.options.volume || 1;
-      utterance.lang = this.options.lang || 'en-US';
-
-      const voice = this.getRecommendedVoice();
-      if (voice) {
-        utterance.voice = voice;
-      }
-
-      utterance.onend = () => resolve();
-      utterance.onerror = () => reject(new Error('Word TTS failed'));
-
-      this.synthesis.speak(utterance);
-    });
+  speakWord(word: string, options: SpeakOptions = {}): Promise<void> {
+    const originalRate = this.options.rate;
+    this.options.rate = (this.options.rate || 1) * 0.9;
+    const playback = this.speak(word, { owner: options.owner ?? 'dictionary' });
+    this.options.rate = originalRate;
+    return playback;
   }
 
   /**
    * 暂停播放
    */
   pause(): void {
+    if (this.bundledOwner) { this.bundledPlayer.pause(); return; }
     if (!this.synthesis) return;
     if (this.isPlaying && !this.isPaused) {
       this.synthesis.pause();
       this.isPaused = true;
-      this.emit({ type: 'pause' });
+      this.emit({ type: 'pause', owner: this.activePlayback?.owner ?? 'default' });
     }
   }
 
@@ -293,24 +372,21 @@ class TTSService {
    * 恢复播放
    */
   resume(): void {
+    if (this.bundledOwner) { this.bundledPlayer.resume(); return; }
     if (!this.synthesis) return;
     if (this.isPaused) {
       this.synthesis.resume();
       this.isPaused = false;
-      this.emit({ type: 'resume' });
+      this.emit({ type: 'resume', owner: this.activePlayback?.owner ?? 'default' });
     }
   }
 
   /**
    * 停止播放
    */
-  stop(): void {
-    if (!this.synthesis) return;
-    this.synthesis.cancel();
-    this.isPlaying = false;
-    this.isPaused = false;
-    this.currentWordIndex = 0;
-    this.utterance = null;
+  stop(owner?: TTSOwner): void {
+    if (owner && this.activePlayback?.owner !== owner && this.bundledOwner !== owner) return;
+    this.cancelActivePlayback();
   }
 
   /**

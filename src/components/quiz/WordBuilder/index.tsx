@@ -6,12 +6,26 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import type { QuizItem } from '@/db';
+import { getQuizEmoji } from '../quizIllustrations';
 import styles from './WordBuilder.module.css';
 
 interface WordBuilderProps {
   question: QuizItem;
   onAnswer: (answer: string) => void;
   onHint: () => void;
+}
+
+function shuffleLetters(letters: string[]): string[] {
+  const shuffled = [...letters];
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  // Most bundled exercises accidentally provide letters in the answer order.
+  if (new Set(letters).size > 1 && shuffled.join('') === letters.join('')) {
+    shuffled.push(shuffled.shift()!);
+  }
+  return shuffled;
 }
 
 export const WordBuilder: React.FC<WordBuilderProps> = ({
@@ -21,15 +35,16 @@ export const WordBuilder: React.FC<WordBuilderProps> = ({
 }) => {
   // 打乱的字母 - 使用 useMemo 确保只在 question 变化时重新计算
   const shuffledLetters = useMemo(() => 
-    question.shuffledWords || [], 
+    shuffleLetters(question.shuffledWords || []),
     [question.shuffledWords]
   );
   
   // 已选择的字母
   const [selectedLetters, setSelectedLetters] = useState<string[]>([]);
+  const [hintUsed, setHintUsed] = useState(false);
   // 剩余可选字母 - 使用初始化函数避免每次渲染重新计算
   const [availableLetters, setAvailableLetters] = useState<string[]>(() => 
-    question.shuffledWords || []
+    shuffledLetters
   );
 
   // 选择字母
@@ -60,17 +75,19 @@ export const WordBuilder: React.FC<WordBuilderProps> = ({
 
   // 使用提示
   const handleHint = useCallback(() => {
-    onHint();
+    if (hintUsed || selectedLetters.length > 0) return;
     // 显示第一个字母
     const correctAnswer = question.correctAnswer || '';
     const firstLetter = correctAnswer[0];
     if (correctAnswer.length > 0 && selectedLetters.length === 0 && firstLetter) {
       const letterIndex = availableLetters.indexOf(firstLetter);
       if (letterIndex !== -1) {
+        setHintUsed(true);
+        onHint();
         handleSelectLetter(firstLetter, letterIndex);
       }
     }
-  }, [onHint, question.correctAnswer, selectedLetters.length, availableLetters, handleSelectLetter]);
+  }, [hintUsed, onHint, question.correctAnswer, selectedLetters.length, availableLetters, handleSelectLetter]);
 
   const isComplete = availableLetters.length === 0;
 
@@ -82,10 +99,10 @@ export const WordBuilder: React.FC<WordBuilderProps> = ({
         <p className={styles.instruction}>{question.question}</p>
         
         {/* 图片提示 */}
-        {question.audioQuestion && (
+        {getQuizEmoji(question.audioQuestion) && (
           <div className={styles.imageHint}>
             <span className={styles.hintEmoji}>
-              {question.audioQuestion}
+              {getQuizEmoji(question.audioQuestion)}
             </span>
           </div>
         )}
@@ -133,8 +150,8 @@ export const WordBuilder: React.FC<WordBuilderProps> = ({
 
       {/* 操作按钮 */}
       <div className={styles.actions}>
-        <button className={styles.hintBtn} onClick={handleHint}>
-          💡 提示 (-5 MP)
+        <button className={styles.hintBtn} onClick={handleHint} disabled={hintUsed || selectedLetters.length > 0}>
+          {hintUsed ? '💡 已使用提示' : '💡 提示 (-5 MP)'}
         </button>
         <button className={styles.clearBtn} onClick={handleClear}>
           🔄 重置
@@ -153,4 +170,3 @@ export const WordBuilder: React.FC<WordBuilderProps> = ({
 };
 
 export default WordBuilder;
-

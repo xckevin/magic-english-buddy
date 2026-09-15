@@ -4,6 +4,7 @@
  */
 
 import { db, type UserProgress } from '@/db';
+import { checkAndUnlockAchievementsInTransaction } from '@/services/achievementService';
 
 // Buddy 进化阶段
 export type BuddyStage = 1 | 2 | 3 | 4;
@@ -176,17 +177,17 @@ export const checkEvolution = async (userId: string): Promise<{
  * 执行进化
  */
 export const evolve = async (userId: string): Promise<boolean> => {
-  const { canEvolve, nextStage } = await checkEvolution(userId);
-  
-  if (!canEvolve || !nextStage) {
-    return false;
-  }
-
-  await db.userProgress.update(userId, {
-    buddyStage: nextStage,
+  return db.transaction('rw', [db.userProgress, db.achievements], async () => {
+    // Re-read in the transaction so two taps cannot skip a stage or create an
+    // evolution achievement without persisting the new stage.
+    const progress = await db.userProgress.get(userId);
+    if (!progress || progress.buddyStage >= 4) return false;
+    const nextStage = (progress.buddyStage + 1) as BuddyStage;
+    if (progress.magicPower < EVOLUTION_CONFIG[nextStage].minMagicPower) return false;
+    await db.userProgress.update(userId, { buddyStage: nextStage });
+    await checkAndUnlockAchievementsInTransaction(userId, { buddyStage: nextStage });
+    return true;
   });
-
-  return true;
 };
 
 /**
@@ -254,4 +255,3 @@ export default {
   EVOLUTION_CONFIG,
   MOOD_CONFIG,
 };
-

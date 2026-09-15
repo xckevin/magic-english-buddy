@@ -10,9 +10,9 @@ import { useAppStore } from '@/stores/useAppStore';
 import { QRSync, AchievementCard, MagicCard } from '@/components/incentive';
 import { BuddyAvatar } from '@/components/buddy';
 import AppShell from '@/components/common/AppShell';
-import { getBuddyState, type BuddyState, checkEvolution } from '@/services/buddyService';
+import { getBuddyState, type BuddyState, checkEvolution, evolve } from '@/services/buddyService';
 import { getUserCards, type CardData } from '@/services/cardCollectionService';
-import { ACHIEVEMENTS, getUserAchievements } from '@/services/achievementService';
+import { ACHIEVEMENTS, claimAchievementReward, getUserAchievements } from '@/services/achievementService';
 import { dictionaryService } from '@/services/dictionaryService';
 import styles from './ScrollPage.module.css';
 
@@ -22,7 +22,7 @@ interface PageData {
   user: User | null;
   progress: UserProgress | null;
   buddy: BuddyState | null;
-  evolution: { canEvolve: boolean; progress: number };
+  evolution: { canEvolve: boolean; progress: number; nextStage: number | null };
   cards: CardData[];
   achievements: Achievement[];
 }
@@ -43,6 +43,8 @@ const ScrollPage: React.FC = () => {
   const [data, setData] = useState<PageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [isActing, setIsActing] = useState(false);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -57,7 +59,7 @@ const ScrollPage: React.FC = () => {
           user: null,
           progress: null,
           buddy: null,
-          evolution: { canEvolve: false, progress: 0 },
+          evolution: { canEvolve: false, progress: 0, nextStage: null },
           cards: [],
           achievements: [],
         });
@@ -87,7 +89,11 @@ const ScrollPage: React.FC = () => {
         user,
         progress: progress || null,
         buddy,
-        evolution: { canEvolve: evolutionInfo.canEvolve, progress: evolutionInfo.progress },
+        evolution: {
+          canEvolve: evolutionInfo.canEvolve,
+          progress: evolutionInfo.progress,
+          nextStage: evolutionInfo.nextStage,
+        },
         cards,
         achievements,
       });
@@ -103,6 +109,39 @@ const ScrollPage: React.FC = () => {
   useEffect(() => {
     void loadData();
   }, [loadData]);
+
+  const handleEvolution = useCallback(async () => {
+    if (!data?.user || isActing) return;
+    setIsActing(true);
+    setActionMessage(null);
+    try {
+      const didEvolve = await evolve(data.user.id);
+      setActionMessage(didEvolve ? '伙伴进化成功！' : '还需要更多魔力才能进化。');
+      await loadData();
+    } catch {
+      setActionMessage('伙伴暂时没有完成进化，请重试。');
+    } finally {
+      setIsActing(false);
+    }
+  }, [data?.user, isActing, loadData]);
+
+  const handleClaimAchievement = useCallback(
+    async (achievement: Achievement) => {
+      if (isActing || achievement.claimed) return;
+      setIsActing(true);
+      setActionMessage(null);
+      try {
+        const amount = await claimAchievementReward(achievement.id);
+        setActionMessage(amount ? `已领取 ${amount} 魔力值。` : '这个奖励已经领取过了。');
+        await loadData();
+      } catch {
+        setActionMessage('奖励暂时无法领取，请重试。');
+      } finally {
+        setIsActing(false);
+      }
+    },
+    [isActing, loadData]
+  );
 
   const renderOverview = () => {
     const progress = data?.progress;
@@ -131,7 +170,17 @@ const ScrollPage: React.FC = () => {
                   />
                 </div>
                 {data?.evolution.canEvolve && (
-                  <p className={styles.readyHint}>伙伴已积累足够魔力，继续一起探索吧。</p>
+                  <div>
+                    <p className={styles.readyHint}>伙伴已积累足够魔力，可以进化了！</p>
+                    <button
+                      className={styles.primaryAction}
+                      type="button"
+                      disabled={isActing}
+                      onClick={() => void handleEvolution()}
+                    >
+                      {isActing ? '正在进化…' : `进化为第 ${data.evolution.nextStage} 阶段`}
+                    </button>
+                  </div>
                 )}
               </div>
             </>
@@ -160,7 +209,7 @@ const ScrollPage: React.FC = () => {
           <div className={styles.statCard}>
             <span aria-hidden="true">📖</span>
             <strong>{progress?.totalStoriesRead || 0}</strong>
-            <small>完成故事</small>
+            <small>读过故事</small>
           </div>
           <div className={styles.statCard}>
             <span aria-hidden="true">🔥</span>
@@ -223,16 +272,28 @@ const ScrollPage: React.FC = () => {
           {ACHIEVEMENTS.map(definition => {
             const achievement = unlocked.get(definition.id);
             return (
-              <AchievementCard
-                key={definition.id}
-                name={definition.name}
-                nameCn={definition.nameCn}
-                description={definition.description}
-                icon={definition.icon}
-                unlocked={Boolean(achievement)}
-                unlockedAt={achievement ? formatDate(achievement.unlockedAt) : undefined}
-                rewardMagicPower={definition.reward.magicPower}
-              />
+              <div key={definition.id}>
+                <AchievementCard
+                  name={definition.name}
+                  nameCn={definition.nameCn}
+                  description={definition.description}
+                  icon={definition.icon}
+                  unlocked={Boolean(achievement)}
+                  unlockedAt={achievement ? formatDate(achievement.unlockedAt) : undefined}
+                  rewardMagicPower={definition.reward.magicPower}
+                />
+                {achievement && !achievement.claimed && (
+                  <button
+                    className={styles.primaryAction}
+                    type="button"
+                    disabled={isActing}
+                    onClick={() => void handleClaimAchievement(achievement)}
+                  >
+                    {isActing ? '正在领取…' : `领取 ${definition.reward.magicPower} 魔力值`}
+                  </button>
+                )}
+                {achievement?.claimed && <p className={styles.readyHint}>奖励已领取</p>}
+              </div>
             );
           })}
         </div>
@@ -295,6 +356,7 @@ const ScrollPage: React.FC = () => {
           ))}
         </div>
         <div className={styles.content}>{renderContent()}</div>
+        {actionMessage && <p className={styles.helpText} role="status">{actionMessage}</p>}
       </div>
     </AppShell>
   );

@@ -30,6 +30,12 @@ export default [
         fetch: 'readonly',
         URL: 'readonly',
         Blob: 'readonly',
+        AbortController: 'readonly',
+        DOMException: 'readonly',
+        BlobEvent: 'readonly',
+        HTMLMediaElement: 'readonly',
+        MediaRecorderOptions: 'readonly',
+        SpeechSynthesisEvent: 'readonly',
         File: 'readonly',
         FileReader: 'readonly',
         FormData: 'readonly',
@@ -43,6 +49,12 @@ export default [
         requestAnimationFrame: 'readonly',
         cancelAnimationFrame: 'readonly',
         AudioContext: 'readonly',
+        AudioContextState: 'readonly',
+        AudioBuffer: 'readonly',
+        AudioBufferSourceNode: 'readonly',
+        AudioParam: 'readonly',
+        AudioDestinationNode: 'readonly',
+        Window: 'readonly',
         MediaRecorder: 'readonly',
         SpeechSynthesis: 'readonly',
         SpeechSynthesisUtterance: 'readonly',
@@ -120,4 +132,3 @@ export default [
     ignores: ['dist/**', 'node_modules/**', '*.config.js']
   }
 ];
-

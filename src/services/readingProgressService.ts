@@ -263,30 +263,33 @@ class ReadingProgressService {
    */
   async markStoryCompleted(storyId: string): Promise<void> {
     await db.transaction('rw', db.mapNodes, async () => {
-      // 查找对应的地图节点并标记为完成
-      const node = await db.mapNodes.where('storyId').equals(storyId).first();
-
-      if (node) {
-        await db.mapNodes.update(node.id, {
-          completed: true,
-        });
-
-        // 解锁后续节点：查找所有将当前节点作为前置条件的节点
-        const dependentNodes = await db.mapNodes
-          .filter(n => n.prerequisites?.includes(node.id))
-          .toArray();
-
-        for (const nextNode of dependentNodes) {
-          // 检查该节点的所有前置条件是否都已完成
-          const allPrereqsCompleted = await this.checkAllPrerequisitesCompleted(
-            nextNode.prerequisites
-          );
-          if (allPrereqsCompleted) {
-            await db.mapNodes.update(nextNode.id, { unlocked: true });
-          }
-        }
-      }
+      await this.markStoryCompletedInTransaction(storyId);
     });
+  }
+
+  /**
+   * Marks a node and its newly available dependents while an enclosing Dexie
+   * transaction is active. Completion settlement uses this so map state cannot
+   * be committed without the accompanying rewards and quiz history.
+   */
+  async markStoryCompletedInTransaction(storyId: string): Promise<string[]> {
+    const node = await db.mapNodes.where('storyId').equals(storyId).first();
+    if (!node) return [];
+
+    await db.mapNodes.update(node.id, { completed: true, unlocked: true });
+    const dependentNodes = await db.mapNodes
+      .filter(n => n.prerequisites?.includes(node.id))
+      .toArray();
+    const unlockedNodeIds: string[] = [];
+
+    for (const nextNode of dependentNodes) {
+      if (nextNode.unlocked) continue;
+      if (await this.checkAllPrerequisitesCompleted(nextNode.prerequisites)) {
+        await db.mapNodes.update(nextNode.id, { unlocked: true });
+        unlockedNodeIds.push(nextNode.id);
+      }
+    }
+    return unlockedNodeIds;
   }
 
   /**

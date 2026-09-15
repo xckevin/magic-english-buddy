@@ -1,0 +1,129 @@
+.section {
+  margin-top: 28px;
+  color: var(--ink);
+}
+.section > h2 {
+  margin: 0 0 10px 4px;
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+}
+.panel {
+  padding: 18px 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface-card);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.intro {
+  margin: 0 0 18px;
+}
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.summary strong {
+  font-size: 16px;
+}
+.summary p {
+  margin: 4px 0 0;
+  color: var(--ink-muted);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.actions button {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+.actions button.primary {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: transparent;
+}
+.actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.actions button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.packs {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 18px 0;
+  list-style: none;
+}
+.pack {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  min-width: 0;
+}
+.packHeading,
+.packFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pack h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.pack p {
+  margin: 3px 0 0;
+  color: var(--ink-muted);
+}
+.status,
+.ready {
+  font-size: 12px;
+}
+.status,
+.packFooter small {
+  color: var(--ink-muted);
+}
+.ready {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+.pack progress {
+  width: 100%;
+  height: 8px;
+  display: block;
+  margin: 12px 0;
+  accent-color: var(--color-primary);
+}
+.note {
+  margin: 8px 0 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+.error {
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #9d1b13;
+  background: #fff0ed;
+}
+@media (min-width: 800px) {
+  .packs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -4,7 +4,7 @@
  * 类似多邻国的设计：从底部起点向上延伸
  */
 
-import type { MapNode, MapRegion } from '@/db';
+import type { MapNode, MapRegion, Story } from '@/db';
 import { levelDataMap } from './index';
 import type { LevelNumber } from './index';
 
@@ -80,6 +80,103 @@ export const levelThemeColors: Record<
   7: { primary: '#F43F5E', secondary: '#FDA4AF', bg: '#1C1917' }, // 核心红
 };
 
+/**
+ * A few of the original level maps were authored before their final stories
+ * existed. Keep every authored node ID intact and give the added lessons
+ * stable, collision-free IDs instead of reusing an old placeholder (notably
+ * `node_l2_boss`, which has historically pointed at `l2_010`).
+ */
+const supplementalNodeId = (storyId: string): string => `node_course_${storyId}`;
+
+const isNumberedStory = (storyId: string): boolean => /_\d{3}$/.test(storyId);
+
+const nodeTypeForStory = (story: Story, source?: MapNode): MapNode['type'] => {
+  if (story.nodeType) return story.nodeType;
+  // Some legacy source maps styled their last numbered story as a boss. The
+  // story catalogue is the source of truth for that lesson's type.
+  if (isNumberedStory(story.id)) return 'story';
+  return source?.type ?? 'story';
+};
+
+const nodeFromStory = (
+  story: Story,
+  source: MapNode | undefined,
+  previous: MapNode | undefined
+): MapNode => {
+  const type = nodeTypeForStory(story, source);
+  const sourceMatchesType = source?.type === type;
+  const fallbackPosition = previous
+    ? { x: previous.position.x, y: previous.position.y + 120 }
+    : { x: 200, y: 80 };
+
+  return {
+    id: source?.id ?? supplementalNodeId(story.id),
+    regionId: story.regionId,
+    type,
+    storyId: story.id,
+    position: source?.position ?? fallbackPosition,
+    prerequisites: [],
+    // Preserve authored rewards for unchanged nodes. Correct a legacy source
+    // node only when its type was changed to match its bundled story.
+    rewards: sourceMatchesType ? source.rewards : story.rewards,
+    unlocked: source?.unlocked ?? false,
+    completed: source?.completed ?? false,
+    title: sourceMatchesType ? source.title : story.title,
+    titleCn: sourceMatchesType ? source.titleCn : story.titleCn,
+    emoji: sourceMatchesType ? source.emoji : undefined,
+  };
+};
+
+/**
+ * Keep the authored map ordering (including its bonus and challenge slots),
+ * then insert stories added after those maps were designed before the next
+ * numbered story or the boss. This produces one topologically ordered route
+ * for every bundled story without making old placeholder nodes playable.
+ */
+const orderLevelNodes = (sourceNodes: MapNode[], stories: Story[]): MapNode[] => {
+  const storyById = new Map(stories.map(story => [story.id, story]));
+  const representedStoryIds = new Set<string>();
+  const nodes: MapNode[] = [];
+
+  for (const source of sourceNodes) {
+    const story = source.storyId ? storyById.get(source.storyId) : undefined;
+    if (!story || representedStoryIds.has(story.id)) continue;
+    nodes.push(nodeFromStory(story, source, nodes[nodes.length - 1]));
+    representedStoryIds.add(story.id);
+  }
+
+  for (const story of stories) {
+    if (representedStoryIds.has(story.id)) continue;
+    const node = nodeFromStory(story, undefined, nodes[nodes.length - 1]);
+    const nextNumberedStory = isNumberedStory(story.id)
+      ? nodes.findIndex(candidate => {
+          const candidateId = candidate.storyId;
+          return (
+            !!candidateId &&
+            isNumberedStory(candidateId) &&
+            candidateId.localeCompare(story.id) > 0
+          );
+        })
+      : -1;
+    const bossIndex = nodes.findIndex(candidate => candidate.type === 'boss');
+    const insertionIndex =
+      nextNumberedStory >= 0
+        ? nextNumberedStory
+        : bossIndex >= 0
+          ? bossIndex
+          : nodes.length;
+    nodes.splice(insertionIndex, 0, node);
+    representedStoryIds.add(story.id);
+  }
+
+  return nodes.map((node, index) => ({
+    ...node,
+    // The map is intentionally a single ordered route. This also replaces
+    // prerequisites that formerly pointed at invisible treasure/branch slots.
+    prerequisites: index === 0 ? [] : [nodes[index - 1]!.id],
+  }));
+};
+
 // ============ 生成函数 ============
 
 /**
@@ -96,30 +193,10 @@ export const generateUnifiedMapData = (): UnifiedMapData => {
     const levelNum = level as LevelNumber;
     const levelData = levelDataMap[levelNum];
     const region = levelData.regionConfig;
-    const sourceNodes = levelData.getMapNodes();
-    const hasContent = (node: MapNode) =>
-      !!node.storyId && levelData.stories.some(story => story.id === node.storyId);
-    // Some legacy bonus/checkpoint nodes have no learning content. Bypass those
-    // placeholders instead of sending a child into an empty, unfinishable lesson.
-    const resolvePrerequisites = (id: string, seen = new Set<string>()): string[] => {
-      if (seen.has(id)) return [];
-      const source = sourceNodes.find(node => node.id === id);
-      if (!source || hasContent(source)) return [id];
-      const nextSeen = new Set(seen).add(id);
-      return source.prerequisites.flatMap(prerequisite =>
-        resolvePrerequisites(prerequisite, nextSeen)
-      );
-    };
-    const nodes = sourceNodes.filter(hasContent).map(node => ({
-      ...node,
-      prerequisites: [...new Set(node.prerequisites.flatMap(id => resolvePrerequisites(id)))],
-    }));
+    const nodes = orderLevelNodes(levelData.getMapNodes(), levelData.stories);
 
     // 记录级别起始索引
     const startIndex = globalIndex;
-
-    // 按 ID 排序确保顺序正确
-    nodes.sort((a, b) => a.id.localeCompare(b.id));
 
     // 转换为统一节点
     nodes.forEach((node, levelIndex) => {

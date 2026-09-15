@@ -4,8 +4,12 @@
  */
 
 import { db, type ReadingRecord, type Story, type ShadowingRecord, generateId } from '@/db';
+import { assertLearningRevision, getLearningRevision } from './learningRevisionService';
+import { completeUserStoryMapNodeInTransaction } from './mapProgressService';
+import { getEffectiveStreak, recordLearningActivityInTransaction } from './learningActivityService';
 
 interface ReadingSession {
+  databaseRevision: Promise<string | null>;
   storyId: string;
   startTime: number;
   currentParagraph: number;
@@ -23,6 +27,7 @@ class ReadingProgressService {
    */
   startSession(storyId: string, totalParagraphs: number = 1): void {
     this.currentSession = {
+      databaseRevision: getLearningRevision().catch(() => null),
       storyId,
       startTime: Date.now(),
       currentParagraph: 0,
@@ -108,7 +113,10 @@ class ReadingProgressService {
     session: ReadingSession
   ): Promise<ReadingRecord | null> {
     try {
-      await db.transaction('rw', db.readingHistory, db.userProgress, async () => {
+      const revision = await session.databaseRevision;
+      if (revision === null) throw new Error('Learning records unavailable');
+      await db.transaction('rw', db.readingHistory, db.userProgress, db.learningMeta, async () => {
+        await assertLearningRevision(revision);
         await db.readingHistory.add(record);
 
         const userProgress = await db.userProgress.get(userId);
@@ -127,19 +135,8 @@ class ReadingProgressService {
           totalStoriesRead: completedStoryIds.size,
           totalReadingTime,
         };
-
-        if (record.completed) {
-          const today = localDateString(record.endTime);
-          updates.lastStudyDate = today;
-          updates.streakDays = nextStreakDays(
-            userProgress.lastStudyDate,
-            userProgress.streakDays,
-            record.endTime,
-            today
-          );
-        }
-
         await db.userProgress.update(userId, updates);
+        if (record.completed) await recordLearningActivityInTransaction(userId);
       });
 
       if (this.currentSession === session) {
@@ -204,44 +201,20 @@ class ReadingProgressService {
     totalWordsLookedUp: number;
     streakDays: number;
   }> {
-    const allRecords = await db.readingHistory.where('userId').equals(userId).toArray();
+    const [allRecords, progress] = await Promise.all([
+      db.readingHistory.where('userId').equals(userId).toArray(),
+      db.userProgress.get(userId),
+    ]);
 
     const uniqueStories = new Set(allRecords.map(r => r.storyId));
     const totalDuration = allRecords.reduce((sum, r) => sum + r.duration, 0);
     const uniqueWords = new Set(allRecords.flatMap(r => r.wordsLookedUp));
 
-    // 计算连续学习天数
-    const dates = [
-      ...new Set(
-        allRecords.map(r => {
-          const date = new Date(r.startTime);
-          return date.toISOString().split('T')[0];
-        })
-      ),
-    ]
-      .sort()
-      .reverse();
-
-    let streakDays = 0;
-    const today = new Date();
-
-    for (let i = 0; i < dates.length; i++) {
-      const expectedDate = new Date(today);
-      expectedDate.setDate(today.getDate() - i);
-      const expectedDateStr = expectedDate.toISOString().split('T')[0];
-
-      if (dates.includes(expectedDateStr)) {
-        streakDays++;
-      } else {
-        break;
-      }
-    }
-
     return {
       totalStories: uniqueStories.size,
       totalDuration,
       totalWordsLookedUp: uniqueWords.size,
-      streakDays,
+      streakDays: progress ? getEffectiveStreak(progress) : 0,
     };
   }
 
@@ -261,10 +234,14 @@ class ReadingProgressService {
   /**
    * 标记故事为已完成（更新地图节点状态）
    */
-  async markStoryCompleted(storyId: string): Promise<void> {
-    await db.transaction('rw', db.mapNodes, async () => {
-      await this.markStoryCompletedInTransaction(storyId);
-    });
+  async markStoryCompleted(userId: string, storyId: string): Promise<void> {
+    await db.transaction(
+      'rw',
+      [db.users, db.userProgress, db.quizHistory, db.mapNodes, db.learningMeta],
+      async () => {
+        await this.markStoryCompletedInTransaction(userId, storyId);
+      }
+    );
   }
 
   /**
@@ -272,41 +249,8 @@ class ReadingProgressService {
    * transaction is active. Completion settlement uses this so map state cannot
    * be committed without the accompanying rewards and quiz history.
    */
-  async markStoryCompletedInTransaction(storyId: string): Promise<string[]> {
-    const node = await db.mapNodes.where('storyId').equals(storyId).first();
-    if (!node) return [];
-
-    await db.mapNodes.update(node.id, { completed: true, unlocked: true });
-    const dependentNodes = await db.mapNodes
-      .filter(n => n.prerequisites?.includes(node.id))
-      .toArray();
-    const unlockedNodeIds: string[] = [];
-
-    for (const nextNode of dependentNodes) {
-      if (nextNode.unlocked) continue;
-      if (await this.checkAllPrerequisitesCompleted(nextNode.prerequisites)) {
-        await db.mapNodes.update(nextNode.id, { unlocked: true });
-        unlockedNodeIds.push(nextNode.id);
-      }
-    }
-    return unlockedNodeIds;
-  }
-
-  /**
-   * 检查所有前置条件是否已完成
-   */
-  private async checkAllPrerequisitesCompleted(prerequisites: string[]): Promise<boolean> {
-    if (!prerequisites || prerequisites.length === 0) {
-      return true;
-    }
-
-    for (const prereqId of prerequisites) {
-      const prereqNode = await db.mapNodes.get(prereqId);
-      if (!prereqNode || !prereqNode.completed) {
-        return false;
-      }
-    }
-    return true;
+  async markStoryCompletedInTransaction(userId: string, storyId: string): Promise<string[]> {
+    return (await completeUserStoryMapNodeInTransaction(userId, storyId)).newlyUnlockedNodeIds;
   }
 
   /**
@@ -339,31 +283,6 @@ class ReadingProgressService {
     this.currentSession = null;
   }
 }
-
-const localDateString = (time: number): string => {
-  const date = new Date(time);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const nextStreakDays = (
-  lastStudyDate: string,
-  streakDays: number,
-  timestamp: number,
-  today: string
-): number => {
-  if (lastStudyDate === today) return Math.max(1, streakDays);
-
-  const previousDay = new Date(timestamp);
-  previousDay.setHours(0, 0, 0, 0);
-  previousDay.setDate(previousDay.getDate() - 1);
-  if (lastStudyDate === localDateString(previousDay.getTime())) {
-    return Math.max(1, streakDays) + 1;
-  }
-  return 1;
-};
 
 // 单例导出
 export const readingProgressService = new ReadingProgressService();

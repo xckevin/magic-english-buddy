@@ -6,6 +6,10 @@ import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { InstallPrompt, Modal } from '@/components/common';
 import AppShell from '@/components/common/AppShell';
 import { db } from '@/db';
+import { OfflineAudioSettings } from '@/components/settings/OfflineAudioSettings';
+import { BackupSettings } from '@/components/settings/BackupSettings';
+import { ProfileSettings } from '@/components/settings/ProfileSettings';
+import { audioDownloadService } from '@/services/audioDownloadService';
 import styles from './SettingsPage.module.css';
 
 interface SettingItemProps {
@@ -82,7 +86,7 @@ const SpeedSelector: React.FC<{
 const SettingsPage: React.FC = () => {
   const settings = useSettings();
   const { updateSettings, resetSettings } = useAppStore();
-  const { canInstall, isInstalled, isStandalone } = usePWAInstall();
+  const { canInstall, isInstalled, isStandalone, isIOS } = usePWAInstall();
   const [dialog, setDialog] = useState<'reset' | 'clear' | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
@@ -117,6 +121,10 @@ const SettingsPage: React.FC = () => {
     setIsClearing(true);
     setSaveError(null);
     try {
+      if (audioDownloadService.getSnapshot().supported) {
+        await audioDownloadService.remove('all');
+        if (audioDownloadService.getSnapshot().error) throw new Error('Audio removal failed');
+      }
       await db.delete();
       localStorage.removeItem('magic-english-storage');
       localStorage.removeItem('magic_english_data_initialized');
@@ -141,7 +149,7 @@ const SettingsPage: React.FC = () => {
         }
       : {
           title: '清除所有数据',
-          message: '这会删除本设备上的学习进度、收藏和设置，且无法恢复。',
+          message: '这会删除本设备上的学习进度、收藏、设置和已下载音频。学习记录无法恢复。',
           confirm: isClearing ? '清除中…' : '确定清除',
           action: handleClearData,
           danger: true,
@@ -178,6 +186,16 @@ const SettingsPage: React.FC = () => {
             </SettingItem>
           </div>
         </section>
+
+        <ProfileSettings
+          onProfileActivated={() =>
+            window.location.replace(`${import.meta.env.BASE_URL}onboarding`)
+          }
+        />
+
+        <OfflineAudioSettings showIOSInstallNote={isIOS && !isStandalone} />
+
+        <BackupSettings />
 
         {canInstall && !isInstalled && !isStandalone && (
           <section className={styles.section} aria-labelledby="install-settings">
@@ -231,6 +249,13 @@ const SettingsPage: React.FC = () => {
               </div>
             </div>
             <div className={styles.helpActions}>
+              <a
+                href={`${import.meta.env.BASE_URL}licenses/ECDICT-LICENSE.txt`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                词典开源许可
+              </a>
               <button
                 type="button"
                 onClick={() =>

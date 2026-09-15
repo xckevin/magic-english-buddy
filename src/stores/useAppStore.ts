@@ -6,6 +6,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import type { User } from '@/db';
 
 // ============ 类型定义 ============
 
@@ -56,6 +57,8 @@ interface AppState {
 interface AppActions {
   // 用户操作
   setCurrentUser: (userId: string) => void;
+  /** Switches profiles without carrying an unfinished reader or quiz into it. */
+  activateLearningProfile: (user: Pick<User, 'id'>) => void;
   clearCurrentUser: () => void;
   setFirstLaunchComplete: () => void;
 
@@ -118,114 +121,127 @@ const initialState: AppState = {
 
 export const useAppStore = create<AppState & AppActions>()(
   persist(
-    immer((set) => ({
+    immer(set => ({
       ...initialState,
 
       // 用户操作
-      setCurrentUser: (userId) =>
-        set((state) => {
+      setCurrentUser: userId =>
+        set(state => {
           state.currentUserId = userId;
         }),
 
+      activateLearningProfile: user =>
+        set(state => {
+          state.currentUserId = user.id;
+          state.isFirstLaunch = false;
+          state.currentStoryId = null;
+          state.currentParagraphIndex = 0;
+          state.activeWordIndex = null;
+          state.currentQuizIndex = 0;
+          state.quizAnswers = {};
+          state.toastMessage = null;
+          state.toastType = null;
+        }),
+
       clearCurrentUser: () =>
-        set((state) => {
+        set(state => {
           state.currentUserId = null;
         }),
 
       setFirstLaunchComplete: () =>
-        set((state) => {
+        set(state => {
           state.isFirstLaunch = false;
         }),
 
       // 设置操作
-      updateSettings: (newSettings) =>
-        set((state) => {
+      updateSettings: newSettings =>
+        set(state => {
           state.settings = { ...state.settings, ...newSettings };
         }),
 
       resetSettings: () =>
-        set((state) => {
+        set(state => {
           state.settings = defaultSettings;
         }),
 
       // UI 操作
       setLoading: (loading, message = '') =>
-        set((state) => {
+        set(state => {
           state.isLoading = loading;
           state.loadingMessage = message;
         }),
 
       showToast: (message, type) =>
-        set((state) => {
+        set(state => {
           state.toastMessage = message;
           state.toastType = type;
         }),
 
       hideToast: () =>
-        set((state) => {
+        set(state => {
           state.toastMessage = null;
           state.toastType = null;
         }),
 
       // 网络状态
-      setOffline: (offline) =>
-        set((state) => {
+      setOffline: offline =>
+        set(state => {
           state.isOffline = offline;
         }),
 
       // 阅读状态
-      setCurrentStory: (storyId) =>
-        set((state) => {
+      setCurrentStory: storyId =>
+        set(state => {
           state.currentStoryId = storyId;
           state.currentParagraphIndex = 0;
           state.activeWordIndex = null;
         }),
 
-      setCurrentParagraph: (index) =>
-        set((state) => {
+      setCurrentParagraph: index =>
+        set(state => {
           state.currentParagraphIndex = index;
           state.activeWordIndex = null;
         }),
 
-      setActiveWord: (index) =>
-        set((state) => {
+      setActiveWord: index =>
+        set(state => {
           state.activeWordIndex = index;
         }),
 
       resetReadingState: () =>
-        set((state) => {
+        set(state => {
           state.currentStoryId = null;
           state.currentParagraphIndex = 0;
           state.activeWordIndex = null;
         }),
 
       // Quiz 状态
-      setQuizIndex: (index) =>
-        set((state) => {
+      setQuizIndex: index =>
+        set(state => {
           state.currentQuizIndex = index;
         }),
 
       setQuizAnswer: (questionId, answer) =>
-        set((state) => {
+        set(state => {
           state.quizAnswers[questionId] = answer;
         }),
 
       resetQuizState: () =>
-        set((state) => {
+        set(state => {
           state.currentQuizIndex = 0;
           state.quizAnswers = {};
         }),
 
       // PWA 安装
-      setPwaInstallDismissed: (dismissed) =>
-        set((state) => {
+      setPwaInstallDismissed: dismissed =>
+        set(state => {
           state.pwaInstallDismissed = dismissed;
         }),
     })),
     {
       name: 'magic-english-storage',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
+      partialize: state => ({
         currentUserId: state.currentUserId,
         isFirstLaunch: state.isFirstLaunch,
         settings: state.settings,
@@ -238,30 +254,30 @@ export const useAppStore = create<AppState & AppActions>()(
 // ============ 选择器 Hooks ============
 
 /** 获取当前用户 ID */
-export const useCurrentUserId = () => useAppStore((state) => state.currentUserId);
+export const useCurrentUserId = () => useAppStore(state => state.currentUserId);
 
 /** 获取是否首次启动 */
-export const useIsFirstLaunch = () => useAppStore((state) => state.isFirstLaunch);
+export const useIsFirstLaunch = () => useAppStore(state => state.isFirstLaunch);
 
 /** 获取设置 */
-export const useSettings = () => useAppStore((state) => state.settings);
+export const useSettings = () => useAppStore(state => state.settings);
 
 /** 获取 TTS 语速 */
-export const useTTSSpeed = () => useAppStore((state) => state.settings.ttsSpeed);
+export const useTTSSpeed = () => useAppStore(state => state.settings.ttsSpeed);
 
 /** 获取是否离线 */
-export const useIsOffline = () => useAppStore((state) => state.isOffline);
+export const useIsOffline = () => useAppStore(state => state.isOffline);
 
 /** 获取加载状态 */
 export const useLoading = () =>
-  useAppStore((state) => ({
+  useAppStore(state => ({
     isLoading: state.isLoading,
     message: state.loadingMessage,
   }));
 
 /** 获取 Toast 状态 */
 export const useToast = () =>
-  useAppStore((state) => ({
+  useAppStore(state => ({
     message: state.toastMessage,
     type: state.toastType,
     show: state.showToast,
@@ -270,7 +286,7 @@ export const useToast = () =>
 
 /** 获取当前阅读状态 */
 export const useReadingState = () =>
-  useAppStore((state) => ({
+  useAppStore(state => ({
     storyId: state.currentStoryId,
     paragraphIndex: state.currentParagraphIndex,
     activeWordIndex: state.activeWordIndex,
@@ -278,10 +294,9 @@ export const useReadingState = () =>
 
 /** 获取当前 Quiz 状态 */
 export const useQuizState = () =>
-  useAppStore((state) => ({
+  useAppStore(state => ({
     quizIndex: state.currentQuizIndex,
     answers: state.quizAnswers,
   }));
 
 export default useAppStore;
-

@@ -14,15 +14,21 @@ interface ImageChoiceProps {
   question: QuizItem;
   onAnswer: (answer: string) => void;
   onHint: () => void;
+  hintUsed?: boolean;
 }
 
-export const ImageChoice: React.FC<ImageChoiceProps> = ({ question, onAnswer, onHint }) => {
+export const ImageChoice: React.FC<ImageChoiceProps> = ({
+  question,
+  onAnswer,
+  onHint,
+  hintUsed = false,
+}) => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
   const [hintMessage, setHintMessage] = useState<string | null>(null);
   const selectedRef = useRef(false);
-  const hintUsedRef = useRef(false);
+  const hintUsedRef = useRef(hintUsed);
   const answerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -69,12 +75,12 @@ export const ImageChoice: React.FC<ImageChoiceProps> = ({ question, onAnswer, on
 
   // 使用提示
   const handleHint = useCallback(() => {
-    if (hintUsedRef.current) return;
+    if (hintUsed || hintUsedRef.current) return;
     hintUsedRef.current = true;
     onHint();
     setHintMessage(`💡 要找的是 “${question.question}” 对应的图片。已使用提示（-5 魔力值）`);
     hintTimerRef.current = setTimeout(() => setHintMessage(null), 3000);
-  }, [onHint, question.question]);
+  }, [hintUsed, onHint, question.question]);
 
   return (
     <div className={styles.container}>
@@ -117,7 +123,9 @@ export const ImageChoice: React.FC<ImageChoiceProps> = ({ question, onAnswer, on
           >
             {getQuizEmoji(option.image) ? (
               <div className={styles.optionImage}>
-                <span className={styles.emoji} aria-hidden="true">{getQuizEmoji(option.image)}</span>
+                <span className={styles.emoji} aria-hidden="true">
+                  {getQuizEmoji(option.image)}
+                </span>
                 <span className={styles.optionText}>{option.text || option.value}</span>
               </div>
             ) : (
@@ -139,8 +147,12 @@ export const ImageChoice: React.FC<ImageChoiceProps> = ({ question, onAnswer, on
             {hintMessage}
           </motion.div>
         )}
-        <button className={styles.hintBtn} onClick={handleHint} disabled={hintUsedRef.current}>
-          {hintUsedRef.current ? '💡 已使用提示' : '💡 提示 (-5 MP)'}
+        <button
+          className={styles.hintBtn}
+          onClick={handleHint}
+          disabled={hintUsed || hintUsedRef.current}
+        >
+          {hintUsed || hintUsedRef.current ? '💡 已使用提示' : '💡 提示 (-5 MP)'}
         </button>
       </div>
     </div>

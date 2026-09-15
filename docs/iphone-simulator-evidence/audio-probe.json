@@ -1,0 +1,21 @@
+{
+  "device": "Magic Buddy Test iPhone (iPhone 17 Pro)",
+  "runtime": "iOS 26.4.1 (23E254a)",
+  "date": "2026-09-15",
+  "method": "Observed through Safari Web Inspector attached to the Xcode iPhone Simulator, with the local origin server stopped. A temporary AudioBufferSourceNode.start wrapper recorded decoded buffers; speechSynthesis.speak threw if called. Reloading cleared the probe.",
+  "browser": {
+    "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.4 Mobile/15E148 Safari/604.1",
+    "secure": true,
+    "audioFiles": 1721,
+    "controller": "http://localhost:4174/magic-english-buddy/sw.js",
+    "state": "activated"
+  },
+  "story": "A Little Cat (l1_002)",
+  "starts": [
+    { "duration": 2.064, "sampleRate": 48000, "peak": 0.28073033690452576, "state": "running" },
+    { "duration": 2.52, "sampleRate": 48000, "peak": 0.3694896101951599, "state": "running" },
+    { "duration": 2.4, "sampleRate": 48000, "peak": 0.3282811939716339, "state": "running" },
+    { "duration": 2.064, "sampleRate": 48000, "peak": 0.28900134563446045, "state": "running" }
+  ],
+  "nativeCalls": 0
+}

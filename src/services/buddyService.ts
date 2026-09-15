@@ -5,6 +5,8 @@
 
 import { db, type UserProgress } from '@/db';
 import { checkAndUnlockAchievementsInTransaction } from '@/services/achievementService';
+import { getEffectiveStreak } from '@/services/learningActivityService';
+import { localDate } from '@/utils/localDate';
 
 // Buddy 进化阶段
 export type BuddyStage = 1 | 2 | 3 | 4;
@@ -105,7 +107,7 @@ export const getBuddyState = async (userId: string): Promise<BuddyState | null> 
     stage: progress.buddyStage,
     mood,
     magicPower: progress.magicPower,
-    streakDays: progress.streakDays,
+    streakDays: getEffectiveStreak(progress),
     lastInteraction: Date.now(),
   };
 };
@@ -114,15 +116,13 @@ export const getBuddyState = async (userId: string): Promise<BuddyState | null> 
  * 计算 Buddy 心情
  */
 const calculateMood = (progress: UserProgress): BuddyMood => {
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDate();
   const lastStudy = progress.lastStudyDate;
 
   // 检查是否今天学习过
-  if (lastStudy !== today) {
-    // 超过 2 天没学习
-    const lastDate = new Date(lastStudy);
-    const diffDays = Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays >= 2) {
+  if (lastStudy !== today || progress.streakDays === 0) {
+    // New profiles have no learning activity yet. Older streaks expire by the local calendar.
+    if (progress.streakDays > 0 && lastStudy < localDate(Date.now(), -1)) {
       return 'sad';
     }
     return 'neutral';

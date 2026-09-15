@@ -1,0 +1,218 @@
+.section {
+  margin-top: 28px;
+  color: var(--ink);
+}
+.heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 4px 10px;
+}
+.heading h2 {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+}
+.heading p {
+  margin: 5px 0 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.createButton,
+.renameButton,
+.profileButton,
+.formActions button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.createButton,
+.confirmButton {
+  padding: 8px 14px;
+  background: var(--color-primary);
+  color: #fff;
+}
+.panel {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface-card);
+}
+.note,
+.status {
+  margin: 0;
+  padding: 14px 16px;
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.note {
+  border-bottom: 1px solid var(--line);
+}
+.profileList {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 10px;
+  list-style: none;
+}
+.profile,
+.profileActive {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.profileActive {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--line));
+  background: var(--surface-soft);
+}
+.profileButton {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+}
+.profileButton:not(:disabled):hover {
+  background: var(--surface-soft);
+}
+.profileButton:disabled {
+  cursor: default;
+}
+.profileAvatar {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--brand-soft);
+  color: var(--color-primary);
+  font-weight: 800;
+}
+.profileText {
+  min-width: 0;
+  flex: 1;
+}
+.profileText strong,
+.profileText small {
+  display: block;
+}
+.profileText strong {
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.profileText small {
+  overflow: hidden;
+  margin-top: 2px;
+  color: var(--ink-muted);
+  font-size: 12px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profileState {
+  color: var(--color-primary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.renameButton {
+  width: 100%;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+}
+.renameButton:hover {
+  background: var(--surface-soft);
+}
+.form {
+  display: grid;
+  gap: 14px;
+}
+.formIntro {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.form label {
+  display: grid;
+  gap: 7px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.form input {
+  min-height: 44px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+}
+.form input:focus-visible,
+.createButton:focus-visible,
+.renameButton:focus-visible,
+.profileButton:focus-visible,
+.formActions button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.formActions {
+  display: flex;
+  gap: 10px;
+}
+.formActions button {
+  flex: 1;
+  background: var(--surface-soft);
+  color: var(--ink);
+}
+.formActions .confirmButton {
+  background: var(--color-primary);
+  color: #fff;
+}
+.createButton:disabled,
+.renameButton:disabled,
+.profileButton:disabled,
+.formActions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+.error {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #f8c6bd;
+  border-radius: 10px;
+  background: #fff0ed;
+  color: #9d1b13;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.form .error {
+  margin: 0;
+}
+@media (max-width: 420px) {
+  .heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .createButton {
+    width: 100%;
+  }
+}

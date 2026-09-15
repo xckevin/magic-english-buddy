@@ -226,3 +226,10 @@
     align-items: stretch;
   }
 }
+.reviewLink { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 16px; margin-bottom: 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-soft); color: var(--ink); font-weight: 650; text-decoration: none; }
+.reviewLink:focus-visible { outline: 3px solid #8772db; outline-offset: 3px; }
+.certificateCard { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px; border: 1px solid #ded1f3; border-radius: 18px; background: linear-gradient(135deg, #f9f6ff, var(--surface-card)); }
+.certificateCard h2 { margin: 0; color: var(--ink); font-size: 18px; } .certificateCard p:last-child { margin: 7px 0 0; color: var(--ink-muted); font-size: 13px; line-height: 1.5; }
+.certificateLink { display: inline-flex; min-height: 44px; flex: 0 0 auto; align-items: center; padding: 10px 14px; border-radius: 12px; background: var(--color-primary); color: #fff; font-weight: 700; text-decoration: none; }
+.certificateLink:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; }
+@media (max-width: 420px) { .certificateCard { align-items: flex-start; flex-direction: column; } }

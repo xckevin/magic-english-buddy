@@ -1,0 +1,13 @@
+{
+  "date": "2026-09-15",
+  "environment": "iPhone 17 Pro simulator, iOS 26.4.1, Home Screen Web App",
+  "method": "Cross-correlate Safari decodeAudioData Float32 channel samples at 48 kHz against FFmpeg gapless Float32 PCM of the same MP3 at 48 kHz. Search +/-100 ms, then refine to one sample. No playback clock or UI latency is included in this decoder measurement.",
+  "samplesPerSecond": 48000,
+  "clips": [
+    {"file":"99f234c7c1b7ea080d8a.mp3","referenceSeconds":2,"decodedSeconds":2.064,"offsetSamples":1152,"offsetMilliseconds":24,"correlation":0.9996493261511107,"correlationWithoutOffset":0.016608181494127388},
+    {"file":"684eb46631a358e04181.mp3","referenceSeconds":2.45,"decodedSeconds":2.52,"offsetSamples":1152,"offsetMilliseconds":24,"correlation":0.9987674114770785,"correlationWithoutOffset":-0.02738603150955489},
+    {"file":"118048346ba6fba564b2.mp3","referenceSeconds":2.35,"decodedSeconds":2.4,"offsetSamples":1152,"offsetMilliseconds":24,"correlation":0.9993951861725979,"correlationWithoutOffset":-0.04021645815814044},
+    {"file":"d35ab5ad707af16eb680.mp3","referenceSeconds":2,"decodedSeconds":2.064,"offsetSamples":1152,"offsetMilliseconds":24,"correlation":0.9996989897804042,"correlationWithoutOffset":0.056316417841098525}
+  ],
+  "interpretation": "All four decoded Safari waveforms are shifted +24 ms relative to the gapless reference. Total MP3 duration excess and ffprobe skip_samples alone do not predict this onset offset. No universal browser offset was added based on these four samples."
+}

@@ -17,6 +17,7 @@ export default defineConfig(() => {
         includeAssets: [
           'favicon.ico',
           'robots.txt',
+          'licenses/*.txt',
           'apple-touch-icon.png',
           'animations/*.json',
           'sounds/*.mp3',
@@ -54,6 +55,9 @@ export default defineConfig(() => {
           lang: 'zh-CN'
         },
         workbox: {
+          // Course recordings are an optional download managed by the settings page.
+          // Never fetch them just because the app is installed or updated.
+          globIgnores: ['**/audio/**'],
           globPatterns: [
             '**/*.{js,css,html,ico,png,svg,webp,json,woff,woff2,mp3}'
           ],
@@ -67,21 +71,6 @@ export default defineConfig(() => {
                 expiration: {
                   maxEntries: 100,
                   maxAgeSeconds: 60 * 60 * 24 * 30 // 30 天
-                }
-              }
-            },
-            {
-              // 音频文件 - 缓存优先
-              urlPattern: /\/audio\/.+\.(mp3|ogg|wav)$/,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'audio-cache',
-                expiration: {
-                  maxEntries: 100,
-                  maxAgeSeconds: 60 * 60 * 24 * 30
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
                 }
               }
             },

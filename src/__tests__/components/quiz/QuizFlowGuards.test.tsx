@@ -101,4 +101,39 @@ describe('练习流程保护', () => {
     expect(onAnswer).toHaveBeenCalledTimes(1);
     expect(onAnswer).toHaveBeenCalledWith('apple');
   });
+
+  it('restores a feedback-stage draft and persists the next-question state', () => {
+    const onDraftChange = vi.fn().mockResolvedValue(undefined);
+    render(
+      <QuizContainer
+        questions={[
+          imageQuestion,
+          { ...imageQuestion, id: 'two', question: 'banana', correctAnswer: 'banana' },
+        ]}
+        storyId="story"
+        onExit={vi.fn()}
+        onComplete={vi.fn()}
+        initialDraft={{
+          stage: 'feedback',
+          currentQuestionIndex: 0,
+          answers: [{ questionId: 'one', userAnswer: 'apple' }],
+          hintsUsed: 1,
+          hintedQuestionIds: ['one'],
+          startedAt: 1_000,
+        }}
+        attemptStartedAt={1_000}
+        onDraftChange={onDraftChange}
+      />
+    );
+
+    expect(screen.getByText('太棒了！')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /继续/ }));
+    expect(onDraftChange).toHaveBeenCalledWith({
+      stage: 'playing',
+      currentQuestionIndex: 1,
+      answers: [{ questionId: 'one', userAnswer: 'apple' }],
+      hintsUsed: 1,
+      hintedQuestionIds: ['one'],
+    });
+  });
 });

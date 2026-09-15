@@ -1,0 +1,5 @@
+.page { display: flex; flex-direction: column; gap: 16px; padding-bottom: calc(28px + var(--safe-area-bottom, 0px)); }
+.note { margin: 0; color: var(--ink-muted); font-size: 14px; line-height: 1.5; text-align: center; }
+.inlineError { margin: 0; padding: 12px 14px; border: 1px solid #cc5b5b; border-radius: 12px; background: #fff3f3; color: #8c2929; text-align: center; }
+.state { display: flex; min-height: 280px; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 28px 20px; border: 1px solid var(--line); border-radius: 22px; background: var(--surface-card); color: var(--ink-muted); text-align: center; }
+.state > span { font-size: 42px; } .state h2 { margin: 0; color: var(--ink); font-size: 20px; } .state p { max-width: 32ch; margin: 0; line-height: 1.6; } .state a, .state button { min-height: 44px; margin-top: 8px; padding: 10px 18px; border: 0; border-radius: 12px; background: var(--color-primary); color: #fff; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }

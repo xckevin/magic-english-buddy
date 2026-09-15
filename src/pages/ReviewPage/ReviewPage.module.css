@@ -1,0 +1,64 @@
+.card {
+  max-width: 640px;
+  margin: 0 auto 28px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface-card);
+  color: var(--ink);
+}
+.card h2 {
+  overflow-wrap: anywhere;
+}
+.card h2[lang] {
+  font-size: clamp(28px, 7vw, 42px);
+  margin: 28px 0 10px;
+}
+.card p {
+  line-height: 1.65;
+}
+.card progress {
+  width: 100%;
+  accent-color: #7760c2;
+}
+.options {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+.card button {
+  min-height: 48px;
+  padding: 12px 16px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.card button:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+.card button:focus-visible,
+.card a:focus-visible {
+  outline: 3px solid #8772db;
+  outline-offset: 3px;
+}
+.card a {
+  display: inline-block;
+  padding: 12px 0;
+  color: var(--ink);
+}
+.feedback {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+@media (max-width: 600px) {
+  .card {
+    padding: 18px;
+  }
+}

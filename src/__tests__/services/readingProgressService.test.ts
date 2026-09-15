@@ -14,6 +14,7 @@ describe('readingProgressService', () => {
       totalReadingTime: 0,
       streakDays: 0,
       lastStudyDate: '2020-01-01',
+      completedNodes: [],
     });
     readingProgressService.cancelSession();
     vi.useFakeTimers();
@@ -41,6 +42,15 @@ describe('readingProgressService', () => {
     expect(await db.readingHistory.where('userId').equals(userId).count()).toBe(1);
   });
 
+  it('拒绝把恢复备份之前打开的阅读会话写回新记录', async () => {
+    readingProgressService.startSession('story-before-restore');
+    await db.learningMeta.get('restoreRevision');
+    await db.learningMeta.put({ key: 'restoreRevision', value: 'restored-records' });
+    expect(await readingProgressService.endSession(userId, true)).toBeNull();
+    expect(await db.readingHistory.count()).toBe(0);
+    expect((await db.userProgress.get(userId))?.totalStoriesRead).toBe(0);
+  });
+
   it('重复完成同一故事只计一次已读，并在首次完成当天开始连续学习', async () => {
     readingProgressService.startSession('story-repeat');
     vi.advanceTimersByTime(61_000);
@@ -57,6 +67,23 @@ describe('readingProgressService', () => {
       streakDays: 1,
       lastStudyDate: '2026-09-15',
     });
+  });
+
+  it('完成阅读不会覆盖同日测验已经记录的连续学习天数', async () => {
+    await db.userProgress.update(userId, {
+      lastStudyDate: '2026-09-15',
+      streakDays: 4,
+    });
+    readingProgressService.startSession('story-after-quiz');
+    vi.advanceTimersByTime(61_000);
+
+    await readingProgressService.endSession(userId, true);
+
+    expect(await db.userProgress.get(userId)).toMatchObject({
+      lastStudyDate: '2026-09-15',
+      streakDays: 4,
+    });
+    expect((await readingProgressService.getTotalStats(userId)).streakDays).toBe(4);
   });
 
   it('并发结束同一会话会复用保存结果，避免写入重复历史', async () => {
@@ -107,7 +134,7 @@ describe('readingProgressService', () => {
     expect(readingProgressService.getCurrentSession()).not.toBeNull();
   });
 
-  it('地图节点更新失败时不会留下部分完成或解锁状态', async () => {
+  it('档案地图更新失败时不会留下部分完成或解锁状态', async () => {
     await db.mapNodes.bulkAdd([
       {
         id: 'story-node',
@@ -132,17 +159,20 @@ describe('readingProgressService', () => {
         unlocked: false,
       },
     ]);
-    const originalUpdate = db.mapNodes.update.bind(db.mapNodes);
-    const updateSpy = vi.spyOn(db.mapNodes, 'update').mockImplementation(async (key, changes) => {
-      if (key === 'dependent-node') throw new Error('dependent write failed');
-      return originalUpdate(key, changes);
-    });
+    const originalUpdate = db.userProgress.update.bind(db.userProgress);
+    const updateSpy = vi
+      .spyOn(db.userProgress, 'update')
+      .mockImplementation(async (key, changes) => {
+        if (key === userId) throw new Error('profile write failed');
+        return originalUpdate(key, changes);
+      });
 
-    await expect(readingProgressService.markStoryCompleted('story-map')).rejects.toThrow(
-      'dependent write failed'
+    await expect(readingProgressService.markStoryCompleted(userId, 'story-map')).rejects.toThrow(
+      'profile write failed'
     );
     updateSpy.mockRestore();
 
+    expect((await db.userProgress.get(userId))?.completedNodes).toEqual([]);
     expect(await db.mapNodes.get('story-node')).toMatchObject({ completed: false });
     expect(await db.mapNodes.get('dependent-node')).toMatchObject({ unlocked: false });
   });

@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '../../utils/render';
 import { describe, expect, it, vi } from 'vitest';
 import { WordBuilder } from '@/components/quiz/WordBuilder';
 import { ImageChoice } from '@/components/quiz/ImageChoice';
+import { SentenceOrder } from '@/components/quiz/SentenceOrder';
 
 describe('quiz content fallbacks', () => {
   it('renders legacy missing images as illustrations, preserving the answer text', () => {
@@ -48,5 +49,51 @@ describe('quiz content fallbacks', () => {
       fireEvent.click(screen.getByRole('button', { name: letter, exact: true }));
     fireEvent.click(screen.getByRole('button', { name: /确认/ }));
     expect(onAnswer).toHaveBeenCalledWith('cat');
+  });
+
+  it('restores a used word-builder hint without charging it again', () => {
+    const onHint = vi.fn();
+    render(
+      <WordBuilder
+        question={{
+          id: 'q',
+          type: 'word_builder',
+          question: 'Spell cat',
+          shuffledWords: ['c', 'a', 't'],
+          correctAnswer: 'cat',
+        }}
+        onAnswer={vi.fn()}
+        onHint={onHint}
+        hintUsed
+      />
+    );
+
+    expect(screen.getByRole('button', { name: /已使用提示/ })).toBeDisabled();
+    // The revealed first letter occupies the answer row; it is removed from the bank.
+    expect(screen.getAllByRole('button', { name: 'c', exact: true })).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: /已使用提示/ }));
+    expect(onHint).not.toHaveBeenCalled();
+  });
+
+  it('restores a used sentence-order hint without charging it again', () => {
+    const onHint = vi.fn();
+    render(
+      <SentenceOrder
+        question={{
+          id: 'q',
+          type: 'sentence_order',
+          question: 'Make a sentence',
+          shuffledWords: ['world', 'Hello'],
+          correctOrder: ['Hello', 'world'],
+        }}
+        onAnswer={vi.fn()}
+        onHint={onHint}
+        hintUsed
+      />
+    );
+
+    expect(screen.getByText('Hello world')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /已使用提示/ }));
+    expect(onHint).not.toHaveBeenCalled();
   });
 });

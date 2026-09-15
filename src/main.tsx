@@ -7,6 +7,9 @@ import ReactDOM from 'react-dom/client';
 import { MotionConfig } from 'framer-motion';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
+import { installBackupWindowSync } from './services/backupWindowSync';
+import { installStaleChunkRecovery } from './services/staleChunkRecoveryService';
+import { installProfileWindowSync } from './services/profileWindowSync';
 
 // 全局样式
 import './styles/global.css';
@@ -25,6 +28,9 @@ const initNetworkListener = () => {
 
 // 初始化
 initNetworkListener();
+installBackupWindowSync();
+installStaleChunkRecovery();
+installProfileWindowSync();
 
 // 渲染应用
 ReactDOM.createRoot(document.getElementById('root')!).render(

@@ -11,9 +11,34 @@ import React from 'react';
 import { vi } from 'vitest';
 
 // 支持的 HTML 标签类型
-type MotionTag = 'div' | 'span' | 'button' | 'a' | 'ul' | 'li' | 'img' | 'svg' | 'path' | 'circle' | 
-  'section' | 'article' | 'header' | 'footer' | 'nav' | 'main' | 'aside' | 'form' | 'input' | 
-  'label' | 'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+type MotionTag =
+  | 'div'
+  | 'span'
+  | 'button'
+  | 'a'
+  | 'ul'
+  | 'li'
+  | 'img'
+  | 'svg'
+  | 'path'
+  | 'circle'
+  | 'section'
+  | 'article'
+  | 'header'
+  | 'footer'
+  | 'nav'
+  | 'main'
+  | 'aside'
+  | 'form'
+  | 'input'
+  | 'label'
+  | 'p'
+  | 'h1'
+  | 'h2'
+  | 'h3'
+  | 'h4'
+  | 'h5'
+  | 'h6';
 
 // Mock motion 组件 - 简单地渲染 HTML 元素
 const createMotionComponent = (tag: MotionTag) => {
@@ -80,6 +105,18 @@ export const motion = {
   h6: createMotionComponent('h6'),
 };
 
+// Reorder is used by the sentence-order quiz. The mock preserves its children
+// and omits drag-only props, which is sufficient for state and accessibility tests.
+export const Reorder = {
+  Group: React.forwardRef<any, any>(
+    ({ axis: _axis, values: _values, onReorder: _onReorder, ...rest }, ref) =>
+      React.createElement('div', { ...rest, ref })
+  ),
+  Item: React.forwardRef<any, any>(({ value: _value, whileDrag: _whileDrag, ...rest }, ref) =>
+    React.createElement('div', { ...rest, ref })
+  ),
+};
+
 // Mock AnimatePresence
 export const AnimatePresence: React.FC<{ children: React.ReactNode; mode?: string }> = ({
   children,
@@ -108,7 +145,7 @@ export const useTransform = (value: any, inputRange: number[], outputRange: any[
 export const useSpring = useMotionValue;
 
 // Mock useCycle
-export const useCycle = <T,>(...items: T[]) => {
+export const useCycle = <T>(...items: T[]) => {
   let currentIndex = 0;
   return [
     items[currentIndex],
@@ -141,13 +178,11 @@ export const useScroll = () => ({
 export const useInView = () => [null, true];
 
 // Mock LazyMotion
-export const LazyMotion: React.FC<{ children: React.ReactNode; features: any }> = ({
-  children,
-}) => React.createElement(React.Fragment, null, children);
+export const LazyMotion: React.FC<{ children: React.ReactNode; features: any }> = ({ children }) =>
+  React.createElement(React.Fragment, null, children);
 
 // Mock domAnimation
 export const domAnimation = {};
 
 // Mock domMax
 export const domMax = {};
-

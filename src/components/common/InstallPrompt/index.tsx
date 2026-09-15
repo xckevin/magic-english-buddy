@@ -36,18 +36,22 @@ const SafariShareIcon = () => (
 const IOSGuide: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   return (
     <div className={styles.iosGuide}>
+      <p className={styles.description}>
+        请先添加到主屏幕，再从主屏幕打开、学习和下载音频。
+        Safari 与主屏幕版的数据分别保存；已有记录仍可在 Safari 中查看。
+      </p>
       <div className={styles.stepList}>
         <div className={styles.step}>
           <span className={styles.stepNumber}>1</span>
           <div className={styles.stepContent}>
             <div className={styles.stepTitle}>
-              点击底部分享按钮
+              打开 Safari 分享菜单
               <span className={styles.stepIcon}>
                 <SafariShareIcon />
               </span>
             </div>
             <div className={styles.stepDesc}>
-              在 Safari 浏览器底部找到分享图标
+              点击工具栏的分享图标；若没有，先点“…”再选“分享”。
             </div>
           </div>
         </div>
@@ -57,7 +61,7 @@ const IOSGuide: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <div className={styles.stepContent}>
             <div className={styles.stepTitle}>选择"添加到主屏幕"</div>
             <div className={styles.stepDesc}>
-              在弹出的菜单中向下滑动，找到并点击"添加到主屏幕"
+              展开分享菜单的更多操作，找到并点击“添加到主屏幕”。
             </div>
           </div>
         </div>
@@ -67,7 +71,7 @@ const IOSGuide: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <div className={styles.stepContent}>
             <div className={styles.stepTitle}>确认添加</div>
             <div className={styles.stepDesc}>
-              点击右上角"添加"完成安装，应用图标会出现在主屏幕
+              若有“作为网页 App 打开”选项，请保持开启。点击“添加”后，从主屏幕图标打开。
             </div>
           </div>
         </div>
@@ -95,7 +99,7 @@ const IOSGuide: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 /** 特性列表 */
 const FEATURES = [
   { icon: '📱', text: '像原生应用一样全屏体验' },
-  { icon: '✈️', text: '完全离线可用，随时学习' },
+  { icon: '✈️', text: '下载音频后可离线听读' },
   { icon: '⚡', text: '一键快速启动' },
 ];
 
@@ -265,4 +269,3 @@ export const InstallPrompt: React.FC<InstallPromptProps> = ({
 };
 
 export default InstallPrompt;
-

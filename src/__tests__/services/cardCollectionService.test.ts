@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db, type UserVocabulary } from '@/db';
 import { convertToCard } from '@/services/cardCollectionService';
 
@@ -10,7 +10,15 @@ describe('cardCollectionService', () => {
   });
 
   afterEach(async () => {
+    vi.useRealTimers();
     await db.userVocabulary.clear();
+  });
+
+  it('schedules a new card for the next local calendar day near midnight', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 15, 1, 0));
+    await convertToCard(userId, 'apple', '苹果', '🍎');
+    expect((await db.userVocabulary.get(`${userId}_apple`))?.nextReviewDate).toBe('2026-09-16');
   });
 
   it('keeps an existing card unchanged when the child taps save repeatedly', async () => {

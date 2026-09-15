@@ -13,13 +13,10 @@ import {
 } from 'lucide-react';
 import { db, type User, type UserProgress } from '@/db';
 import { initializeAppData, needsInitialization } from '@/services/dataInitService';
+import { getUserMapNodes } from '@/services/mapProgressService';
+import { getEffectiveStreak } from '@/services/learningActivityService';
 import { getStoryById } from '@/data';
-import {
-  findActiveNode,
-  generateUnifiedMapData,
-  mergeNodeStates,
-  type UnifiedMapNode,
-} from '@/data/unifiedMap';
+import { findActiveNode, generateUnifiedMapData, type UnifiedMapNode } from '@/data/unifiedMap';
 import { useAppStore } from '@/stores/useAppStore';
 import AppShell from '@/components/common/AppShell';
 import BuddyScene from '@/components/common/BuddyScene';
@@ -62,16 +59,41 @@ export default function MapPage() {
         const result = await initializeAppData();
         if (!result.success) throw new Error('Content initialization failed');
       }
-      const savedUser = currentUserId
-        ? await db.users.get(currentUserId)
-        : await db.users.orderBy('createdAt').last();
+      const activeProfileId = (await db.learningMeta.get('activeProfileId'))?.value;
+      const savedUser = activeProfileId
+        ? await db.users.get(activeProfileId)
+        : currentUserId
+          ? await db.users.get(currentUserId)
+          : await db.users.orderBy('createdAt').last();
       if (!savedUser) {
         navigate('/onboarding', { replace: true });
         return;
       }
-      const savedNodes = await db.mapNodes.toArray();
-      if (!savedNodes.length) await db.mapNodes.bulkPut(mapData.nodes);
-      const merged = mergeNodeStates(mapData.nodes, savedNodes);
+      if (activeProfileId === savedUser.id && currentUserId !== savedUser.id) {
+        useAppStore.getState().activateLearningProfile(savedUser);
+      }
+      const userNodes = await getUserMapNodes(savedUser.id);
+      // A profile switch can finish a newer request while this older request is
+      // still resolving. Do not paint the old profile's map in that case.
+      const latestActiveProfileId = (await db.learningMeta.get('activeProfileId'))?.value;
+      if (latestActiveProfileId && latestActiveProfileId !== savedUser.id) return;
+      const merged = mapData.nodes.map(node => {
+        const userNode = userNodes.find(
+          saved => saved.id === node.id || saved.storyId === node.storyId
+        );
+        return userNode
+          ? {
+              ...node,
+              ...userNode,
+              level: node.level,
+              globalIndex: node.globalIndex,
+              levelIndex: node.levelIndex,
+              theme: node.theme,
+              isLevelStart: node.isLevelStart,
+              isLevelEnd: node.isLevelEnd,
+            }
+          : node;
+      });
       setUser(savedUser);
       setProgress((await db.userProgress.get(savedUser.id)) ?? null);
       setNodes(merged);
@@ -185,7 +207,7 @@ export default function MapPage() {
                 <Flame size={20} />
               </span>
               <strong>
-                {progress?.streakDays ?? 0}
+                {progress ? getEffectiveStreak(progress) : 0}
                 <small>天</small>
               </strong>
               <span>连续学习</span>

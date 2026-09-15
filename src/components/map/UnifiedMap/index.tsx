@@ -1,7 +1,7 @@
 /**
  * UnifiedMap - 统一地图组件
  * 多邻国风格的垂直滚动地图，展示所有级别的节点
- * 
+ *
  * 特点：
  * - 从下往上滚动（起点在底部）
  * - 自动定位到当前进度
@@ -11,10 +11,10 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { db } from '@/db';
+import { useAppStore } from '@/stores/useAppStore';
+import { getUserMapNodes } from '@/services/mapProgressService';
 import {
   generateUnifiedMapData,
-  mergeNodeStates,
   findActiveNode,
   getLevelProgress,
   type UnifiedMapNode,
@@ -39,46 +39,37 @@ const UnifiedMap: React.FC<UnifiedMapProps> = ({ onNodeClick, loading: externalL
   const [activeNodeId, setActiveNodeId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [hasScrolledToActive, setHasScrolledToActive] = useState(false);
+  const currentUserId = useAppStore(s => s.currentUserId);
 
   // 生成并加载地图数据
   useEffect(() => {
     const loadMapData = async () => {
       setLoading(true);
       try {
-        // 生成统一地图数据
         const mapData = generateUnifiedMapData();
-        
-        // 从数据库获取节点状态
-        const dbNodes = await db.mapNodes.toArray();
-        
-        // 如果数据库为空，初始化节点状态
-        if (dbNodes.length === 0) {
-          // 保存初始状态到数据库
-          const initialNodes = mapData.nodes.map(node => ({
-            id: node.id,
-            regionId: node.regionId,
-            type: node.type,
-            storyId: node.storyId,
-            position: node.position,
-            prerequisites: node.prerequisites,
-            rewards: node.rewards,
-            unlocked: node.unlocked,
-            completed: node.completed,
-            title: node.title,
-            titleCn: node.titleCn,
-            emoji: node.emoji,
-          }));
-          await db.mapNodes.bulkPut(initialNodes);
-        }
-        
-        // 合并数据库状态
-        const mergedNodes = dbNodes.length > 0 
-          ? mergeNodeStates(mapData.nodes, dbNodes)
-          : mapData.nodes;
-        
+        const userNodes = currentUserId ? await getUserMapNodes(currentUserId) : [];
+        if (useAppStore.getState().currentUserId !== currentUserId) return;
+        const mergedNodes = mapData.nodes.map(node => {
+          const userNode = userNodes.find(
+            saved => saved.id === node.id || saved.storyId === node.storyId
+          );
+          return userNode
+            ? {
+                ...node,
+                ...userNode,
+                level: node.level,
+                globalIndex: node.globalIndex,
+                levelIndex: node.levelIndex,
+                theme: node.theme,
+                isLevelStart: node.isLevelStart,
+                isLevelEnd: node.isLevelEnd,
+              }
+            : node;
+        });
+
         setNodes(mergedNodes);
         setSections(mapData.sections);
-        
+
         // 找到当前活跃节点
         const activeNode = findActiveNode(mergedNodes);
         if (activeNode) {
@@ -92,7 +83,7 @@ const UnifiedMap: React.FC<UnifiedMapProps> = ({ onNodeClick, loading: externalL
     };
 
     loadMapData();
-  }, []);
+  }, [currentUserId]);
 
   // 自动滚动到当前活跃节点
   useEffect(() => {
@@ -108,7 +99,7 @@ const UnifiedMap: React.FC<UnifiedMapProps> = ({ onNodeClick, loading: externalL
           setHasScrolledToActive(true);
         }
       }, 300);
-      
+
       return () => clearTimeout(timer);
     }
   }, [loading, activeNodeId, hasScrolledToActive]);
@@ -152,14 +143,14 @@ const UnifiedMap: React.FC<UnifiedMapProps> = ({ onNodeClick, loading: externalL
 
     reversedNodes.forEach((node, index) => {
       const originalIndex = nodes.length - 1 - index;
-      
+
       // 检查是否需要添加级别分隔器
       const section = reversedSections.find(s => s.endIndex === originalIndex);
       if (section) {
         const progress = getLevelProgress(nodes, section.level);
         const isCurrentLevel = nodes.find(n => n.id === activeNodeId)?.level === section.level;
         const isUnlocked = nodes.some(n => n.level === section.level && n.unlocked);
-        
+
         items.push(
           <LevelDivider
             key={`level-${section.level}`}
@@ -176,7 +167,7 @@ const UnifiedMap: React.FC<UnifiedMapProps> = ({ onNodeClick, loading: externalL
       if (index < reversedNodes.length - 1 && nextNode) {
         const isActive = node.unlocked || nextNode.unlocked;
         const isCompleted = Boolean(node.completed && nextNode.completed);
-        
+
         items.push(
           <PathConnector
             key={`path-${node.id}`}
@@ -191,11 +182,7 @@ const UnifiedMap: React.FC<UnifiedMapProps> = ({ onNodeClick, loading: externalL
       // 添加节点
       items.push(
         <div key={node.id} id={`node-${node.id}`}>
-          <MapNode
-            node={node}
-            isActive={node.id === activeNodeId}
-            onClick={onNodeClick}
-          />
+          <MapNode node={node} isActive={node.id === activeNodeId} onClick={onNodeClick} />
         </div>
       );
     });
@@ -223,18 +210,14 @@ const UnifiedMap: React.FC<UnifiedMapProps> = ({ onNodeClick, loading: externalL
   return (
     <div className={styles.container}>
       {/* 背景装饰 */}
-      <div className={styles.bgDecoration}>
-        {bgStars}
-      </div>
+      <div className={styles.bgDecoration}>{bgStars}</div>
 
       {/* 顶部渐变遮罩 */}
       <div className={styles.topGradient} />
 
       {/* 滚动容器 */}
       <div ref={scrollContainerRef} className={styles.scrollContainer}>
-        <div className={`${styles.mapContent} ${styles.mapContentReversed}`}>
-          {renderMapItems}
-        </div>
+        <div className={`${styles.mapContent} ${styles.mapContentReversed}`}>{renderMapItems}</div>
       </div>
 
       {/* 底部渐变遮罩 */}
@@ -242,25 +225,13 @@ const UnifiedMap: React.FC<UnifiedMapProps> = ({ onNodeClick, loading: externalL
 
       {/* 快速导航 */}
       <div className={styles.quickNav}>
-        <button
-          className={styles.quickNavBtn}
-          onClick={scrollToTop}
-          title="跳到顶部"
-        >
+        <button className={styles.quickNavBtn} onClick={scrollToTop} title="跳到顶部">
           ⬆️
         </button>
-        <button
-          className={styles.quickNavBtn}
-          onClick={scrollToActive}
-          title="当前进度"
-        >
+        <button className={styles.quickNavBtn} onClick={scrollToActive} title="当前进度">
           🎯
         </button>
-        <button
-          className={styles.quickNavBtn}
-          onClick={scrollToBottom}
-          title="跳到起点"
-        >
+        <button className={styles.quickNavBtn} onClick={scrollToBottom} title="跳到起点">
           ⬇️
         </button>
       </div>
@@ -286,4 +257,3 @@ const UnifiedMap: React.FC<UnifiedMapProps> = ({ onNodeClick, loading: externalL
 export default UnifiedMap;
 export { MapNode, PathConnector, LevelDivider };
 export type { UnifiedMapNode };
-

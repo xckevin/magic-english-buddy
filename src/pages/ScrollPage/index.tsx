@@ -2,8 +2,8 @@
  * 成长记录：展示当前用户在本设备上的真实学习数据。
  */
 
-import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { db, type Achievement, type User, type UserProgress } from '@/db';
 import { useAppStore } from '@/stores/useAppStore';
@@ -14,6 +14,8 @@ import { getBuddyState, type BuddyState, checkEvolution, evolve } from '@/servic
 import { getUserCards, type CardData } from '@/services/cardCollectionService';
 import { ACHIEVEMENTS, claimAchievementReward, getUserAchievements } from '@/services/achievementService';
 import { dictionaryService } from '@/services/dictionaryService';
+import { getUserMapNodes } from '@/services/mapProgressService';
+import { getEffectiveStreak } from '@/services/learningActivityService';
 import styles from './ScrollPage.module.css';
 
 type TabType = 'overview' | 'cards' | 'achievements' | 'sync';
@@ -25,6 +27,7 @@ interface PageData {
   evolution: { canEvolve: boolean; progress: number; nextStage: number | null };
   cards: CardData[];
   achievements: Achievement[];
+  completedCourses: number;
 }
 
 const tabs: Array<{ id: TabType; label: string; icon: string }> = [
@@ -45,16 +48,18 @@ const ScrollPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [isActing, setIsActing] = useState(false);
+  const loadRequestRef = useRef(0);
 
   const loadData = useCallback(async () => {
+    const request = ++loadRequestRef.current;
     setIsLoading(true);
     setError(null);
 
     try {
-      let user = currentUserId ? await db.users.get(currentUserId) : undefined;
-      if (!user) user = await db.users.orderBy('createdAt').reverse().first();
+      const user = currentUserId ? await db.users.get(currentUserId) : undefined;
 
       if (!user) {
+        if (request !== loadRequestRef.current) return;
         setData({
           user: null,
           progress: null,
@@ -62,16 +67,18 @@ const ScrollPage: React.FC = () => {
           evolution: { canEvolve: false, progress: 0, nextStage: null },
           cards: [],
           achievements: [],
+          completedCourses: 0,
         });
         return;
       }
 
-      const [progress, buddy, evolutionInfo, rawCards, achievements] = await Promise.all([
+      const [progress, buddy, evolutionInfo, rawCards, achievements, nodes] = await Promise.all([
         db.userProgress.get(user.id),
         getBuddyState(user.id),
         checkEvolution(user.id),
         getUserCards(user.id),
         getUserAchievements(user.id),
+        getUserMapNodes(user.id),
       ]);
       const definitions = await dictionaryService.lookupMultiple(rawCards.map(card => card.word));
       const cards = rawCards
@@ -85,6 +92,7 @@ const ScrollPage: React.FC = () => {
         })
         .sort((a, b) => b.obtainedAt - a.obtainedAt);
 
+      if (request !== loadRequestRef.current || useAppStore.getState().currentUserId !== currentUserId) return;
       setData({
         user,
         progress: progress || null,
@@ -96,13 +104,15 @@ const ScrollPage: React.FC = () => {
         },
         cards,
         achievements,
+        completedCourses: new Set(nodes.filter(node => node.completed && node.storyId).map(node => node.storyId)).size,
       });
     } catch (loadError) {
       console.error('加载成长记录失败:', loadError);
+      if (request !== loadRequestRef.current) return;
       setData(null);
       setError('暂时无法读取成长记录，请检查后重试。');
     } finally {
-      setIsLoading(false);
+      if (request === loadRequestRef.current) setIsLoading(false);
     }
   }, [currentUserId]);
 
@@ -208,14 +218,24 @@ const ScrollPage: React.FC = () => {
           </div>
           <div className={styles.statCard}>
             <span aria-hidden="true">📖</span>
-            <strong>{progress?.totalStoriesRead || 0}</strong>
-            <small>读过故事</small>
+            <strong>{data?.completedCourses || 0}</strong>
+            <small>完成课程</small>
           </div>
           <div className={styles.statCard}>
             <span aria-hidden="true">🔥</span>
-            <strong>{progress?.streakDays || 0}</strong>
+            <strong>{progress ? getEffectiveStreak(progress) : 0}</strong>
             <small>连续学习</small>
           </div>
+        </section>
+        <section className={styles.certificateCard} aria-label="学习里程碑证书">
+          <div>
+            <p className={styles.eyebrow}>当前档案</p>
+            <h2>学习里程碑证书</h2>
+            <p>{data?.completedCourses ? `已完成 ${data.completedCourses} 节课程，可以生成一份本地学习记录。` : '完成第一节课程后，可以在这里生成学习里程碑证书。'}</p>
+          </div>
+          <Link to="/certificate" className={styles.certificateLink}>
+            {data?.completedCourses ? '查看证书' : '去学习'}
+          </Link>
         </section>
       </div>
     );
@@ -230,6 +250,7 @@ const ScrollPage: React.FC = () => {
         </div>
         <span className={styles.countBadge}>{data?.cards.length || 0} 张</span>
       </div>
+      <Link to="/review" className={styles.reviewLink}>复习收藏的单词 →</Link>
       {data?.cards.length ? (
         <div className={styles.cardsGrid}>
           {data.cards.map((card, index) => (
@@ -338,8 +359,12 @@ const ScrollPage: React.FC = () => {
     );
   };
 
+  if (!currentUserId || (!isLoading && !error && data?.user === null)) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
   return (
-    <AppShell title="成长记录" subtitle="本设备的共同学习记录，不代表单个孩子的成绩">
+    <AppShell title="成长记录" subtitle="当前档案的课程、词卡和学习里程碑">
       <div className={styles.page}>
         <div className={styles.tabs} role="group" aria-label="成长记录内容">
           {tabs.map(tab => (

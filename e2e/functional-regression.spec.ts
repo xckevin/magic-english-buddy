@@ -87,14 +87,16 @@ test('legacy image questions display useful illustrations instead of missing fil
       request.onsuccess = () => resolve(request.result);
     });
     await new Promise<void>((resolve, reject) => {
-      const tx = database.transaction('mapNodes', 'readwrite');
-      const store = tx.objectStore('mapNodes');
-      const cursor = store.openCursor();
-      cursor.onsuccess = () => {
-        const item = cursor.result;
-        if (!item) return;
-        if (item.value.storyId === 'l2_001') item.update({ ...item.value, unlocked: true });
-        item.continue();
+      const tx = database.transaction(['mapNodes', 'userProgress'], 'readwrite');
+      const lookup = tx.objectStore('mapNodes').index('storyId').get('l2_001');
+      lookup.onsuccess = () => {
+        const cursor = tx.objectStore('userProgress').openCursor();
+        cursor.onsuccess = () => {
+          const item = cursor.result;
+          if (!item) return;
+          item.update({ ...item.value, unlockedNodes: [...item.value.unlockedNodes, lookup.result.id] });
+          item.continue();
+        };
       };
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
@@ -155,6 +157,19 @@ test('bundled narration works without Web Speech, including pause and shadowing'
   });
   await page.reload();
   await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+  // Optional recordings are not part of the app's automatic precache.
+  expect(
+    await page.evaluate(async () => {
+      const names = await caches.keys();
+      const keys = await Promise.all(names.map(async name => (await caches.open(name)).keys()));
+      return keys.flat().filter(request => /\/audio\/.+\.mp3/.test(request.url)).length;
+    })
+  ).toBe(0);
+  await page.getByRole('link', { name: '设置', exact: true }).click();
+  const l1Pack = page.getByRole('listitem', { name: 'L1 音频包', exact: true });
+  await page.getByRole('button', { name: '下载 L1 音频', exact: true }).click();
+  await expect(l1Pack.getByText('可离线使用', { exact: true })).toBeVisible({ timeout: 30_000 });
+  await page.getByRole('link', { name: '魔法地图', exact: true }).click();
   // Chromium covers full offline reload. WebKit 26's automation reload fails
   // internally with a controlling SW; its run covers real decoding/activation.
   // https://github.com/microsoft/playwright/issues/42273

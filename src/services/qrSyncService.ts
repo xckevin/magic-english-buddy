@@ -4,6 +4,8 @@
  */
 
 import { db } from '@/db';
+import { getUserMapNodes } from '@/services/mapProgressService';
+import { getEffectiveStreak } from '@/services/learningActivityService';
 
 // 同步数据结构
 export interface SyncData {
@@ -31,15 +33,15 @@ export interface SyncData {
  */
 export const generateSyncData = async (userId: string): Promise<SyncData | null> => {
   try {
-    const user = await db.users.get(userId);
-    const progress = await db.userProgress.get(userId);
-    
+    const [user, progress, mapNodes] = await Promise.all([
+      db.users.get(userId),
+      db.userProgress.get(userId),
+      getUserMapNodes(userId),
+    ]);
+
     if (!user || !progress) return null;
 
-    // 获取已完成的节点
-    const completedNodes = await db.mapNodes
-      .filter(n => n.completed === true)
-      .toArray();
+    const completedNodes = mapNodes.filter(node => node.completed).map(node => node.id);
 
     const data: SyncData = {
       version: '1.0',
@@ -55,8 +57,8 @@ export const generateSyncData = async (userId: string): Promise<SyncData | null>
         buddyStage: progress.buddyStage,
         totalReadingTime: progress.totalReadingTime,
         totalStoriesRead: progress.totalStoriesRead,
-        streakDays: progress.streakDays,
-        completedNodes: completedNodes.map(n => n.id),
+        streakDays: getEffectiveStreak(progress),
+        completedNodes,
       },
       checksum: '',
     };
@@ -81,7 +83,7 @@ export const generateQRContent = async (userId: string): Promise<string | null> 
   // 压缩数据为 Base64
   const jsonStr = JSON.stringify(data);
   const compressed = btoa(encodeURIComponent(jsonStr));
-  
+
   return `MEB:${compressed}`;
 };
 
@@ -122,7 +124,7 @@ const generateChecksum = (data: Omit<SyncData, 'checksum'> & { checksum: string 
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash;
   }
   return Math.abs(hash).toString(16);
@@ -136,7 +138,7 @@ export const generateProgressReport = async (userId: string): Promise<string> =>
   if (!data) return '无法生成报告';
 
   const date = new Date(data.timestamp).toLocaleDateString('zh-CN');
-  
+
   return `
 📜 魔法英语伙伴 - 学习报告
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -167,4 +169,3 @@ export default {
   parseQRContent,
   generateProgressReport,
 };
-

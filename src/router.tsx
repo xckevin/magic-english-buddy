@@ -15,6 +15,8 @@ const ReaderPage = lazy(() => import('@/pages/ReaderPage'));
 const QuizPage = lazy(() => import('@/pages/QuizPage'));
 const ScrollPage = lazy(() => import('@/pages/ScrollPage'));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
+const ReviewPage = lazy(() => import('@/pages/ReviewPage'));
+const CertificatePage = lazy(() => import('@/pages/CertificatePage'));
 
 // 加载组件包装器
 const PageLoader = ({ children }: { children: React.ReactNode }) => (
@@ -82,6 +84,8 @@ export const router = createBrowserRouter(
         </PageLoader>
       ),
     },
+    { path: '/review', element: <PageLoader><ReviewPage /></PageLoader> },
+    { path: '/certificate', element: <PageLoader><CertificatePage /></PageLoader> },
     {
       path: '*',
       element: <Navigate to="/onboarding" replace />,

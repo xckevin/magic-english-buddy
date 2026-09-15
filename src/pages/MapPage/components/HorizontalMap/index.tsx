@@ -5,10 +5,10 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, animate } from 'framer-motion';
-import { db } from '@/db';
+import { useAppStore } from '@/stores/useAppStore';
+import { getUserMapNodes } from '@/services/mapProgressService';
 import {
   generateUnifiedMapData,
-  mergeNodeStates,
   findActiveNode,
   getNodesByLevel,
   getLevelProgress,
@@ -76,18 +76,18 @@ const useSwipeHint = () => {
 
     if (canShow) {
       hasShownRef.current = true;
-      
+
       // 延迟1秒显示
       const showTimer = setTimeout(() => {
         setShowHint(true);
         incrementSwipeHintCount();
-        
+
         // 5秒后自动隐藏
         hideTimerRef.current = setTimeout(() => {
           setShowHint(false);
         }, HINT_DURATION);
       }, 1000);
-      
+
       return () => {
         clearTimeout(showTimer);
         if (hideTimerRef.current) {
@@ -118,20 +118,21 @@ interface HorizontalMapProps {
 const HorizontalMap: React.FC<HorizontalMapProps> = ({ onNodeClick }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  
+
   // 地图数据
   const [nodes, setNodes] = useState<UnifiedMapNode[]>([]);
   const [sections, setSections] = useState<LevelSection[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const currentUserId = useAppStore(s => s.currentUserId);
+
   // 当前区域索引
   const [currentRegionIndex, setCurrentRegionIndex] = useState(0);
   const [activeNodeId, setActiveNodeId] = useState<string>('');
-  
+
   // 滚动状态
   const scrollX = useMotionValue(0);
   const [isDragging, setIsDragging] = useState(false);
-  
+
   // 滑动提示
   const { showHint, hideHint } = useSwipeHint();
 
@@ -141,33 +142,29 @@ const HorizontalMap: React.FC<HorizontalMapProps> = ({ onNodeClick }) => {
       setLoading(true);
       try {
         const mapData = generateUnifiedMapData();
-        const dbNodes = await db.mapNodes.toArray();
-        
-        if (dbNodes.length === 0) {
-          const initialNodes = mapData.nodes.map(node => ({
-            id: node.id,
-            regionId: node.regionId,
-            type: node.type,
-            storyId: node.storyId,
-            position: node.position,
-            prerequisites: node.prerequisites,
-            rewards: node.rewards,
-            unlocked: node.unlocked,
-            completed: node.completed,
-            title: node.title,
-            titleCn: node.titleCn,
-            emoji: node.emoji,
-          }));
-          await db.mapNodes.bulkPut(initialNodes);
-        }
-        
-        const mergedNodes = dbNodes.length > 0
-          ? mergeNodeStates(mapData.nodes, dbNodes)
-          : mapData.nodes;
-        
+        const userNodes = currentUserId ? await getUserMapNodes(currentUserId) : [];
+        if (useAppStore.getState().currentUserId !== currentUserId) return;
+        const mergedNodes = mapData.nodes.map(node => {
+          const userNode = userNodes.find(
+            saved => saved.id === node.id || saved.storyId === node.storyId
+          );
+          return userNode
+            ? {
+                ...node,
+                ...userNode,
+                level: node.level,
+                globalIndex: node.globalIndex,
+                levelIndex: node.levelIndex,
+                theme: node.theme,
+                isLevelStart: node.isLevelStart,
+                isLevelEnd: node.isLevelEnd,
+              }
+            : node;
+        });
+
         setNodes(mergedNodes);
         setSections(mapData.sections);
-        
+
         // 找到当前活跃节点并定位到对应区域
         const activeNode = findActiveNode(mergedNodes);
         if (activeNode) {
@@ -180,25 +177,28 @@ const HorizontalMap: React.FC<HorizontalMapProps> = ({ onNodeClick }) => {
         setLoading(false);
       }
     };
-    
+
     loadMapData();
-  }, []);
+  }, [currentUserId]);
 
   // 滚动到指定区域
-  const scrollToRegion = useCallback((index: number) => {
-    if (!scrollRef.current) return;
-    
-    const regionWidth = scrollRef.current.offsetWidth;
-    const targetX = -index * regionWidth;
-    
-    animate(scrollX, targetX, {
-      type: 'spring',
-      stiffness: 300,
-      damping: 30,
-    });
-    
-    setCurrentRegionIndex(index);
-  }, [scrollX]);
+  const scrollToRegion = useCallback(
+    (index: number) => {
+      if (!scrollRef.current) return;
+
+      const regionWidth = scrollRef.current.offsetWidth;
+      const targetX = -index * regionWidth;
+
+      animate(scrollX, targetX, {
+        type: 'spring',
+        stiffness: 300,
+        damping: 30,
+      });
+
+      setCurrentRegionIndex(index);
+    },
+    [scrollX]
+  );
 
   // 键盘导航
   useEffect(() => {
@@ -209,43 +209,48 @@ const HorizontalMap: React.FC<HorizontalMapProps> = ({ onNodeClick }) => {
         scrollToRegion(currentRegionIndex + 1);
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentRegionIndex, sections.length, scrollToRegion]);
 
   // 处理拖拽结束
-  const handleDragEnd = useCallback((
-    _: MouseEvent | TouchEvent | PointerEvent,
-    info: { offset: { x: number }; velocity: { x: number } }
-  ) => {
-    setIsDragging(false);
-    
-    if (!scrollRef.current) return;
-    
-    const regionWidth = scrollRef.current.offsetWidth;
-    // scrollX.get() 保留以备将来使用
-    void scrollX.get();
-    const velocity = info.velocity.x;
-    const offset = info.offset.x;
-    
-    // 根据速度和偏移决定滚动方向
-    let targetIndex = currentRegionIndex;
-    
-    if (Math.abs(velocity) > 500) {
-      // 高速滑动
-      targetIndex = velocity > 0 
-        ? Math.max(0, currentRegionIndex - 1)
-        : Math.min(sections.length - 1, currentRegionIndex + 1);
-    } else if (Math.abs(offset) > regionWidth * 0.2) {
-      // 中等距离滑动
-      targetIndex = offset > 0
-        ? Math.max(0, currentRegionIndex - 1)
-        : Math.min(sections.length - 1, currentRegionIndex + 1);
-    }
-    
-    scrollToRegion(targetIndex);
-  }, [currentRegionIndex, sections.length, scrollToRegion, scrollX]);
+  const handleDragEnd = useCallback(
+    (
+      _: MouseEvent | TouchEvent | PointerEvent,
+      info: { offset: { x: number }; velocity: { x: number } }
+    ) => {
+      setIsDragging(false);
+
+      if (!scrollRef.current) return;
+
+      const regionWidth = scrollRef.current.offsetWidth;
+      // scrollX.get() 保留以备将来使用
+      void scrollX.get();
+      const velocity = info.velocity.x;
+      const offset = info.offset.x;
+
+      // 根据速度和偏移决定滚动方向
+      let targetIndex = currentRegionIndex;
+
+      if (Math.abs(velocity) > 500) {
+        // 高速滑动
+        targetIndex =
+          velocity > 0
+            ? Math.max(0, currentRegionIndex - 1)
+            : Math.min(sections.length - 1, currentRegionIndex + 1);
+      } else if (Math.abs(offset) > regionWidth * 0.2) {
+        // 中等距离滑动
+        targetIndex =
+          offset > 0
+            ? Math.max(0, currentRegionIndex - 1)
+            : Math.min(sections.length - 1, currentRegionIndex + 1);
+      }
+
+      scrollToRegion(targetIndex);
+    },
+    [currentRegionIndex, sections.length, scrollToRegion, scrollX]
+  );
 
   // 计算拖拽约束
   const dragConstraints = useMemo(() => {
@@ -264,7 +269,7 @@ const HorizontalMap: React.FC<HorizontalMapProps> = ({ onNodeClick }) => {
       const progress = getLevelProgress(nodes, section.level);
       const isUnlocked = regionNodes.some(n => n.unlocked);
       const isCurrent = index === currentRegionIndex;
-      
+
       return {
         section,
         nodes: regionNodes,
@@ -372,4 +377,3 @@ const HorizontalMap: React.FC<HorizontalMapProps> = ({ onNodeClick }) => {
 };
 
 export default HorizontalMap;
-

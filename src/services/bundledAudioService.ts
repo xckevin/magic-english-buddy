@@ -1,4 +1,5 @@
 import manifestData from '@/data/audio/manifest.json';
+import { AUDIO_CACHE_NAME, audioFileUrl } from './audioDownloadService';
 
 export interface AudioWord {
   word: string;
@@ -19,7 +20,9 @@ const manifest: AudioManifest = manifestData;
 
 /** Only exact text matches may use a recording; edited lessons fall back to TTS. */
 export function getBundledSpeech(text: string): AudioClip[] | null {
-  const word = /^\S+$/.test(text) ? text.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, '').toLowerCase() : '';
+  const word = /^\S+$/.test(text)
+    ? text.normalize('NFKC').replace(/^[^\p{L}\p{N}'’-]+|[^\p{L}\p{N}'’-]+$/gu, '').toLowerCase()
+    : '';
   const clip =
     manifest.clips[text] ?? (word ? manifest.clips[word === 'i' ? 'I' : word] : undefined);
   if (clip) return [clip];
@@ -108,16 +111,9 @@ export class BundledSpeechPlayer {
       let started = false;
 
       const isCurrent = () => this.active === playback;
-      const currentClipTime = () => {
-        if (!playback.source || playback.context.state !== 'running') return playback.clipPosition;
-        return (
-          playback.clipPosition +
-          (playback.context.currentTime - playback.positionAnchor) * playback.rate
-        );
-      };
       const updateWord = () => {
-        if (!isCurrent()) return;
-        const position = currentClipTime();
+        if (!isCurrent() || !playback.source || playback.paused || context.state !== 'running') return;
+        const position = currentPosition(playback);
         const word = clips[index]?.words.find(
           item => position >= item.start && position < item.end
         );
@@ -199,8 +195,21 @@ export class BundledSpeechPlayer {
             finish();
             return;
           }
-          const response = await fetch(`${import.meta.env.BASE_URL}audio/${clip.file}`, {
+          const url = audioFileUrl(clip.file);
+          let response: Response | undefined;
+          // Downloaded audio is read directly, even before the service worker takes
+          // control. Streaming a clip never opts the user into an offline download.
+          if (typeof caches !== 'undefined') {
+            try {
+              response = await caches.match(url, { cacheName: AUDIO_CACHE_NAME });
+            } catch {
+              /* Storage may be disabled; online playback can still work. */
+            }
+          }
+          if (!isCurrent()) return;
+          response ??= await fetch(url, {
             signal: playback.controller.signal,
+            cache: 'no-store',
           });
           if (!isCurrent()) return;
           if (!response.ok) throw new Error(`Audio unavailable (${response.status})`);
@@ -258,10 +267,8 @@ export class BundledSpeechPlayer {
   pause(): void {
     const playback = this.active;
     if (!playback || playback.paused) return;
-    if (playback.source && playback.context.state === 'running') {
-      playback.clipPosition = currentPosition(playback);
-      playback.positionAnchor = playback.context.currentTime;
-    }
+    // The context clock freezes with its audio sources. Keep the same anchor:
+    // suspend/resume promises can settle after the render thread changes state.
     playback.paused = true;
     void playback.context.suspend().catch(() => undefined);
     playback.notify({ type: 'pause' });
@@ -271,13 +278,11 @@ export class BundledSpeechPlayer {
     const playback = this.active;
     if (!playback || !playback.paused) return;
     playback.paused = false;
-    playback.positionAnchor = playback.context.currentTime;
     playback.notify({ type: 'resume' });
     void playback.context
       .resume()
       .then(() => {
         if (this.active !== playback || playback.paused) return;
-        playback.positionAnchor = playback.context.currentTime;
         playback.start();
       })
       .catch(error => {
@@ -290,7 +295,7 @@ export class BundledSpeechPlayer {
   setRate(rate: number): void {
     const playback = this.active;
     if (!playback) return;
-    if (playback.source && playback.context.state === 'running') {
+    if (playback.source) {
       playback.clipPosition = currentPosition(playback);
       playback.positionAnchor = playback.context.currentTime;
     }

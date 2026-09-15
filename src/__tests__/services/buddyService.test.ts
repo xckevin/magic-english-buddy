@@ -16,6 +16,7 @@ import {
 } from '@/services/buddyService';
 import { seedTestDatabase, createTestDatabase, mockUserProgress } from '../mocks';
 import { db } from '@/db';
+import { localDate } from '@/utils/localDate';
 
 describe('BuddyService', () => {
   beforeEach(async () => {
@@ -74,6 +75,22 @@ describe('BuddyService', () => {
   });
 
   describe('getBuddyState', () => {
+    it('uses local learning days and does not treat profile creation as studying', async () => {
+      await db.userProgress.update(mockUserProgress.id, {
+        lastStudyDate: localDate(), streakDays: 0, totalReadingTime: 0,
+      });
+      expect(await getBuddyState(mockUserProgress.id)).toMatchObject({ mood: 'neutral', streakDays: 0 });
+      await db.userProgress.update(mockUserProgress.id, { streakDays: 1 });
+      expect(await getBuddyState(mockUserProgress.id)).toMatchObject({ mood: 'happy', streakDays: 1 });
+    });
+
+    it('does not display an expired streak', async () => {
+      await db.userProgress.update(mockUserProgress.id, {
+        lastStudyDate: localDate(Date.now(), -2), streakDays: 7,
+      });
+      expect(await getBuddyState(mockUserProgress.id)).toMatchObject({ mood: 'sad', streakDays: 0 });
+    });
+
     it('应该返回 Buddy 当前状态', async () => {
       const state = await getBuddyState(mockUserProgress.id);
 
@@ -218,4 +235,3 @@ describe('BuddyService', () => {
     });
   });
 });
-

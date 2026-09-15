@@ -37,6 +37,11 @@ export interface UserProgress {
   totalStoriesRead: number;
   currentMapNode: string;
   unlockedNodes: string[];
+  /**
+   * Per-profile completed map nodes. `undefined` is deliberately reserved for
+   * pre-profile-map installs that still need their one-time legacy migration.
+   */
+  completedNodes?: string[];
   achievements: string[];
   streakDays: number;
   lastStudyDate: string; // YYYY-MM-DD
@@ -175,6 +180,26 @@ export interface QuizRecord {
   completedAt: number;
 }
 
+export interface QuizDraftAnswer {
+  questionId: string;
+  userAnswer: string | string[];
+}
+
+/** An unfinished attempt; derived scores are recomputed from current questions. */
+export interface QuizDraft {
+  id: string;
+  userId: string;
+  storyId: string;
+  questionFingerprint: string;
+  startedAt: number;
+  updatedAt: number;
+  stage: 'playing' | 'feedback' | 'result';
+  currentQuestionIndex: number;
+  answers: QuizDraftAnswer[];
+  hintsUsed: number;
+  hintedQuestionIds?: string[];
+}
+
 /** 地图节点 */
 export interface MapNode {
   id: string;
@@ -232,6 +257,8 @@ export class MagicEnglishDB extends Dexie {
   userVocabulary!: Table<UserVocabulary>;
   readingHistory!: Table<ReadingRecord>;
   quizHistory!: Table<QuizRecord>;
+  quizDrafts!: Table<QuizDraft>;
+  learningMeta!: Table<{ key: string; value: string }>;
   mapNodes!: Table<MapNode>;
   mapRegions!: Table<MapRegion>;
   achievements!: Table<Achievement>;
@@ -251,6 +278,11 @@ export class MagicEnglishDB extends Dexie {
       mapRegions: 'id, level',
       achievements: 'id, achievementId, userId, unlockedAt',
     });
+    // Additive migration: existing learning history and map progress stay intact.
+    this.version(2).stores({
+      quizDrafts: 'id, userId, storyId, [userId+storyId], updatedAt',
+      learningMeta: 'key',
+    });
   }
 }
 
@@ -269,7 +301,7 @@ export const generateId = (): string => {
     return crypto.randomUUID();
   }
   // Fallback: 手动生成 UUID v4
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
     const r = (Math.random() * 16) | 0;
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
@@ -318,8 +350,9 @@ export const createUser = async (name: string, buddyName: string): Promise<User>
     buddyStage: 1,
     totalReadingTime: 0,
     totalStoriesRead: 0,
-    currentMapNode: 'node_l1_001',
-    unlockedNodes: ['node_l1_001'],
+    currentMapNode: 'node_l1_01',
+    unlockedNodes: ['node_l1_01'],
+    completedNodes: [],
     achievements: [],
     streakDays: 0,
     lastStudyDate: getTodayString(),
@@ -356,7 +389,7 @@ export const updateUserActivity = async (userId: string): Promise<void> => {
 
   if (progress) {
     const lastDate = progress.lastStudyDate;
-    
+
     // 如果今天已经更新过，不再增加连续天数
     if (lastDate === today) {
       // 今天已经学习过，只更新活跃时间
@@ -365,9 +398,9 @@ export const updateUserActivity = async (userId: string): Promise<void> => {
       });
       return;
     }
-    
+
     const dayDiff = getDayDifference(lastDate, today);
-    
+
     await db.userProgress.update(userId, {
       lastStudyDate: today,
       // 如果是连续的第二天，增加连续天数；否则重置为1
@@ -392,4 +425,3 @@ const getDayDifference = (dateStr1: string, dateStr2: string): number => {
 };
 
 export default db;
-

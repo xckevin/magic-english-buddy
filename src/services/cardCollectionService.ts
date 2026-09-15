@@ -4,6 +4,7 @@
  */
 
 import { db, type UserVocabulary } from '@/db';
+import { localDate } from '@/utils/localDate';
 
 // 卡牌稀有度
 export type CardRarity = 'white' | 'green' | 'blue' | 'gold';
@@ -158,7 +159,7 @@ export const convertToCard = async (
       correctCount: 1,
       wrongCount: 0,
       masteryLevel: 1,
-      nextReviewDate: new Date(now + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      nextReviewDate: localDate(now, 1),
       isCard: true,
       cardRarity: rarity,
     };
@@ -202,7 +203,7 @@ export const grantStoryRewardCardsInTransaction = async (
       correctCount: Math.max(1, existing?.correctCount ?? 0),
       wrongCount: existing?.wrongCount ?? 0,
       masteryLevel: Math.max(1, existing?.masteryLevel ?? 0) as 0 | 1 | 2 | 3,
-      nextReviewDate: new Date(now + 24 * 60 * 60 * 1000).toISOString().split('T')[0]!,
+      nextReviewDate: localDate(now, 1),
       isCard: true,
       cardRarity,
     };

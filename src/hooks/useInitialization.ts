@@ -3,14 +3,9 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/stores/useAppStore';
-import { getCurrentUser } from '@/db';
-import {
-  needsInitialization,
-  initializeAppData,
-  getDataStats,
-} from '@/services/dataInitService';
+import { db, getCurrentUser } from '@/db';
+import { needsInitialization, initializeAppData, getDataStats } from '@/services/dataInitService';
 
 interface InitializationState {
   isChecking: boolean;
@@ -31,8 +26,7 @@ interface InitializationResult {
  * 首次启动检测与初始化 Hook
  */
 export const useInitialization = (): InitializationResult => {
-  const navigate = useNavigate();
-  const { setCurrentUser, isFirstLaunch } = useAppStore();
+  const { currentUserId, setCurrentUser } = useAppStore();
 
   const [state, setState] = useState<InitializationState>({
     isChecking: true,
@@ -44,34 +38,35 @@ export const useInitialization = (): InitializationResult => {
   });
 
   /**
-   * 检查用户状态并决定导航
+   * 选择当前学习档案；页面自身负责导航，避免与页面操作竞争。
    */
-  const checkUserAndNavigate = useCallback(async () => {
-    try {
-      const user = await getCurrentUser();
-      
-      if (user) {
-        // 已有用户，设置到 store
-        setCurrentUser(user.id);
-        
-        // 如果不是首次启动，直接跳转到地图
-        if (!isFirstLaunch) {
-          navigate('/map', { replace: true });
-          return true;
-        }
+  const selectCurrentUser = useCallback(
+    async (isCurrent: () => boolean = () => true) => {
+      try {
+        // activeProfileId is the authoritative cross-window selection. The
+        // persisted store can lag behind a profile switch in another tab.
+        const activeProfileId = (await db.learningMeta.get('activeProfileId'))?.value;
+        const activeUser = activeProfileId ? await db.users.get(activeProfileId) : undefined;
+        const persistedUser = currentUserId ? await db.users.get(currentUserId) : undefined;
+        const selectedUser = activeUser ?? persistedUser ?? (await getCurrentUser());
+
+        if (!isCurrent()) return false;
+        if (selectedUser) setCurrentUser(selectedUser.id);
+
+        return Boolean(selectedUser);
+      } catch (error) {
+        console.error('Check user failed:', error);
+        return false;
       }
-      
-      return false;
-    } catch (error) {
-      console.error('Check user failed:', error);
-      return false;
-    }
-  }, [navigate, setCurrentUser, isFirstLaunch]);
+    },
+    [currentUserId, setCurrentUser]
+  );
 
   /**
    * 执行数据初始化
    */
-  const startInitialization = useCallback(async () => {
+  const startInitialization = useCallback(async (isCurrent: () => boolean = () => true) => {
+    if (!isCurrent()) return;
     setState(prev => ({
       ...prev,
       isInitializing: true,
@@ -80,6 +75,7 @@ export const useInitialization = (): InitializationResult => {
 
     try {
       const result = await initializeAppData((message, progress) => {
+        if (!isCurrent()) return;
         setState(prev => ({
           ...prev,
           message,
@@ -87,7 +83,7 @@ export const useInitialization = (): InitializationResult => {
         }));
       });
 
-      if (result.success) {
+      if (result.success && isCurrent()) {
         setState(prev => ({
           ...prev,
           isInitializing: false,
@@ -98,6 +94,7 @@ export const useInitialization = (): InitializationResult => {
         throw new Error('数据初始化失败');
       }
     } catch (error) {
+      if (!isCurrent()) return;
       setState(prev => ({
         ...prev,
         isInitializing: false,
@@ -125,33 +122,40 @@ export const useInitialization = (): InitializationResult => {
    * 初始检查
    */
   useEffect(() => {
+    let cancelled = false;
+    const isCurrent = () => !cancelled;
     const check = async () => {
       // 检查是否需要初始化数据
       const needsInit = needsInitialization();
-      
+
       if (needsInit) {
+        if (!isCurrent()) return;
         setState(prev => ({
           ...prev,
           isChecking: false,
           message: '首次启动，准备初始化数据...',
         }));
-        await startInitialization();
+        await startInitialization(isCurrent);
       } else {
         // 数据已存在，检查用户
         const stats = await getDataStats();
+        if (!isCurrent()) return;
         setState(prev => ({
           ...prev,
           isChecking: false,
           isComplete: true,
           message: `已加载 ${stats.stories} 个故事`,
         }));
-        
-        await checkUserAndNavigate();
+
+        await selectCurrentUser(isCurrent);
       }
     };
 
-    check();
-  }, [checkUserAndNavigate, startInitialization]);
+    void check();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectCurrentUser, startInitialization]);
 
   return {
     state,
@@ -161,4 +165,3 @@ export const useInitialization = (): InitializationResult => {
 };
 
 export default useInitialization;
-

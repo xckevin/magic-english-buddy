@@ -6,9 +6,12 @@
 import { db, type MapNode } from '@/db';
 import { allStories, allDictionary, allRegions } from '@/data';
 import { generateUnifiedMapData } from '@/data/unifiedMap';
+import { migrateLegacyMapProgressInTransaction } from '@/services/mapProgressService';
 
 const INIT_KEY = 'magic_english_data_initialized';
-const INIT_VERSION = '3.2.0';
+// Re-run the append-only initializers when bundled course data grows, so old
+// installs receive newly added stories, dictionary entries, and map nodes.
+const INIT_VERSION = '3.4.0';
 
 /**
  * 检查是否需要初始化
@@ -67,38 +70,41 @@ export const initDictionary = async (): Promise<number> =>
  * Versions before 3 used node_l1_001; the visible map uses node_l1_01.
  */
 export const initMapData = async (): Promise<void> =>
-  db.transaction('rw', [db.mapRegions, db.mapNodes], async () => {
-    const existing = await db.mapNodes.toArray();
-    const canonical = generateUnifiedMapData().nodes;
-    const oldId = new Map(
-      canonical.map(node => {
-        const saved =
-          existing.find(item => item.id === node.id) ??
-          existing.find(item => item.storyId === node.storyId);
-        return [node.id, saved?.id ?? node.id];
-      })
-    );
-    const nodes: MapNode[] = canonical.map(node => {
-      const saved = existing.filter(item => item.id === node.id || item.storyId === node.storyId);
-      return {
-        ...node,
-        id: oldId.get(node.id)!,
-        prerequisites: node.prerequisites.map(id => oldId.get(id) ?? id),
-        completed: saved.some(item => item.completed) || !!node.completed,
-        unlocked: saved.some(item => item.unlocked) || !!node.unlocked,
-      };
-    });
-    // Preserve previous unlocks; make completed prerequisites navigable on old installs.
-    for (const node of nodes) {
-      if (
-        node.prerequisites.length &&
-        node.prerequisites.every(id => nodes.some(item => item.id === id && item.completed))
-      )
-        node.unlocked = true;
+  db.transaction(
+    'rw',
+    [db.mapRegions, db.mapNodes, db.users, db.userProgress, db.quizHistory, db.learningMeta],
+    async () => {
+      const existing = await db.mapNodes.toArray();
+      // Snapshot the shared pre-profile flags into the one eligible profile
+      // before replacing map nodes with course structure only.
+      await migrateLegacyMapProgressInTransaction();
+      const canonical = generateUnifiedMapData().nodes;
+      const oldId = new Map(
+        canonical.map(node => {
+          const saved =
+            existing.find(item => item.id === node.id) ??
+            existing.find(item => item.storyId === node.storyId);
+          return [node.id, saved?.id ?? node.id];
+        })
+      );
+      const nodes: MapNode[] = canonical.map(node => {
+        const saved = existing.filter(item => item.id === node.id || item.storyId === node.storyId);
+        const savedNode = saved[0];
+        return {
+          ...node,
+          id: oldId.get(node.id)!,
+          prerequisites: node.prerequisites.map(id => oldId.get(id) ?? id),
+          rewards: savedNode?.rewards ?? node.rewards,
+          // Runtime state belongs to UserProgress. Map nodes remain a canonical
+          // course graph after migration, never another profile's progress.
+          completed: false,
+          unlocked: false,
+        };
+      });
+      await db.mapRegions.bulkPut(allRegions);
+      await db.mapNodes.bulkPut(nodes);
     }
-    await db.mapRegions.bulkPut(allRegions);
-    await db.mapNodes.bulkPut(nodes);
-  });
+  );
 
 /**
  * 执行完整的数据初始化

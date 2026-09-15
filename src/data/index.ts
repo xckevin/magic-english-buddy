@@ -31,6 +31,7 @@ import { l4Dictionary } from './dictionary/l4-words';
 import { l5Dictionary } from './dictionary/l5-words';
 import { l6Dictionary } from './dictionary/l6-words';
 import { l7Dictionary } from './dictionary/l7-words';
+import { courseSupplementDictionary } from './dictionary/course-supplement';
 
 // ============ 类型定义 ============
 
@@ -55,49 +56,49 @@ export const levelDataMap: Record<LevelNumber, LevelData> = {
     regionConfig: l1RegionConfig,
     getMapNodes: generateL1MapNodes,
     stories: l1Stories,
-    dictionary: l1Dictionary,
+    dictionary: [...l1Dictionary, ...courseSupplementDictionary.filter(entry => entry.level === 1)],
   },
   2: {
     level: 2,
     regionConfig: l2ValleyMapRegion,
     getMapNodes: () => l2ValleyMapNodes,
     stories: l2Stories,
-    dictionary: l2Dictionary,
+    dictionary: [...l2Dictionary, ...courseSupplementDictionary.filter(entry => entry.level === 2)],
   },
   3: {
     level: 3,
     regionConfig: l3RegionConfig,
     getMapNodes: generateL3MapNodes,
     stories: l3Stories,
-    dictionary: l3Dictionary,
+    dictionary: [...l3Dictionary, ...courseSupplementDictionary.filter(entry => entry.level === 3)],
   },
   4: {
     level: 4,
     regionConfig: l4RegionConfig,
     getMapNodes: generateL4MapNodes,
     stories: l4Stories,
-    dictionary: l4Dictionary,
+    dictionary: [...l4Dictionary, ...courseSupplementDictionary.filter(entry => entry.level === 4)],
   },
   5: {
     level: 5,
     regionConfig: l5RegionConfig,
     getMapNodes: generateL5MapNodes,
     stories: l5Stories,
-    dictionary: l5Dictionary,
+    dictionary: [...l5Dictionary, ...courseSupplementDictionary.filter(entry => entry.level === 5)],
   },
   6: {
     level: 6,
     regionConfig: l6RegionConfig,
     getMapNodes: generateL6MapNodes,
     stories: l6Stories,
-    dictionary: l6Dictionary,
+    dictionary: [...l6Dictionary, ...courseSupplementDictionary.filter(entry => entry.level === 6)],
   },
   7: {
     level: 7,
     regionConfig: l7RegionConfig,
     getMapNodes: generateL7MapNodes,
     stories: l7Stories,
-    dictionary: l7Dictionary,
+    dictionary: [...l7Dictionary, ...courseSupplementDictionary.filter(entry => entry.level === 7)],
   },
 };
 
@@ -164,6 +165,7 @@ export const allDictionary: DictionaryEntry[] = [
   ...l5Dictionary,
   ...l6Dictionary,
   ...l7Dictionary,
+  ...courseSupplementDictionary,
 ];
 
 /**
@@ -263,4 +265,3 @@ export default {
   getNextLevel,
   getPrevLevel,
 };
-

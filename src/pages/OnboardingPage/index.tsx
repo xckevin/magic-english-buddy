@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, BookOpen, Headphones, Sparkles, ShieldCheck } from 'lucide-react';
-import { db, createUser } from '@/db';
+import { db } from '@/db';
 import { useAppStore } from '@/stores/useAppStore';
 import { useInitialization } from '@/hooks/useInitialization';
 import { useLongPress } from '@/hooks/useLongPress';
 import { MagicEgg } from '@/components/onboarding';
 import BuddyScene from '@/components/common/BuddyScene';
 import Button from '@/components/common/Button';
+import { createLearningProfile } from '@/services/profileService';
 import styles from './OnboardingPage.module.css';
 
 type Step = 'welcome' | 'hatching' | 'naming';
@@ -29,11 +30,19 @@ export default function OnboardingPage() {
   useEffect(() => {
     if (!init.isComplete) return;
     let cancelled = false;
-    void db.users
-      .orderBy('createdAt')
-      .last()
+    const selectedUserId = useAppStore.getState().currentUserId;
+    void (async () => {
+      const activeProfileId = (await db.learningMeta.get('activeProfileId'))?.value;
+      return (
+        (activeProfileId ? await db.users.get(activeProfileId) : undefined) ??
+        (selectedUserId ? await db.users.get(selectedUserId) : undefined) ??
+        (await db.users.orderBy('createdAt').last())
+      );
+    })()
       .then(user => {
-        if (user && !cancelled) {
+        // Creating a profile performs its own committed navigation. An older
+        // startup lookup must not add a second navigation while it finishes.
+        if (user && !cancelled && !submitting.current) {
           setCurrentUser(user.id);
           navigate('/map', { replace: true });
         }
@@ -56,11 +65,10 @@ export default function OnboardingPage() {
       setBusy(true);
       setError('');
       try {
-        const user = await createUser(
+        await createLearningProfile(
           skip ? '小小探险队' : userName.trim(),
           skip ? '小精灵' : buddyName.trim()
         );
-        setCurrentUser(user.id);
         finishFirstLaunch();
         navigate('/map', { replace: true });
       } catch {
@@ -70,7 +78,7 @@ export default function OnboardingPage() {
         setBusy(false);
       }
     },
-    [userName, buddyName, setCurrentUser, finishFirstLaunch, navigate]
+    [userName, buddyName, finishFirstLaunch, navigate]
   );
   const loading = init.isChecking || init.isInitializing;
   return (
@@ -175,6 +183,13 @@ export default function OnboardingPage() {
                   >
                     先为我们的伙伴起个名字
                   </button>
+                  <button
+                    className={styles.skip}
+                    onClick={() => navigate('/settings')}
+                    disabled={busy}
+                  >
+                    已有学习记录？恢复备份或管理档案
+                  </button>
                 </>
               )}
               {step === 'hatching' && (
@@ -255,7 +270,7 @@ export default function OnboardingPage() {
             </>
           )}
           <p className={styles.privacy}>
-            <ShieldCheck size={14} /> 无需账号 · 记录属于这台共用设备
+            <ShieldCheck size={14} /> 无需账号 · 共用设备也能分开保存学习档案
           </p>
         </section>
       </main>

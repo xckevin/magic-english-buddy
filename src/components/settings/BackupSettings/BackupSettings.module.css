@@ -1,0 +1,80 @@
+.section {
+  margin-top: 28px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 24px;
+  background: var(--surface-card);
+  color: var(--ink);
+}
+.section h2 {
+  margin: 0 0 12px;
+  font-size: 20px;
+}
+.section p,
+.preview p {
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.note {
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0 0;
+}
+.section button,
+.preview button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: inherit;
+  background: var(--surface-soft);
+  font: inherit;
+  cursor: pointer;
+}
+.section button:disabled,
+.preview button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.section button:focus-visible,
+.preview button:focus-visible {
+  outline: 3px solid #8772db;
+  outline-offset: 3px;
+}
+.preview {
+  display: grid;
+  gap: 12px;
+}
+.preview label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  line-height: 1.6;
+}
+.preview input {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 3px;
+  accent-color: #7760c2;
+}
+.file {
+  display: none;
+}
+.error {
+  color: var(--danger, #b32738);
+}
+@media (max-width: 600px) {
+  .section {
+    margin-top: 28px;
+    padding: 18px;
+  }
+  .actions > button {
+    flex: 1 1 140px;
+  }
+}

@@ -7,10 +7,16 @@
  * granting rewards again.
  */
 
-import { db, generateId, type Achievement, type MapNode, type Story } from '@/db';
-import { readingProgressService } from '@/services/readingProgressService';
+import { db, generateId, type Achievement, type MapNode, type QuizItem, type Story } from '@/db';
 import { grantStoryRewardCardsInTransaction } from '@/services/cardCollectionService';
 import { checkAndUnlockAchievementsInTransaction } from '@/services/achievementService';
+import { assertLearningRevision } from '@/services/learningRevisionService';
+import { recordLearningActivityInTransaction } from '@/services/learningActivityService';
+import {
+  completeUserStoryMapNodeInTransaction,
+  getUserMapNodes,
+  getUserMapNodesInTransaction,
+} from '@/services/mapProgressService';
 
 export interface LessonAccess {
   allowed: boolean;
@@ -23,17 +29,16 @@ export interface LessonAccess {
 export interface QuizCompletionAnswer {
   questionId: string;
   userAnswer: string | string[];
-  correctAnswer: string | string[];
-  isCorrect: boolean;
 }
 
 export interface StoryQuizCompletionInput {
   userId: string;
   storyId: string;
-  score: number;
   answers: QuizCompletionAnswer[];
-  /** The quiz's per-question reward before first-pass rules are applied. */
-  quizMagicPower: number;
+  /** Stored for resume only; completion clamps it before calculating rewards. */
+  hintsUsed: number;
+  /** Captured when the quiz loaded; rejects a tab superseded by restore. */
+  databaseRevision: string;
 }
 
 export interface StoryQuizCompletionResult {
@@ -47,14 +52,66 @@ export interface StoryQuizCompletionResult {
 
 const isPassingQuiz = (score: number) => score >= 60;
 
-const getAccess = async (userId: string, storyId: string): Promise<LessonAccess> => {
-  const [progress, story, node] = await Promise.all([
+const isCorrectAnswer = (question: QuizItem, userAnswer: string | string[]): boolean => {
+  if (question.type === 'sentence_order') {
+    const correctOrder = question.correctOrder ?? [];
+    return (
+      Array.isArray(userAnswer) &&
+      userAnswer.length === correctOrder.length &&
+      userAnswer.every((word, index) => word === correctOrder[index])
+    );
+  }
+  return typeof userAnswer === 'string' && userAnswer === question.correctAnswer;
+};
+
+const scoreQuiz = (story: Story, submitted: QuizCompletionAnswer[], hintsUsed: number) => {
+  if (!story.quiz.length) throw new Error('Story has no quiz questions');
+  const answersByQuestion = new Map<string, string | string[]>();
+  for (const answer of submitted) {
+    if (!answersByQuestion.has(answer.questionId)) {
+      answersByQuestion.set(answer.questionId, answer.userAnswer);
+    }
+  }
+  const answers = story.quiz.map(question => {
+    const userAnswer =
+      answersByQuestion.get(question.id) ?? (question.type === 'sentence_order' ? [] : '');
+    const correctAnswer =
+      question.type === 'sentence_order'
+        ? (question.correctOrder ?? [])
+        : (question.correctAnswer ?? '');
+    return {
+      questionId: question.id,
+      userAnswer,
+      correctAnswer,
+      isCorrect: isCorrectAnswer(question, userAnswer),
+    };
+  });
+  const correctCount = answers.filter(answer => answer.isCorrect).length;
+  const score = Math.round((correctCount / story.quiz.length) * 100);
+  // Existing sentence-order UI allows more than one hint. Preserve that actual
+  // cost while rejecting malformed or implausibly large persisted values.
+  const safeHints =
+    Number.isInteger(hintsUsed) && hintsUsed > 0 && hintsUsed <= 1_000 ? hintsUsed : 0;
+  return {
+    answers,
+    score,
+    quizMagicPower: Math.max(0, correctCount * 3 - safeHints * 5),
+  };
+};
+
+const getAccess = async (
+  userId: string,
+  storyId: string,
+  inTransaction = false
+): Promise<LessonAccess> => {
+  const [progress, story, nodes] = await Promise.all([
     db.userProgress.get(userId),
     db.stories.get(storyId),
-    db.mapNodes.where('storyId').equals(storyId).first(),
+    inTransaction ? getUserMapNodesInTransaction(userId) : getUserMapNodes(userId),
   ]);
   if (!progress) return { allowed: false, reason: 'missing_profile', isReview: false };
   if (!story) return { allowed: false, reason: 'missing_story', isReview: false };
+  const node = nodes.find(candidate => candidate.storyId === storyId);
   if (!node) return { allowed: false, reason: 'missing_map_node', isReview: false, story };
   if (!node.unlocked && !node.completed) {
     return { allowed: false, reason: 'locked', isReview: false, story, node };
@@ -99,20 +156,32 @@ export const completeStoryQuiz = async (
 ): Promise<StoryQuizCompletionResult> =>
   db.transaction(
     'rw',
-    [db.quizHistory, db.userProgress, db.stories, db.mapNodes, db.userVocabulary, db.achievements],
+    [
+      db.quizHistory,
+      db.quizDrafts,
+      db.learningMeta,
+      db.users,
+      db.userProgress,
+      db.stories,
+      db.mapNodes,
+      db.userVocabulary,
+      db.achievements,
+    ],
     async () => {
+      await assertLearningRevision(input.databaseRevision);
       // Recheck inside the transaction so a stale UI cannot settle a now-locked lesson.
-      const access = await getAccess(input.userId, input.storyId);
+      const access = await getAccess(input.userId, input.storyId, true);
       if (!access.allowed || !access.story || !access.node) {
         throw new Error(`Lesson is not available: ${access.reason ?? 'unknown'}`);
       }
       const progress = await db.userProgress.get(input.userId);
       if (!progress) throw new Error('Learning profile not found');
 
-      const passed = isPassingQuiz(input.score);
+      const settledQuiz = scoreQuiz(access.story, input.answers, input.hintsUsed);
+      const passed = isPassingQuiz(settledQuiz.score);
       const firstCompletion = passed && !access.isReview;
       const storyReward = firstCompletion ? access.story.rewards.magicPower : 0;
-      const quizReward = firstCompletion ? input.quizMagicPower : 0;
+      const quizReward = firstCompletion ? settledQuiz.quizMagicPower : 0;
       const awardedMagicPower = storyReward + quizReward;
       let awardedCards: string[] = [];
 
@@ -121,11 +190,17 @@ export const completeStoryQuiz = async (
         userId: input.userId,
         storyId: input.storyId,
         quizType: 'story_quiz',
-        questions: input.answers.map(answer => ({ ...answer, timeSpent: 0 })),
-        score: input.score,
+        questions: settledQuiz.answers.map(answer => ({ ...answer, timeSpent: 0 })),
+        score: settledQuiz.score,
         earnedMagicPower: awardedMagicPower,
         completedAt: Date.now(),
       });
+      // Every submitted course quiz is real learning activity, including a
+      // failed attempt or replay. Rewards remain first-pass-only below.
+      const activity = await recordLearningActivityInTransaction(input.userId);
+      // The completion record and draft deletion commit together. An earlier
+      // asynchronous draft write is rejected by quizDraftService's startedAt fence.
+      await db.quizDrafts.delete(`${input.userId}:${input.storyId}`);
 
       if (!firstCompletion) {
         return {
@@ -138,17 +213,16 @@ export const completeStoryQuiz = async (
         };
       }
 
-      await readingProgressService.markStoryCompletedInTransaction(input.storyId);
+      const userMap = await completeUserStoryMapNodeInTransaction(input.userId, input.storyId);
       awardedCards = await grantStoryRewardCardsInTransaction(
         input.userId,
         access.story.rewards.cards
       );
-      const allNodes = await db.mapNodes.toArray();
       const storyIds = new Set((await db.stories.toArray()).map(story => story.id));
-      const completedLearningNodes = allNodes.filter(
+      const completedLearningNodes = userMap.nodes.filter(
         node => node.completed && !!node.storyId && storyIds.has(node.storyId)
       );
-      const level = calculateLevel(allNodes, Math.max(progress.level, access.story.level));
+      const level = calculateLevel(userMap.nodes, Math.max(progress.level, access.story.level));
       const nextProgress = {
         magicPower: progress.magicPower + awardedMagicPower,
         level,
@@ -164,7 +238,7 @@ export const completeStoryQuiz = async (
           // intentionally stricter: only a passed, persisted map lesson counts.
           storiesCompleted: completedLearningNodes.length,
           wordsLearned: vocabulary.length,
-          streakDays: progress.streakDays,
+          streakDays: activity.streakDays,
           totalCards: vocabulary.filter(item => item.isCard).length,
           goldCards: vocabulary.filter(item => item.isCard && item.cardRarity === 'gold').length,
           buddyStage: progress.buddyStage,

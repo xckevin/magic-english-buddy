@@ -1,4 +1,4 @@
-/** 本设备共同学习记录的导出组件。 */
+/** 当前档案本地学习记录的导出组件。 */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
@@ -97,7 +97,7 @@ export const QRSync: React.FC<QRSyncProps> = ({ userId, userName }) => {
   return (
     <div className={styles.container}>
       <p className={styles.sharedNote}>
-        这台共用设备上的学习记录会保存在这里，大家可以一起查看和积累。
+        这是当前档案在本设备上的学习记录；切换档案不会把别人的进度混在这里。
       </p>
 
       <section className={styles.card} aria-labelledby="export-code-title">
@@ -108,7 +108,7 @@ export const QRSync: React.FC<QRSyncProps> = ({ userId, userName }) => {
           </div>
         </div>
         <p className={styles.description}>
-          可保存当前记录的二维码快照。当前版本尚不支持扫码查看或恢复；给别人查看时，请复制下方的学习摘要。
+          可保存当前档案记录的二维码快照。当前版本尚不支持扫码查看或恢复；给别人查看时，请复制下方的学习摘要。
         </p>
 
         {isGenerating ? (
@@ -132,7 +132,7 @@ export const QRSync: React.FC<QRSyncProps> = ({ userId, userName }) => {
             <div className={styles.qrWrapper}>
               <img
                 src={qrDataUrl}
-                alt="本设备学习记录的导出二维码，普通扫码无法直接查看"
+                alt="当前档案学习记录的导出二维码，普通扫码无法直接查看"
                 className={styles.qrImage}
               />
             </div>

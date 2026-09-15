@@ -7,6 +7,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import type { QuizItem } from '@/db';
 import { QuizContainer, type QuizResultData } from '@/components/quiz';
 import { completeStoryQuiz, getLessonAccess } from '@/services/learningCompletionService';
+import {
+  loadQuizDraft,
+  saveQuizDraft,
+  type LoadedQuizDraft,
+  type QuizDraftSnapshot,
+} from '@/services/quizDraftService';
+import { getLearningRevision } from '@/services/learningRevisionService';
 import { Modal } from '@/components/common/Modal';
 import { Loading } from '@/components/common';
 import { useAppStore } from '@/stores/useAppStore';
@@ -23,10 +30,15 @@ const QuizPage: React.FC = () => {
   const [storyRewardMagicPower, setStoryRewardMagicPower] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [exitConfirmationOpen, setExitConfirmationOpen] = useState(false);
+  const [initialDraft, setInitialDraft] = useState<LoadedQuizDraft | null>(null);
+  const [attemptStartedAt, setAttemptStartedAt] = useState<number | null>(null);
+  const [databaseRevision, setDatabaseRevision] = useState<string | null>(null);
   const saveInFlightRef = useRef(false);
+  const completionInFlightRef = useRef(false);
 
   // 加载题目
   useEffect(() => {
+    let cancelled = false;
     const loadQuestions = async () => {
       setLoading(true);
       setLoadError(null);
@@ -53,7 +65,20 @@ const QuizPage: React.FC = () => {
           setLoadError('这篇故事的练习正在准备中。');
           return;
         }
+        let draft: LoadedQuizDraft | null = null;
+        const revision = await getLearningRevision();
+        try {
+          draft = await loadQuizDraft(currentUserId, storyId, story.quiz);
+        } catch (error) {
+          // Draft storage is optional. A quota or IndexedDB failure must not
+          // block a child from starting a new quiz.
+          console.error('Failed to load quiz draft:', error);
+        }
+        if (cancelled) return;
         setQuestions(story.quiz);
+        setInitialDraft(draft);
+        setAttemptStartedAt(draft?.startedAt ?? Date.now());
+        setDatabaseRevision(revision);
         setIsReview(access.isReview);
         setStoryRewardMagicPower(story.rewards.magicPower);
       } catch (error) {
@@ -64,7 +89,10 @@ const QuizPage: React.FC = () => {
       }
     };
 
-    loadQuestions();
+    void loadQuestions();
+    return () => {
+      cancelled = true;
+    };
   }, [currentUserId, storyId]);
 
   const retryLoad = useCallback(() => {
@@ -76,30 +104,50 @@ const QuizPage: React.FC = () => {
     async (result: QuizResultData) => {
       if (saveInFlightRef.current) return;
       saveInFlightRef.current = true;
+      completionInFlightRef.current = true;
       try {
-        if (!currentUserId || !storyId) throw new Error('Missing learning profile');
+        if (!currentUserId || !storyId || databaseRevision === null) {
+          throw new Error('Missing learning profile');
+        }
         await completeStoryQuiz({
           userId: currentUserId,
           storyId,
-          score: result.score,
-          quizMagicPower: result.earnedMagicPower,
-          answers: result.answers.map(answer => ({
-            ...answer,
-            correctAnswer:
-              questions.find(question => question.id === answer.questionId)?.correctOrder ??
-              questions.find(question => question.id === answer.questionId)?.correctAnswer ??
-              '',
-          })),
+          answers: result.answers.map(({ questionId, userAnswer }) => ({ questionId, userAnswer })),
+          hintsUsed: result.hintsUsed,
+          databaseRevision,
         });
         navigate('/map');
       } catch (error) {
         console.error('Failed to save quiz result:', error);
+        completionInFlightRef.current = false;
         throw error;
       } finally {
         saveInFlightRef.current = false;
       }
     },
-    [currentUserId, storyId, navigate, questions]
+    [currentUserId, databaseRevision, storyId, navigate]
+  );
+
+  const handleDraftChange = useCallback(
+    async (snapshot: QuizDraftSnapshot) => {
+      if (
+        !currentUserId ||
+        !storyId ||
+        !attemptStartedAt ||
+        databaseRevision === null ||
+        completionInFlightRef.current
+      )
+        return;
+      await saveQuizDraft(
+        currentUserId,
+        storyId,
+        questions,
+        snapshot,
+        attemptStartedAt,
+        databaseRevision
+      );
+    },
+    [attemptStartedAt, currentUserId, databaseRevision, questions, storyId]
   );
 
   // 退出
@@ -145,6 +193,9 @@ const QuizPage: React.FC = () => {
         storyId={storyId || 'unknown'}
         isReview={isReview}
         storyRewardMagicPower={storyRewardMagicPower}
+        initialDraft={initialDraft}
+        attemptStartedAt={attemptStartedAt ?? undefined}
+        onDraftChange={handleDraftChange}
         onComplete={handleComplete}
         onExit={handleExit}
       />
@@ -154,7 +205,7 @@ const QuizPage: React.FC = () => {
         title="要退出练习吗？"
         size="sm"
       >
-        <p>这次未完成的题目不会保存。已经读过的故事记录会保留。</p>
+        <p>这次未完成的答题会保留，下次可以从当前进度继续。已经读过的故事记录也会保留。</p>
         <div className={styles.statusActions}>
           <button
             className={styles.secondaryAction}

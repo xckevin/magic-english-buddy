@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db, type Story, type UserProgress } from '@/db';
-import { completeStoryQuiz, getLessonAccess } from '@/services/learningCompletionService';
+import { completeStoryQuiz } from '@/services/learningCompletionService';
 
 const userId = 'completion-user';
 const story: Story = {
@@ -12,7 +12,14 @@ const story: Story = {
   coverImage: '',
   audioFile: '',
   content: [],
-  quiz: [],
+  quiz: [
+    {
+      id: 'q1',
+      type: 'image_choice',
+      question: 'apple',
+      correctAnswer: 'apple',
+    },
+  ],
   rewards: { magicPower: 15, cards: ['apple', 'red'] },
   metadata: { wordCount: 2, estimatedTime: 1, difficulty: 1 },
 };
@@ -26,6 +33,7 @@ const progress: UserProgress = {
   totalStoriesRead: 0,
   currentMapNode: 'node_reward',
   unlockedNodes: ['node_reward'],
+  completedNodes: [],
   achievements: [],
   streakDays: 0,
   lastStudyDate: '2026-09-15',
@@ -34,9 +42,9 @@ const progress: UserProgress = {
 const input = () => ({
   userId,
   storyId: story.id,
-  score: 100,
-  quizMagicPower: 3,
-  answers: [{ questionId: 'q1', userAnswer: 'apple', correctAnswer: 'apple', isCorrect: true }],
+  hintsUsed: 0,
+  databaseRevision: '',
+  answers: [{ questionId: 'q1', userAnswer: 'apple' }],
 });
 
 const clearTables = async () => {
@@ -46,12 +54,14 @@ const clearTables = async () => {
     db.stories.clear(),
     db.userVocabulary.clear(),
     db.quizHistory.clear(),
+    db.quizDrafts.clear(),
+    db.learningMeta.clear(),
     db.mapNodes.clear(),
     db.achievements.clear(),
   ]);
 };
 
-const seed = async (completed = false, totalStoriesRead = 0) => {
+const seed = async (totalStoriesRead = 0) => {
   await db.userProgress.add({ ...progress, totalStoriesRead });
   await db.stories.add(story);
   await db.mapNodes.bulkAdd([
@@ -64,7 +74,7 @@ const seed = async (completed = false, totalStoriesRead = 0) => {
       prerequisites: [],
       rewards: { magicPower: 15 },
       unlocked: true,
-      completed,
+      completed: false,
     },
     {
       id: 'node_next',
@@ -82,7 +92,10 @@ const seed = async (completed = false, totalStoriesRead = 0) => {
 
 describe('learningCompletionService', () => {
   beforeEach(clearTables);
-  afterEach(clearTables);
+  afterEach(async () => {
+    vi.useRealTimers();
+    await clearTables();
+  });
 
   it('settles the first passing quiz atomically and grants its story rewards once', async () => {
     await seed();
@@ -94,8 +107,12 @@ describe('learningCompletionService', () => {
     expect(await db.userProgress.get(userId)).toMatchObject({ magicPower: 18, level: 2 });
     expect(await db.userVocabulary.where('userId').equals(userId).count()).toBe(2);
     expect(await db.quizHistory.where('userId').equals(userId).count()).toBe(1);
-    expect(await db.mapNodes.get('node_reward')).toMatchObject({ completed: true });
-    expect(await db.mapNodes.get('node_next')).toMatchObject({ unlocked: true });
+    expect(await db.mapNodes.get('node_reward')).toMatchObject({ completed: false });
+    expect(await db.mapNodes.get('node_next')).toMatchObject({ unlocked: false });
+    expect(await db.userProgress.get(userId)).toMatchObject({
+      completedNodes: ['node_reward'],
+      unlockedNodes: expect.arrayContaining(['node_reward', 'node_next']),
+    });
     expect(await db.achievements.get(`${userId}_first_story`)).toMatchObject({ claimed: false });
   });
 
@@ -117,8 +134,32 @@ describe('learningCompletionService', () => {
     );
   });
 
-  it('treats a migrated completed map node as a review even without old quiz history', async () => {
-    await seed(true);
+  it('records every completed quiz attempt as one local learning day, including replays', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 15, 12));
+    await seed();
+
+    await completeStoryQuiz(input());
+    expect(await db.userProgress.get(userId)).toMatchObject({
+      lastStudyDate: '2026-09-15',
+      streakDays: 1,
+    });
+
+    await completeStoryQuiz(input());
+    expect((await db.userProgress.get(userId))?.streakDays).toBe(1);
+
+    vi.setSystemTime(new Date(2026, 8, 16, 12));
+    await completeStoryQuiz(input());
+    expect(await db.userProgress.get(userId)).toMatchObject({
+      lastStudyDate: '2026-09-16',
+      streakDays: 2,
+    });
+    vi.useRealTimers();
+  });
+
+  it('treats a profile-completed node as a review even without old quiz history', async () => {
+    await seed();
+    await db.userProgress.update(userId, { completedNodes: ['node_reward'] });
 
     const result = await completeStoryQuiz(input());
 
@@ -128,8 +169,47 @@ describe('learningCompletionService', () => {
     expect(await db.quizHistory.count()).toBe(1);
   });
 
+  it('recalculates score and rewards from the stored questions instead of submitted correctness', async () => {
+    await seed();
+
+    const result = await completeStoryQuiz({
+      ...input(),
+      hintsUsed: 1,
+      answers: [{ questionId: 'q1', userAnswer: 'not apple' }],
+    });
+
+    expect(result).toMatchObject({ passed: false, firstCompletion: false, awardedMagicPower: 0 });
+    expect(await db.quizHistory.toCollection().first()).toMatchObject({
+      score: 0,
+      earnedMagicPower: 0,
+      questions: [expect.objectContaining({ questionId: 'q1', isCorrect: false })],
+    });
+    expect((await db.userProgress.get(userId))?.streakDays).toBe(1);
+  });
+
+  it('deletes the matching quiz draft in the same completion transaction', async () => {
+    await seed();
+    await db.quizDrafts.add({
+      id: `${userId}:${story.id}`,
+      userId,
+      storyId: story.id,
+      questionFingerprint: 'quiz-v1:test',
+      startedAt: Date.now() - 1,
+      updatedAt: Date.now(),
+      stage: 'result',
+      currentQuestionIndex: 0,
+      answers: [{ questionId: 'q1', userAnswer: 'apple' }],
+      hintsUsed: 0,
+      hintedQuestionIds: [],
+    });
+
+    await completeStoryQuiz(input());
+
+    await expect(db.quizDrafts.get(`${userId}:${story.id}`)).resolves.toBeUndefined();
+  });
+
   it('does not unlock story-completion achievements from reading-only totals or placeholder nodes', async () => {
-    await seed(false, 10);
+    await seed(10);
     await db.mapNodes.add({
       id: 'completed-placeholder',
       regionId: 'region_l1',
@@ -147,29 +227,33 @@ describe('learningCompletionService', () => {
     expect(await db.achievements.get(`${userId}_story_collector_10`)).toBeUndefined();
   });
 
-  it('rejects a locked direct link and rolls back every table when map unlock writing fails', async () => {
+  it('rejects a completion from a tab superseded by backup restore before writing rewards', async () => {
     await seed();
-    await db.mapNodes.update('node_reward', { unlocked: false });
-    await expect(getLessonAccess(userId, story.id)).resolves.toMatchObject({
-      allowed: false,
-      reason: 'locked',
-    });
-    await expect(completeStoryQuiz(input())).rejects.toThrow('locked');
+    await db.learningMeta.put({ key: 'restoreRevision', value: 'after-restore' });
 
-    await db.mapNodes.update('node_reward', { unlocked: true });
-    const originalUpdate = db.mapNodes.update.bind(db.mapNodes);
-    const updateSpy = vi.spyOn(db.mapNodes, 'update').mockImplementation(async (key, changes) => {
-      if (key === 'node_next') throw new Error('unlock write failed');
-      return originalUpdate(key, changes);
-    });
-    await expect(completeStoryQuiz(input())).rejects.toThrow('unlock write failed');
+    await expect(completeStoryQuiz(input())).rejects.toThrow('重新打开页面');
+
+    expect(await db.quizHistory.count()).toBe(0);
+    expect(await db.userProgress.get(userId)).toMatchObject({ magicPower: 0 });
+    expect(await db.mapNodes.get('node_reward')).toMatchObject({ completed: false });
+  });
+
+  it('rolls back every table when the profile map write fails', async () => {
+    await seed();
+    const originalUpdate = db.userProgress.update.bind(db.userProgress);
+    const updateSpy = vi
+      .spyOn(db.userProgress, 'update')
+      .mockImplementation(async (key, changes) => {
+        if (key === userId) throw new Error('profile map write failed');
+        return originalUpdate(key, changes);
+      });
+    await expect(completeStoryQuiz(input())).rejects.toThrow('profile map write failed');
     updateSpy.mockRestore();
 
     expect(await db.quizHistory.count()).toBe(0);
     expect(await db.userVocabulary.count()).toBe(0);
     expect(await db.achievements.count()).toBe(0);
     expect(await db.userProgress.get(userId)).toMatchObject({ magicPower: 0 });
-    expect(await db.mapNodes.get('node_reward')).toMatchObject({ completed: false });
-    expect(await db.mapNodes.get('node_next')).toMatchObject({ unlocked: false });
+    expect(await db.userProgress.get(userId)).toMatchObject({ completedNodes: [] });
   });
 });

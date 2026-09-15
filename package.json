@@ -1,7 +1,7 @@
 {
   "name": "magic-english-buddy",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "description": "Magic English Buddy - 你的魔法英语伙伴，专为儿童设计的离线英语学习应用",
   "scripts": {
@@ -79,6 +79,6 @@
     "workbox-strategies": "^7.4.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "^20.19.0 || >=22.12.0"
   }
 }

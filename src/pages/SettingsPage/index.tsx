@@ -245,7 +245,7 @@ const SettingsPage: React.FC = () => {
               </span>
               <div>
                 <h3>Magic English Buddy</h3>
-                <p>版本 1.0.0 · 让英语学习像魔法一样有趣。</p>
+                <p>版本 2.0.0 · 让英语学习像魔法一样有趣。</p>
               </div>
             </div>
             <div className={styles.helpActions}>

@@ -6,6 +6,8 @@ async function start(page: Page) {
   await page.goto(`${root}/`);
   await page.getByRole('button', { name: '直接开始，一起学英语' }).click();
   await expect(page).toHaveURL(/\/map$/);
+  // The URL can change before the lazy map replaces onboarding in WebKit.
+  await expect(page.getByRole('button', { name: '开始第一个故事', exact: true })).toBeVisible();
 }
 async function rows(page: Page, table: string) {
   return page.evaluate(async table => {

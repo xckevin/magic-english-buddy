@@ -1,185 +1,364 @@
-/**
- * OnboardingPage 页面样式
- */
-
-.container {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+.page {
   min-height: 100dvh;
-  overflow: hidden;
-}
-
-.content {
-  position: relative;
-  z-index: 1;
+  background: var(--surface-page);
+  color: var(--ink);
   display: flex;
   flex-direction: column;
+}
+.header {
+  display: flex;
   align-items: center;
+  gap: 12px;
+  padding: 30px 5%;
+}
+.logo {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 44px;
+  background: #7560c4;
+  color: #fff;
+  border-radius: 13px;
+  transform: rotate(-5deg);
+}
+.header strong {
+  font: 800 22px var(--font-display);
+  letter-spacing: -0.5px;
+}
+.header > span:last-child {
+  margin-left: auto;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  max-width: 1080px;
+  width: calc(100% - 80px);
+  margin: auto;
+  gap: 80px;
+  align-items: center;
+  padding: 28px 0;
+}
+.storyPanel {
+  padding: 24px 0;
+}
+.eyebrow {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  letter-spacing: 2px;
+  color: var(--color-primary);
+  font-size: 10px;
+  font-weight: 700;
+}
+.storyPanel h1 {
+  font-size: clamp(34px, 3.8vw, 49px);
+  font-weight: 800;
+  line-height: 1.5;
+  margin: 25px 0 16px;
+  letter-spacing: -1px;
+}
+.storyPanel h1 span {
+  color: var(--color-primary);
+}
+.storyPanel > p {
+  font-size: 14px;
+  color: var(--ink-muted);
+  line-height: 2;
+}
+.illustration {
+  width: 300px;
+  margin: -10px auto 0;
+}
+.features {
+  display: flex;
   justify-content: center;
+  gap: 25px;
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+.features > span {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.setupPanel {
+  position: relative;
+  padding: 38px;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: var(--surface-card);
+  box-shadow: 0 12px 50px #30244006;
+}
+.steps {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 32px;
+}
+.steps span {
+  height: 4px;
   flex: 1;
-  padding: var(--space-6);
-  padding-top: calc(var(--space-6) + var(--safe-area-top));
-  padding-bottom: calc(var(--space-6) + var(--safe-area-bottom));
+  background: var(--surface-soft);
+  border-radius: 5px;
 }
-
-/* ============ 标题区域 ============ */
-
-.titleSection {
+.steps .stepActive {
+  background: #a18bcf;
+}
+.stepLabel {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--color-primary);
+  margin-bottom: 13px;
+}
+.setupPanel h2 {
+  font-size: 25px;
+  line-height: 1.55;
+  letter-spacing: -0.5px;
+}
+.description {
+  margin: 12px 0 0;
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.9;
+}
+.eggPreview {
+  width: 100%;
   text-align: center;
-  margin-bottom: var(--space-8);
+  font-size: 76px;
+  padding: 30px 0;
 }
-
-.title {
-  font-family: var(--font-display);
-  font-size: var(--text-4xl);
-  font-weight: var(--font-bold);
-  color: var(--text-light);
-  margin: 0 0 var(--space-2) 0;
-  text-shadow: 0 0 30px rgba(107, 92, 231, 0.5);
+.eggPreview span {
+  display: block;
+  font-size: 11px;
+  margin-top: 14px;
+  color: var(--ink-muted);
 }
-
-.subtitle {
-  font-size: var(--text-lg);
-  color: var(--text-muted);
-  margin: 0;
+.skip {
+  min-height: 44px;
+  width: 100%;
+  margin-top: 8px;
+  color: var(--ink-muted);
+  font-size: 12px;
 }
-
-/* ============ 蛋容器 ============ */
-
-.eggContainer {
-  position: relative;
+.privacy {
   display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+  margin: 22px 0 0;
+}
+.back {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: -16px;
+  margin-bottom: 14px;
+}
+.egg {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+  user-select: none;
+  touch-action: none;
+}
+.egg > div {
+  transform: scale(0.8);
+  margin: -20px;
+}
+.form {
+  margin-top: 24px;
+  display: grid;
+  gap: 20px;
+}
+.form label {
+  display: grid;
+  gap: 9px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.form input {
+  background: var(--surface-page);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  width: 100%;
+  font-size: 16px;
+  min-height: 50px;
+}
+.form input::placeholder {
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+.form button {
+  margin-top: 5px;
+}
+.error {
+  color: #b04754;
+  background: #fff0f0;
+  padding: 12px;
+  margin: 16px 0 0;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.state {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: var(--space-6) 0;
-  cursor: pointer;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* ============ 对话框 ============ */
-
-.dialogue {
-  max-width: 300px;
-  padding: var(--space-4);
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: var(--radius-xl);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  text-align: center;
-  margin-bottom: var(--space-6);
-}
-
-.dialogue p {
-  font-size: var(--text-base);
-  color: var(--text-light);
-  margin: 0;
-  line-height: 1.6;
-}
-
-/* ============ 命名表单 ============ */
-
-.namingForm {
-  width: 100%;
-  max-width: 320px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.inputGroup {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.inputGroup label {
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-  color: var(--text-muted);
-}
-
-.inputGroup input {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  font-size: var(--text-base);
-  color: var(--text-light);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-lg);
-  outline: none;
-  transition: all var(--transition-fast);
-}
-
-.inputGroup input::placeholder {
-  color: var(--text-tertiary);
-}
-
-.inputGroup input:focus {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(107, 92, 231, 0.2);
-}
-
-.adventureBtn {
-  margin-top: var(--space-4);
-  padding: var(--space-4) !important;
-  font-size: var(--text-lg) !important;
-}
-
-/* ============ 准备完成 ============ */
-
-.readySection {
+  gap: 20px;
   text-align: center;
 }
-
-.sparkles {
-  font-size: 48px;
-  margin-bottom: var(--space-4);
-  animation: bounce 1s ease-in-out infinite;
+.state p {
+  color: var(--ink-muted);
+  font-size: 13px;
 }
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+.state progress {
+  width: 80%;
+  accent-color: var(--color-primary);
 }
-
-.readyText {
-  font-size: var(--text-xl);
-  color: var(--text-light);
-  margin: 0;
-}
-
-/* ============ 底部区域 ============ */
-
 .footer {
-  position: absolute;
-  bottom: calc(var(--space-8) + var(--safe-area-bottom));
-  left: 0;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  text-align: center;
+  font-size: 11px;
+  color: var(--ink-muted);
+  padding: 24px;
+}
+@media (max-width: 850px) {
+  .layout {
+    gap: 32px;
+  }
+  .setupPanel {
+    padding: 28px;
+  }
+  .storyPanel h1 {
+    font-size: 35px;
+  }
+  .illustration {
+    width: 260px;
+  }
+  .features {
+    gap: 14px;
+    font-size: 10px;
+  }
+}
+@media (max-width: 640px) {
+  .header {
+    padding: calc(20px + env(safe-area-inset-top)) 22px 18px;
+  }
+  .header > span:last-child {
+    display: none;
+  }
+  .header strong {
+    font-size: 20px;
+  }
+  .layout {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: calc(100% - 40px);
+    padding: 0;
+  }
+  .storyPanel {
+    padding: 10px 8px;
+    width: 100%;
+  }
+  .storyPanel .eyebrow {
+    font-size: 9px;
+  }
+  .storyPanel h1 {
+    font-size: 31px;
+    margin: 16px 0 9px;
+  }
+  .storyPanel > p {
+    font-size: 12px;
+    margin: 0;
+  }
+  .illustration,
+  .features {
+    display: none;
+  }
+  .setupPanel {
+    width: 100%;
+    padding: 25px;
+    border-radius: 22px;
+  }
+  .setupPanel h2 {
+    font-size: 22px;
+  }
+  .steps {
+    margin-bottom: 23px;
+  }
+  .eggPreview {
+    font-size: 62px;
+    padding: 20px 0;
+  }
+  .eggPreview span {
+    margin-top: 9px;
+  }
+  .privacy {
+    font-size: 9px;
+  }
+  .footer {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+  .egg {
+    margin-block: 5px;
+  }
 }
 
-.actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  width: 100%;
-  max-width: 280px;
-}
-
-.hint {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  margin: 0;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+/* Phone-first classroom use: keep the next action visible and naming optional. */
+@media (max-width: 640px) {
+  .hideOnMobile {
+    display: none;
+  }
+  .storyPanel h1 {
+    font-size: 25px;
+    line-height: 1.35;
+  }
+  .storyPanel > p,
+  .storyPanel .eyebrow {
+    display: none;
+  }
+  .storyPanel {
+    padding: 3px 4px;
+  }
+  .layout {
+    gap: 13px;
+  }
+  .setupPanel {
+    padding: 22px;
+  }
+  .description {
+    font-size: 15px;
+  }
+  .eggPreview {
+    padding: 16px 0;
+    font-size: 52px;
+  }
+  .eggPreview span {
+    font-size: 12px;
+  }
+  .skip {
+    font-size: 14px;
+    min-height: 48px;
+  }
+  .privacy {
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+  .form label {
+    font-size: 15px;
+  }
 }

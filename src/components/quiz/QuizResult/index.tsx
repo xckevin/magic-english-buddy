@@ -13,12 +13,16 @@ interface QuizResultProps {
   result: QuizResultData;
   onFinish: () => void;
   onRetry: () => void;
+  isSaving?: boolean;
+  saveError?: string | null;
 }
 
 export const QuizResult: React.FC<QuizResultProps> = ({
   result,
   onFinish,
   onRetry,
+  isSaving = false,
+  saveError,
 }) => {
   const isPassed = result.score >= 60;
 
@@ -132,17 +136,21 @@ export const QuizResult: React.FC<QuizResultProps> = ({
         transition={{ delay: 0.8 }}
       >
         {!isPassed && (
-          <Button variant="secondary" onClick={onRetry}>
+          <Button variant="secondary" onClick={onRetry} disabled={isSaving}>
             🔄 再试一次
           </Button>
         )}
-        <Button variant="primary" onClick={onFinish}>
-          {isPassed ? '🎯 完成' : '📖 返回学习'}
+        <Button variant="primary" onClick={onFinish} disabled={isSaving}>
+          {isSaving ? '正在保存…' : isPassed ? '🎯 完成' : '📖 返回学习'}
         </Button>
       </motion.div>
+      {saveError && (
+        <p className={styles.saveError} role="alert">
+          {saveError}
+        </p>
+      )}
     </div>
   );
 };
 
 export default QuizResult;
-

@@ -3,7 +3,7 @@
  * 听音辨图题型 - 听音频选择正确的图片
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import type { QuizItem } from '@/db';
 import styles from './ImageChoice.module.css';
@@ -14,64 +14,84 @@ interface ImageChoiceProps {
   onHint: () => void;
 }
 
-export const ImageChoice: React.FC<ImageChoiceProps> = ({
-  question,
-  onAnswer,
-  onHint,
-}) => {
+export const ImageChoice: React.FC<ImageChoiceProps> = ({ question, onAnswer, onHint }) => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
+  const [hintMessage, setHintMessage] = useState<string | null>(null);
+  const selectedRef = useRef(false);
+  const hintUsedRef = useRef(false);
+  const answerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (answerTimerRef.current) clearTimeout(answerTimerRef.current);
+      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+      window.speechSynthesis?.cancel();
+    },
+    []
+  );
 
   // 播放音频
   const playAudio = useCallback(() => {
-    if (question.audioQuestion && typeof window !== 'undefined' && window.speechSynthesis) {
+    if (isPlaying) return;
+    setAudioError(null);
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      setAudioError('当前设备不能播放语音，请直接看英文单词再选择图片。');
+      return;
+    }
+    try {
       setIsPlaying(true);
-      // 使用 Web Speech API 播放音频
       const utterance = new SpeechSynthesisUtterance(question.question);
       utterance.lang = 'en-US';
       utterance.rate = 0.8;
       utterance.onend = () => setIsPlaying(false);
-      utterance.onerror = () => setIsPlaying(false);
+      utterance.onerror = () => {
+        setIsPlaying(false);
+        setAudioError('语音没有播放成功，请直接看英文单词再选择图片。');
+      };
       window.speechSynthesis.speak(utterance);
+    } catch {
+      setIsPlaying(false);
+      setAudioError('语音没有播放成功，请直接看英文单词再选择图片。');
     }
-  }, [question]);
-
-  // 自动播放
-  useEffect(() => {
-    const timer = setTimeout(playAudio, 500);
-    return () => clearTimeout(timer);
-  }, [playAudio]);
+  }, [isPlaying, question]);
 
   // 选择选项
-  const handleSelect = useCallback((value: string) => {
-    if (selectedOption) return; // 防止重复选择
-    setSelectedOption(value);
-    
-    // 延迟提交，让用户看到选中效果
-    setTimeout(() => {
-      onAnswer(value);
-    }, 300);
-  }, [selectedOption, onAnswer]);
+  const handleSelect = useCallback(
+    (value: string) => {
+      if (selectedRef.current) return;
+      selectedRef.current = true;
+      setSelectedOption(value);
 
-  // 提示信息状态
-  const [hintMessage, setHintMessage] = useState<string | null>(null);
+      // 延迟提交，让用户看到选中效果
+      answerTimerRef.current = setTimeout(() => {
+        onAnswer(value);
+      }, 300);
+    },
+    [onAnswer]
+  );
 
   // 使用提示
   const handleHint = useCallback(() => {
+    if (hintUsedRef.current) return;
+    hintUsedRef.current = true;
     onHint();
-    // 显示提示信息
-    setHintMessage('💡 提示：仔细听单词的发音！(-5 魔力值)');
-    // 3秒后隐藏
-    setTimeout(() => setHintMessage(null), 3000);
-  }, [onHint]);
+    setHintMessage(`💡 要找的是 “${question.question}” 对应的图片。已使用提示（-5 魔力值）`);
+    hintTimerRef.current = setTimeout(() => setHintMessage(null), 3000);
+  }, [onHint, question.question]);
 
   return (
     <div className={styles.container}>
       {/* 题目区域 */}
       <div className={styles.questionSection}>
-        <h2 className={styles.title}>🎧 听一听，选一选</h2>
-        <p className={styles.instruction}>点击喇叭听单词，选择对应的图片</p>
-        
+        <h2 className={styles.title}>🎧 看一看，选一选</h2>
+        <p className={styles.instruction}>一起读题目，也可以点喇叭听题，再选答案</p>
+        <p className={styles.questionWord} lang="en">
+          {question.question}
+        </p>
+
         <motion.button
           className={`${styles.playBtn} ${isPlaying ? styles.playing : ''}`}
           onClick={playAudio}
@@ -79,10 +99,13 @@ export const ImageChoice: React.FC<ImageChoiceProps> = ({
           disabled={isPlaying}
         >
           <span className={styles.playIcon}>{isPlaying ? '🔊' : '🔈'}</span>
-          <span className={styles.playText}>
-            {isPlaying ? '播放中...' : '点击听音'}
-          </span>
+          <span className={styles.playText}>{isPlaying ? '播放中...' : '听题目'}</span>
         </motion.button>
+        {audioError && (
+          <p className={styles.audioError} role="alert">
+            {audioError}
+          </p>
+        )}
       </div>
 
       {/* 选项区域 */}
@@ -101,11 +124,10 @@ export const ImageChoice: React.FC<ImageChoiceProps> = ({
             {option.image ? (
               <div className={styles.optionImage}>
                 <span className={styles.emoji}>{option.image}</span>
+                <span className={styles.optionText}>{option.text || option.value}</span>
               </div>
             ) : (
-              <div className={styles.optionText}>
-                {option.text}
-              </div>
+              <div className={styles.optionText}>{option.text}</div>
             )}
           </motion.button>
         ))}
@@ -123,8 +145,8 @@ export const ImageChoice: React.FC<ImageChoiceProps> = ({
             {hintMessage}
           </motion.div>
         )}
-        <button className={styles.hintBtn} onClick={handleHint}>
-          💡 提示 (-5 MP)
+        <button className={styles.hintBtn} onClick={handleHint} disabled={hintUsedRef.current}>
+          {hintUsedRef.current ? '💡 已使用提示' : '💡 提示 (-5 MP)'}
         </button>
       </div>
     </div>
@@ -132,4 +154,3 @@ export const ImageChoice: React.FC<ImageChoiceProps> = ({
 };
 
 export default ImageChoice;
-

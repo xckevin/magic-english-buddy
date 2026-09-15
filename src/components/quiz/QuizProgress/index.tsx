@@ -14,20 +14,22 @@ interface QuizProgressProps {
   onExit: () => void;
 }
 
-export const QuizProgress = memo<QuizProgressProps>(({
-  current,
-  total,
-  progress,
-  onExit,
-}) => {
+export const QuizProgress = memo<QuizProgressProps>(({ current, total, progress, onExit }) => {
   return (
     <div className={styles.container}>
       <button className={styles.exitBtn} onClick={onExit}>
         ✕
       </button>
-      
+
       <div className={styles.progressWrapper}>
-        <div className={styles.progressBar}>
+        <div
+          className={styles.progressBar}
+          role="progressbar"
+          aria-label="练习进度"
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-valuenow={current}
+        >
           <motion.div
             className={styles.progressFill}
             initial={{ width: 0 }}
@@ -48,4 +50,3 @@ export const QuizProgress = memo<QuizProgressProps>(({
 QuizProgress.displayName = 'QuizProgress';
 
 export default QuizProgress;
-

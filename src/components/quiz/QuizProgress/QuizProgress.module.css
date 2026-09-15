@@ -17,9 +17,9 @@
   align-items: center;
   justify-content: center;
   font-size: var(--text-lg);
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
+  color: var(--ink-muted, #756c7e);
+  background: var(--surface-card, #fff);
+  border: 1px solid var(--line, #eadfd5);
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -40,7 +40,7 @@
 .progressBar {
   flex: 1;
   height: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-soft, #f5efff);
   border-radius: var(--radius-full);
   overflow: hidden;
 }
@@ -54,7 +54,7 @@
 .progressText {
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
-  color: var(--text-muted);
+  color: var(--ink-muted, #756c7e);
   min-width: 50px;
   text-align: right;
 }
@@ -62,4 +62,3 @@
 .placeholder {
   width: 36px;
 }
-

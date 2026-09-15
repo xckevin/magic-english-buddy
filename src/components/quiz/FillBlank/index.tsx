@@ -3,7 +3,7 @@
  * 填空题型 - 选择正确的单词填入空白处
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { QuizItem } from '@/db';
 import styles from './FillBlank.module.css';
@@ -17,33 +17,44 @@ interface FillBlankProps {
   isAnswered?: boolean;
 }
 
-export const FillBlank: React.FC<FillBlankProps> = ({
-  question,
-  onAnswer,
-  isAnswered = false,
-}) => {
+export const FillBlank: React.FC<FillBlankProps> = ({ question, onAnswer, isAnswered = false }) => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const submittedRef = useRef(false);
+  const answerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleSelect = useCallback((value: string) => {
-    if (isAnswered) return;
-    
-    setSelectedOption(value);
-    setShowFeedback(true);
-    
-    const isCorrect = value === question.correctAnswer;
-    
-    // 延迟提交答案，让用户看到反馈
-    setTimeout(() => {
-      onAnswer(value, isCorrect);
-    }, 800);
-  }, [isAnswered, question.correctAnswer, onAnswer]);
+  useEffect(
+    () => () => {
+      if (answerTimerRef.current) clearTimeout(answerTimerRef.current);
+    },
+    []
+  );
+
+  const handleSelect = useCallback(
+    (value: string) => {
+      if (isAnswered || submittedRef.current) return;
+      submittedRef.current = true;
+
+      setSelectedOption(value);
+      setShowFeedback(true);
+      setSubmitted(true);
+
+      const isCorrect = value === question.correctAnswer;
+
+      // 延迟提交答案，让用户看到反馈
+      answerTimerRef.current = setTimeout(() => {
+        onAnswer(value, isCorrect);
+      }, 800);
+    },
+    [isAnswered, question.correctAnswer, onAnswer]
+  );
 
   // 解析题目文本，将 _____ 替换为可视化空白
   const renderQuestion = () => {
     const text = question.question;
     const parts = text.split('_____');
-    
+
     return (
       <div className={styles.questionText}>
         {parts.map((part, index) => (
@@ -84,18 +95,16 @@ export const FillBlank: React.FC<FillBlankProps> = ({
               selectedOption === option.value ? styles.selected : ''
             } ${getOptionState(option.value)}`}
             onClick={() => handleSelect(option.value)}
-            disabled={isAnswered}
+            disabled={isAnswered || submitted}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            whileHover={{ scale: isAnswered ? 1 : 1.02 }}
-            whileTap={{ scale: isAnswered ? 1 : 0.98 }}
+            whileHover={{ scale: isAnswered || submitted ? 1 : 1.02 }}
+            whileTap={{ scale: isAnswered || submitted ? 1 : 0.98 }}
           >
-            <span className={styles.optionLetter}>
-              {String.fromCharCode(65 + index)}
-            </span>
+            <span className={styles.optionLetter}>{String.fromCharCode(65 + index)}</span>
             <span className={styles.optionText}>{option.text}</span>
-            
+
             {/* 正确/错误图标 */}
             <AnimatePresence>
               {showFeedback && option.value === question.correctAnswer && (
@@ -108,28 +117,27 @@ export const FillBlank: React.FC<FillBlankProps> = ({
                   ✓
                 </motion.span>
               )}
-              {showFeedback && option.value === selectedOption && option.value !== question.correctAnswer && (
-                <motion.span
-                  className={styles.wrongIcon}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                >
-                  ✗
-                </motion.span>
-              )}
+              {showFeedback &&
+                option.value === selectedOption &&
+                option.value !== question.correctAnswer && (
+                  <motion.span
+                    className={styles.wrongIcon}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                  >
+                    ✗
+                  </motion.span>
+                )}
             </AnimatePresence>
           </motion.button>
         ))}
       </div>
 
       {/* 提示 */}
-      {!isAnswered && (
-        <p className={styles.hint}>选择正确的单词填入空白处</p>
-      )}
+      {!isAnswered && !submitted && <p className={styles.hint}>选择正确的单词填入空白处</p>}
     </div>
   );
 };
 
 export default FillBlank;
-

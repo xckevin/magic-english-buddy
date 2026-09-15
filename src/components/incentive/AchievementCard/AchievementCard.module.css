@@ -1,112 +1,109 @@
-/**
- * AchievementCard 组件样式
- */
-
 .card {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-4);
-  background: var(--bg-card-dark);
-  border-radius: var(--radius-xl);
-  cursor: pointer;
-  transition: all var(--transition-fast);
+  gap: 14px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface-card);
+  color: var(--ink);
 }
-
-.card.unlocked {
-  background: linear-gradient(135deg, rgba(107, 92, 231, 0.1) 0%, rgba(139, 124, 247, 0.1) 100%);
-  border: 1px solid rgba(107, 92, 231, 0.3);
+.unlocked {
+  background: linear-gradient(135deg, var(--brand-soft), var(--surface-card));
 }
-
-.card.locked {
-  opacity: 0.6;
-  cursor: not-allowed;
+.locked {
+  background: var(--surface-soft);
 }
-
-/* ============ 图标 ============ */
-
 .iconWrapper {
   position: relative;
-  width: 56px;
-  height: 56px;
   display: flex;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-lg);
-  flex-shrink: 0;
+  border-radius: 16px;
+  background: var(--surface-card);
+  border: 1px solid var(--line);
 }
-
-.card.unlocked .iconWrapper {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+.unlocked .iconWrapper {
+  background: var(--brand-soft);
+  border-color: var(--line);
 }
-
 .icon {
-  font-size: 28px;
+  position: relative;
+  z-index: 1;
+  font-size: 26px;
 }
-
 .glow {
   position: absolute;
-  /* 兼容旧浏览器 */
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  inset: 7px;
+  border-radius: 12px;
   background: var(--color-primary);
-  border-radius: var(--radius-lg);
-  opacity: 0.5;
-  z-index: -1;
+  opacity: 0.12;
   filter: blur(8px);
 }
-
-/* ============ 内容 ============ */
-
 .content {
-  flex: 1;
   min-width: 0;
+  flex: 1;
 }
-
 .name {
-  font-size: var(--text-base);
-  font-weight: var(--font-semibold);
-  color: var(--text-light);
-  margin: 0 0 var(--space-1) 0;
+  margin: 0 0 4px;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.3;
 }
-
 .description {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
   margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
-
 .date {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  margin-top: var(--space-1);
   display: block;
+  margin-top: 6px;
+  color: var(--ink-muted);
+  font-size: 12px;
 }
-
-/* ============ 奖励 ============ */
-
 .reward {
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
   align-items: center;
-  padding: var(--space-2);
-  background: rgba(107, 92, 231, 0.2);
-  border-radius: var(--radius-lg);
+  gap: 1px;
+  padding: 7px 8px;
+  border-radius: 12px;
+  background: var(--surface-card);
+  border: 1px solid var(--line);
 }
-
 .rewardIcon {
-  font-size: 16px;
+  font-size: 14px;
 }
-
 .rewardValue {
-  font-size: var(--text-sm);
-  font-weight: var(--font-bold);
   color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 750;
 }
-
+@media (max-width: 360px) {
+  .card {
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px;
+  }
+  .iconWrapper {
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
+    border-radius: 14px;
+  }
+  .icon {
+    font-size: 23px;
+  }
+  .reward {
+    align-self: center;
+    padding: 6px;
+  }
+}

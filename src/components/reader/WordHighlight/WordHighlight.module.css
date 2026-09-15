@@ -4,27 +4,35 @@
 
 .word {
   display: inline;
-  padding: 2px 4px;
+  min-height: 44px;
+  padding: 5px 4px;
   margin: 0 1px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
   user-select: none;
+  touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
-.word:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.word:hover,
+.word:focus-visible {
+  background-color: var(--brand-soft, rgba(107, 92, 231, 0.14));
+}
+
+.word:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .word:active {
-  background-color: rgba(107, 92, 231, 0.2);
+  background-color: var(--brand-soft, rgba(107, 92, 231, 0.2));
 }
 
 /* 高亮状态 - TTS 播放时 */
 .highlighted {
   background-color: var(--color-highlight) !important;
-  color: var(--text-primary);
+  color: var(--ink, var(--text-primary));
   border-radius: var(--radius-md);
   box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
 }
@@ -39,7 +47,8 @@
 
 /* 高亮动画 */
 @keyframes highlight-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 4px rgba(255, 215, 0, 0.3);
   }
   50% {
@@ -48,6 +57,14 @@
 }
 
 .highlighted {
-  animation: highlight-pulse 0.8s ease-in-out infinite;
+  animation: highlight-pulse 1.2s ease-in-out infinite;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .word {
+    transition: none;
+  }
+  .highlighted {
+    animation: none;
+  }
+}

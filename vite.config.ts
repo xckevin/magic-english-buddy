@@ -29,9 +29,9 @@ export default defineConfig(({ mode }) => {
           short_name: 'MagicBuddy',
           description: '你的魔法英语伙伴 - 离线英语学习应用',
           theme_color: '#6B5CE7',
-          background_color: '#1A1A2E',
+          background_color: '#f8f7f4',
           display: 'standalone',
-          orientation: 'portrait',
+          orientation: 'any',
           start_url: '/magic-english-buddy/',
           scope: '/magic-english-buddy/',
           icons: [

@@ -3,8 +3,22 @@
  */
 
 .cardContainer {
+  display: block;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xl);
+  background: transparent;
+  font: inherit;
   perspective: 1000px;
   cursor: pointer;
+}
+.cardContainer:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 4px;
+}
+.cardContainer:disabled {
+  cursor: default;
 }
 
 .card {
@@ -28,7 +42,7 @@
   padding: var(--space-3);
   border: 2px solid;
   border-radius: var(--radius-xl);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .back {
@@ -55,6 +69,7 @@
   margin: 0;
   text-align: center;
   text-transform: capitalize;
+  overflow-wrap: anywhere;
 }
 
 .mastery {
@@ -82,6 +97,7 @@
   font-weight: var(--font-semibold);
   color: white;
   text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .rarityLabel {
@@ -90,4 +106,3 @@
   font-size: var(--text-xs);
   color: rgba(255, 255, 255, 0.7);
 }
-

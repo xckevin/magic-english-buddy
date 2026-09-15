@@ -1,486 +1,284 @@
-/**
- * SettingsPage 样式
- * 设置页面
- */
-
-/* ============ 容器 ============ */
-
-.container {
-  min-height: 100vh;
-  min-height: 100dvh;
-  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-  color: #f8fafc;
+.page {
+  padding-bottom: calc(28px + var(--safe-area-bottom, 0px));
+  color: var(--ink);
 }
-
-/* ============ 顶部导航 ============ */
-
-.header {
-  position: sticky;
-  top: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  padding-top: calc(16px + var(--safe-area-top, 0px));
-  background: rgba(15, 23, 42, 0.9);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  z-index: 100;
-}
-
-.backBtn {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  color: #f8fafc;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.backBtn:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.title {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0;
-}
-
-.placeholder {
-  width: 40px;
-}
-
-/* ============ 内容区域 ============ */
-
-.content {
-  padding: 20px;
-  padding-bottom: calc(40px + var(--safe-area-bottom, 0px));
-}
-
-/* ============ 分组 ============ */
-
 .section {
-  margin-bottom: 24px;
+  margin-top: 28px;
 }
-
+.section:first-child {
+  margin-top: 0;
+}
 .sectionTitle {
-  font-size: 14px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0 0 12px 4px;
-  letter-spacing: 0.5px;
+  margin: 0 0 10px 4px;
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
 }
-
 .sectionContent {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
+  background: var(--surface-card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
 }
-
-/* ============ 设置项 ============ */
-
 .settingItem {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  min-height: 76px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
 }
-
-.settingItem:last-child {
-  border-bottom: none;
+.settingItem:last-child,
+.actionButton:last-child {
+  border-bottom: 0;
 }
-
-.settingIcon {
+.settingIcon,
+.actionIcon {
+  display: inline-flex;
   width: 40px;
   height: 40px;
-  display: flex;
+  flex: 0 0 40px;
   align-items: center;
   justify-content: center;
+  border-radius: 12px;
+  background: var(--surface-soft);
   font-size: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  flex-shrink: 0;
 }
-
-.settingContent {
-  flex: 1;
+.settingContent,
+.actionText {
   min-width: 0;
+  flex: 1;
 }
-
-.settingTitle {
+.settingTitle,
+.actionText strong {
   display: block;
-  font-size: 16px;
-  font-weight: 500;
-  color: #f8fafc;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
 }
-
-.settingDesc {
+.settingDesc,
+.actionText small {
   display: block;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  margin-top: 2px;
+  margin-top: 3px;
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.45;
 }
-
 .settingControl {
-  flex-shrink: 0;
+  flex: 0 0 auto;
 }
-
-/* ============ 开关组件 ============ */
-
 .toggle {
   position: relative;
-  width: 48px;
-  height: 28px;
-  background: rgba(255, 255, 255, 0.15);
-  border: none;
-  border-radius: 14px;
-  cursor: pointer;
-  transition: background 0.2s;
+  width: 52px;
+  min-width: 52px;
+  height: 44px;
   padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--line);
+  cursor: pointer;
+  transition: background 0.18s ease;
 }
-
-.toggle:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
 .toggleOn {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  background: var(--color-primary);
 }
-
-.toggleOn:hover {
-  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-}
-
-.toggleDisabled {
-  opacity: 0.5;
+.toggle:disabled {
   cursor: not-allowed;
+  opacity: 0.55;
 }
-
 .toggleThumb {
   position: absolute;
-  top: 4px;
+  top: 10px;
   left: 4px;
-  width: 20px;
-  height: 20px;
-  background: white;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(30 20 50 / 28%);
+  transition: transform 0.18s ease;
 }
-
-/* ============ 语速选择器 ============ */
-
+.toggleOn .toggleThumb {
+  transform: translateX(20px);
+}
+.toggle:focus-visible,
+.speedOption:focus-visible,
+.actionButton:focus-visible,
+.helpActions button:focus-visible,
+.modalActions button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: -3px;
+}
 .speedSelector {
   display: flex;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 4px;
+  min-height: 44px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--surface-soft);
 }
-
-.speedOption {
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.6);
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.speedOption:hover {
-  color: rgba(255, 255, 255, 0.8);
-}
-
+.speedOption,
 .speedOptionActive {
-  color: white;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  min-width: 44px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
 }
-
-/* ============ 操作按钮 ============ */
-
+.speedOptionActive {
+  background: var(--surface-card);
+  color: var(--color-primary);
+  box-shadow: 0 1px 3px rgb(50 35 80 / 15%);
+}
 .actionButton {
   width: 100%;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px;
+  min-height: 76px;
+  padding: 14px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
   background: transparent;
-  border: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  cursor: pointer;
   text-align: left;
-  transition: background 0.2s;
+  cursor: pointer;
 }
-
-.actionButton:last-child {
-  border-bottom: none;
-}
-
 .actionButton:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-soft);
 }
-
-.actionDanger:hover {
-  background: rgba(239, 68, 68, 0.1);
-}
-
-.actionHighlight {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-}
-
-.actionHighlight:hover {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(139, 92, 246, 0.25) 100%);
-}
-
-.actionHighlight .actionIcon {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%);
-}
-
-.actionIcon {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  flex-shrink: 0;
-}
-
-.actionDanger .actionIcon {
-  background: rgba(239, 68, 68, 0.2);
-}
-
-.actionText {
-  flex: 1;
-}
-
-.actionText strong {
-  display: block;
-  font-size: 16px;
-  font-weight: 500;
-  color: #f8fafc;
-}
-
-.actionText small {
-  display: block;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  margin-top: 2px;
-  font-weight: normal;
-}
-
-.actionDanger .actionText strong {
-  color: #ef4444;
-}
-
 .actionArrow {
-  font-size: 20px;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--ink-muted);
+  font-size: 26px;
+  line-height: 1;
 }
-
-/* ============ 关于卡片 ============ */
-
+.actionDanger strong {
+  color: #b42318;
+}
+.actionDanger .actionIcon {
+  background: #fff0ed;
+}
 .aboutCard {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 20px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 14px;
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--line);
 }
-
 .appLogo {
-  width: 64px;
-  height: 64px;
-  display: flex;
+  display: inline-flex;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
   align-items: center;
   justify-content: center;
-  font-size: 36px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
-  flex-shrink: 0;
+  background: var(--brand-soft);
+  font-size: 30px;
 }
-
-.appInfo {
-  flex: 1;
-}
-
-.appName {
-  font-size: 18px;
-  font-weight: 600;
-  color: #f8fafc;
-  margin: 0 0 4px 0;
-}
-
-.appVersion {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
-  margin: 0 0 4px 0;
-}
-
-.appDesc {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
+.aboutCard h3 {
   margin: 0;
+  color: var(--ink);
+  font-size: 16px;
 }
-
-.aboutLinks {
+.aboutCard p {
+  margin: 5px 0 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.helpActions {
   display: flex;
   flex-direction: column;
 }
-
-.aboutLink {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  color: #f8fafc;
-  text-decoration: none;
-  font-size: 15px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  transition: background 0.2s;
-}
-
-.aboutLink:last-child {
-  border-bottom: none;
-}
-
-.aboutLink:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-/* ============ 底部留白 ============ */
-
-.bottomSpacer {
-  height: 40px;
-}
-
-/* ============ 确认弹窗 ============ */
-
-.dialogOverlay {
-  position: fixed;
-  /* 兼容旧浏览器 */
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  z-index: 1000;
-  padding: 20px;
-}
-
-.dialog {
-  width: 100%;
-  max-width: 320px;
-  padding: 24px;
-  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
-}
-
-.dialogTitle {
-  font-size: 18px;
-  font-weight: 600;
-  color: #f8fafc;
-  margin: 0 0 12px 0;
-  text-align: center;
-}
-
-.dialogMessage {
+.helpActions button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  font: inherit;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
-  margin: 0 0 24px 0;
-  text-align: center;
-  line-height: 1.5;
-}
-
-.dialogActions {
-  display: flex;
-  gap: 12px;
-}
-
-.dialogCancel,
-.dialogConfirm {
-  flex: 1;
-  padding: 12px 16px;
-  font-size: 15px;
-  font-weight: 600;
-  border: none;
-  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s;
 }
-
-.dialogCancel {
-  color: #f8fafc;
-  background: rgba(255, 255, 255, 0.1);
+.helpActions button:hover {
+  background: var(--surface-soft);
 }
-
-.dialogCancel:hover {
-  background: rgba(255, 255, 255, 0.15);
+.helpText {
+  margin: 0;
+  padding: 12px 16px;
+  background: var(--surface-soft);
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.55;
 }
-
-.dialogConfirm {
-  color: white;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+.inlineError {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #f8c6bd;
+  border-radius: 12px;
+  background: #fff0ed;
+  color: #9d1b13;
+  font-size: 14px;
+  line-height: 1.45;
 }
-
-.dialogConfirm:hover {
-  filter: brightness(1.1);
+.modalMessage {
+  margin: 0;
+  color: var(--ink-muted);
+  line-height: 1.6;
 }
-
-.dialogDanger {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+.modalActions {
+  display: flex;
+  gap: 10px;
 }
-
-/* ============ 响应式 ============ */
-
-@media (min-width: 768px) {
-  .content {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 32px 40px;
+.modalCancel,
+.modalConfirm,
+.modalDanger {
+  min-height: 44px;
+  flex: 1;
+  border: 0;
+  border-radius: 12px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.modalCancel {
+  background: var(--surface-soft);
+  color: var(--ink);
+}
+.modalConfirm {
+  background: var(--color-primary);
+  color: #fff;
+}
+.modalDanger {
+  background: #b42318;
+  color: #fff;
+}
+.modalActions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+@media (max-width: 600px) {
+  .wideControl {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
   }
-
-  .header {
-    justify-content: center;
-    gap: 20px;
+  .wideControl .settingControl {
+    grid-column: 2;
   }
-
-  .backBtn {
-    position: absolute;
-    left: 20px;
+  .speedOption,
+  .speedOptionActive {
+    min-width: 44px;
+    min-height: 44px;
+    flex: 1;
   }
-
-  .placeholder {
-    display: none;
-  }
-
+}
+@media (min-width: 680px) {
   .sectionContent {
     border-radius: 20px;
   }
-
-  .settingItem {
-    padding: 20px;
-  }
 }
-

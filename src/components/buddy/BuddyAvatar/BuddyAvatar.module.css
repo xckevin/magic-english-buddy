@@ -16,10 +16,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: var(--surface-card);
   border: 3px solid;
   border-radius: var(--radius-full);
-  cursor: pointer;
+  cursor: inherit;
   overflow: visible;
 }
 
@@ -40,7 +40,7 @@
   justify-content: center;
   font-size: 14px;
   border-radius: var(--radius-full);
-  border: 2px solid var(--bg-dark);
+  border: 2px solid var(--surface-card);
 }
 
 /* ============ 对话气泡 ============ */
@@ -51,8 +51,8 @@
   left: 50%;
   transform: translateX(-50%);
   padding: var(--space-2) var(--space-3);
-  background: var(--bg-card-dark);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-card);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   z-index: 10;
@@ -60,8 +60,8 @@
 
 .bubbleText {
   font-size: var(--text-sm);
-  color: var(--text-light);
-  white-space: nowrap;
+  color: var(--ink);
+  overflow-wrap: anywhere;
 }
 
 .bubbleArrow {
@@ -73,6 +73,5 @@
   height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 6px solid var(--bg-card-dark);
+  border-top: 6px solid var(--surface-card);
 }
-

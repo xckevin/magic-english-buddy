@@ -24,7 +24,9 @@
 .primary {
   color: var(--text-light);
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  box-shadow: var(--shadow-md), 0 0 0 0 rgba(107, 92, 231, 0);
+  box-shadow:
+    var(--shadow-md),
+    0 0 0 0 rgba(107, 92, 231, 0);
 }
 
 .primary:hover:not(.disabled) {
@@ -58,7 +60,9 @@
 }
 
 .danger:hover:not(.disabled) {
-  box-shadow: var(--shadow-lg), 0 0 20px rgba(255, 87, 87, 0.4);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 20px rgba(255, 87, 87, 0.4);
 }
 
 .success {
@@ -144,3 +148,30 @@
   }
 }
 
+.button {
+  min-height: 44px;
+  height: auto;
+  padding-block: 12px;
+  white-space: normal;
+  line-height: 1.4;
+}
+.primary {
+  background: #7560c4;
+  color: #fff;
+  box-shadow: 0 3px 0 #5946a0;
+}
+.primary:hover:not(.disabled) {
+  background: #6650b2;
+  box-shadow: 0 3px 0 #493987;
+}
+.ghost {
+  background: var(--surface-soft);
+  color: var(--ink);
+  backdrop-filter: none;
+}
+.ghost:hover:not(.disabled) {
+  background: var(--brand-soft);
+}
+.sm {
+  padding-block: 10px;
+}

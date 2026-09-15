@@ -160,3 +160,68 @@
   box-shadow: var(--shadow-md);
 }
 
+/* Light learning surface */
+.title,
+.letterSlot {
+  color: var(--ink, #312850);
+}
+.instruction,
+.hintBtn,
+.clearBtn {
+  color: var(--ink-muted, #756c7e);
+}
+.answerArea {
+  background: var(--surface-soft, #f5efff);
+  border-color: var(--color-primary, #6b5ce7);
+}
+.letterSlot {
+  background: var(--brand-soft, #eeeaff);
+  border: 1px solid var(--color-primary, #6b5ce7);
+}
+.letterBtn {
+  min-width: 56px;
+  min-height: 64px;
+  color: var(--ink, #312850);
+  background: var(--surface-card, #fff);
+  border-color: var(--line, #eadfd5);
+}
+.letterBtn:hover {
+  background: var(--surface-soft, #f5efff);
+  border-color: var(--color-primary, #6b5ce7);
+}
+.hintBtn,
+.clearBtn,
+.submitBtn {
+  min-height: 48px;
+}
+.hintBtn,
+.clearBtn {
+  background: var(--surface-card, #fff);
+  border-color: var(--line, #eadfd5);
+}
+.submitBtn {
+  background: linear-gradient(135deg, var(--color-primary, #6b5ce7), #8b5cf6);
+}
+.letterBtn:focus-visible,
+.letterSlot:focus-visible,
+.hintBtn:focus-visible,
+.clearBtn:focus-visible,
+.submitBtn:focus-visible {
+  outline: 3px solid var(--color-primary, #6b5ce7);
+  outline-offset: 3px;
+}
+
+@media (max-width: 360px) {
+  .container {
+    gap: var(--space-4);
+  }
+  .actions {
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+  .hintBtn,
+  .clearBtn,
+  .submitBtn {
+    padding-inline: var(--space-3);
+  }
+}

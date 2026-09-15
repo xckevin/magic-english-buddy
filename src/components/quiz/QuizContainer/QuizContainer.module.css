@@ -7,7 +7,7 @@
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
-  background: var(--bg-dark);
+  background: var(--surface-page, #fff8f1);
 }
 
 .questionArea {
@@ -31,4 +31,3 @@
   flex-direction: column;
   padding: var(--space-4);
 }
-

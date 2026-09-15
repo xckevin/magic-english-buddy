@@ -1,107 +1,182 @@
-/**
- * QRSync 组件样式
- */
-
 .container {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: 16px;
+  color: var(--ink);
 }
-
-.loading {
+.sharedNote {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--brand-soft);
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface-card);
+}
+.heading {
+  width: 100%;
+}
+.eyebrow {
+  margin: 0 0 4px;
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+}
+.heading h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1.3;
+}
+.description {
+  margin: 8px 0 16px;
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.loading,
+.errorState {
+  width: 100%;
+  min-height: 224px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-8);
-  color: var(--text-muted);
+  gap: 12px;
+  color: var(--ink-muted);
+  text-align: center;
+  font-size: 14px;
 }
-
+.errorState p {
+  margin: 0;
+}
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
+  width: 34px;
+  height: 34px;
+  border: 3px solid var(--line);
   border-top-color: var(--color-primary);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: var(--space-4);
+  animation: spin 800ms linear infinite;
 }
-
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
-
-/* ============ 二维码区域 ============ */
-
-.qrSection {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: var(--space-6);
-  background: var(--bg-card-dark);
-  border-radius: var(--radius-xl);
-}
-
-.title {
-  font-size: var(--text-lg);
-  font-weight: var(--font-bold);
-  color: var(--text-light);
-  margin: 0 0 var(--space-2) 0;
-}
-
-.description {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  margin: 0 0 var(--space-4) 0;
-  text-align: center;
-}
-
 .qrWrapper {
-  padding: var(--space-4);
-  background: white;
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-4);
+  align-self: center;
+  margin: 2px 0 16px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
 }
-
 .qrImage {
   display: block;
-  width: 200px;
-  height: 200px;
+  width: min(200px, calc(100vw - 104px));
+  height: auto;
+  aspect-ratio: 1;
 }
-
-.qrPlaceholder {
-  width: 200px;
-  height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius-lg);
-  color: var(--text-muted);
+.primaryAction,
+.secondaryAction {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 750;
+  cursor: pointer;
 }
-
-.actions {
-  display: flex;
-  gap: var(--space-3);
+.primaryAction {
+  background: var(--color-primary);
+  color: #fff;
 }
-
-/* ============ 报告区域 ============ */
-
-.reportSection {
-  padding: var(--space-6);
-  background: var(--bg-card-dark);
-  border-radius: var(--radius-xl);
+.secondaryAction {
+  align-self: center;
+  background: var(--surface-soft);
+  color: var(--ink);
 }
-
+.primaryAction:hover,
+.secondaryAction:hover {
+  filter: brightness(0.98);
+}
+.primaryAction:disabled,
+.secondaryAction:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.primaryAction:focus-visible,
+.secondaryAction:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
 .reportText {
-  padding: var(--space-4);
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: var(--radius-lg);
-  font-family: monospace;
-  font-size: var(--text-xs);
-  color: var(--text-light);
+  width: 100%;
+  min-height: 214px;
+  resize: vertical;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font:
+    13px/1.55 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
   white-space: pre-wrap;
-  overflow-x: auto;
-  margin: var(--space-4) 0;
 }
-
+.reportText:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+.reportText::placeholder {
+  color: var(--ink-muted);
+}
+.reportActions {
+  display: flex;
+  width: 100%;
+  margin-top: 12px;
+}
+.copyMessage {
+  width: 100%;
+  margin: 10px 0 0;
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+@media (max-width: 360px) {
+  .card {
+    padding: 16px;
+  }
+  .primaryAction,
+  .secondaryAction {
+    width: 100%;
+  }
+  .reportActions {
+    flex-direction: column;
+  }
+  .qrImage {
+    width: min(200px, calc(100vw - 88px));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}

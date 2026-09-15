@@ -5,7 +5,8 @@
 .container {
   min-height: 100vh;
   min-height: 100dvh;
-  background: var(--bg-dark);
+  background: var(--surface-page, #fff8f1);
+  color: var(--ink, #312850);
 }
 
 .loadingContainer {
@@ -14,5 +15,88 @@
   justify-content: center;
   min-height: 100vh;
   min-height: 100dvh;
-  background: var(--bg-dark);
+  background: var(--surface-page, #fff8f1);
+}
+
+.statusPage {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  background: var(--surface-page, #fff8f1);
+  color: var(--ink, #312850);
+}
+.statusCard {
+  max-width: 430px;
+  padding: var(--space-8);
+  text-align: center;
+  background: var(--surface-card, #fff);
+  border: 1px solid var(--line, #eadfd5);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-md);
+}
+.statusCard h1 {
+  margin: var(--space-3) 0 var(--space-2);
+  font-size: var(--text-2xl);
+}
+.statusCard p {
+  margin: 0;
+  color: var(--ink-muted, #756c7e);
+}
+.statusIcon {
+  font-size: 48px;
+}
+.statusActions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  margin-top: var(--space-6);
+}
+.primaryAction,
+.secondaryAction,
+.dangerAction {
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+}
+.primaryAction {
+  color: #fff;
+  background: var(--color-primary, #6b5ce7);
+  border: 1px solid var(--color-primary, #6b5ce7);
+}
+.secondaryAction {
+  color: var(--ink, #312850);
+  background: var(--surface-soft, #f5efff);
+  border: 1px solid var(--line, #eadfd5);
+}
+.dangerAction {
+  color: #a52b3a;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+}
+.exitOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgb(49 40 80 / 35%);
+}
+.exitDialog {
+  width: min(100%, 400px);
+  padding: var(--space-6);
+  border-radius: var(--radius-2xl);
+  background: var(--surface-card, #fff);
+  color: var(--ink, #312850);
+  box-shadow: var(--shadow-lg);
+}
+.exitDialog h2,
+.exitDialog p {
+  margin-top: 0;
+}
+.exitDialog p {
+  color: var(--ink-muted, #756c7e);
 }

@@ -61,6 +61,7 @@ export default [
         // DOM Types
         HTMLElement: 'readonly',
         HTMLDivElement: 'readonly',
+        HTMLDialogElement: 'readonly',
         HTMLButtonElement: 'readonly',
         HTMLInputElement: 'readonly',
         HTMLAudioElement: 'readonly',

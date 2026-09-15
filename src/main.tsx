@@ -4,6 +4,7 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { MotionConfig } from 'framer-motion';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
 
@@ -28,16 +29,17 @@ initNetworkListener();
 // 渲染应用
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <MotionConfig reducedMotion="user">
+      <RouterProvider router={router} />
+    </MotionConfig>
   </React.StrictMode>
 );
 
 // PWA 注册
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/magic-english-buddy/sw.js').catch((error) => {
+    navigator.serviceWorker.register('/magic-english-buddy/sw.js').catch(error => {
       console.warn('SW registration failed:', error);
     });
   });
 }
-

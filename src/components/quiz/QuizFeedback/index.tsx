@@ -3,7 +3,7 @@
  * 正确/错误反馈动画
  */
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import styles from './QuizFeedback.module.css';
 
@@ -18,12 +18,6 @@ export const QuizFeedback: React.FC<QuizFeedbackProps> = ({
   correctAnswer,
   onContinue,
 }) => {
-  // 自动继续
-  useEffect(() => {
-    const timer = setTimeout(onContinue, 2000);
-    return () => clearTimeout(timer);
-  }, [onContinue]);
-
   return (
     <motion.div
       className={`${styles.container} ${isCorrect ? styles.correct : styles.wrong}`}
@@ -58,10 +52,7 @@ export const QuizFeedback: React.FC<QuizFeedbackProps> = ({
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
       >
-        {isCorrect 
-          ? '你的魔力值 +3 ✨' 
-          : `正确答案是：${correctAnswer}`
-        }
+        {isCorrect ? '你的魔力值 +3 ✨' : `正确答案是：${correctAnswer}`}
       </motion.p>
 
       {/* 粒子效果 (仅正确时) */}
@@ -101,11 +92,10 @@ export const QuizFeedback: React.FC<QuizFeedbackProps> = ({
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
       >
-        点击继续 →
+        继续 →
       </motion.button>
     </motion.div>
   );
 };
 
 export default QuizFeedback;
-

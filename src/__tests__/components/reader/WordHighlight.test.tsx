@@ -31,9 +31,7 @@ describe('WordHighlight 组件', () => {
     });
 
     it('isHighlighted 为 true 时应该高亮', () => {
-      const { container } = render(
-        <WordHighlight {...defaultProps} isHighlighted={true} />
-      );
+      const { container } = render(<WordHighlight {...defaultProps} isHighlighted={true} />);
       expect(container.firstChild).not.toBeNull();
     });
 
@@ -51,9 +49,7 @@ describe('WordHighlight 组件', () => {
 
   describe('已学习状态', () => {
     it('isLearned 为 true 时应该有特殊样式', () => {
-      const { container } = render(
-        <WordHighlight {...defaultProps} isLearned={true} />
-      );
+      const { container } = render(<WordHighlight {...defaultProps} isLearned={true} />);
       expect(container.firstChild).not.toBeNull();
     });
 
@@ -75,9 +71,7 @@ describe('WordHighlight 组件', () => {
 
     it('点击应该传递正确的单词和索引', () => {
       const handleClick = vi.fn();
-      render(
-        <WordHighlight word="hello" index={5} onClick={handleClick} />
-      );
+      render(<WordHighlight word="hello" index={5} onClick={handleClick} />);
 
       fireEvent.click(screen.getByText('hello'));
 
@@ -94,9 +88,7 @@ describe('WordHighlight 组件', () => {
   describe('长按交互（右键模拟）', () => {
     it('右键应该触发 onLongPress', () => {
       const handleLongPress = vi.fn();
-      render(
-        <WordHighlight {...defaultProps} onLongPress={handleLongPress} />
-      );
+      render(<WordHighlight {...defaultProps} onLongPress={handleLongPress} />);
 
       fireEvent.contextMenu(screen.getByText('apple'));
 
@@ -105,9 +97,7 @@ describe('WordHighlight 组件', () => {
 
     it('右键应该传递正确的单词和索引', () => {
       const handleLongPress = vi.fn();
-      render(
-        <WordHighlight word="world" index={3} onLongPress={handleLongPress} />
-      );
+      render(<WordHighlight word="world" index={3} onLongPress={handleLongPress} />);
 
       fireEvent.contextMenu(screen.getByText('world'));
 
@@ -116,14 +106,32 @@ describe('WordHighlight 组件', () => {
 
     it('右键应该阻止默认菜单', () => {
       const handleLongPress = vi.fn();
-      render(
-        <WordHighlight {...defaultProps} onLongPress={handleLongPress} />
-      );
+      render(<WordHighlight {...defaultProps} onLongPress={handleLongPress} />);
 
       const event = fireEvent.contextMenu(screen.getByText('apple'));
 
       // contextMenu 事件被处理
       expect(handleLongPress).toHaveBeenCalled();
+    });
+  });
+
+  describe('键盘交互', () => {
+    it('按 Enter 应该打开单词操作', () => {
+      const handleClick = vi.fn();
+      render(<WordHighlight {...defaultProps} onClick={handleClick} />);
+
+      fireEvent.keyDown(screen.getByText('apple'), { key: 'Enter' });
+
+      expect(handleClick).toHaveBeenCalledWith('apple', 0);
+    });
+
+    it('按 Space 应该打开单词操作', () => {
+      const handleClick = vi.fn();
+      render(<WordHighlight {...defaultProps} onClick={handleClick} />);
+
+      fireEvent.keyDown(screen.getByText('apple'), { key: ' ' });
+
+      expect(handleClick).toHaveBeenCalledWith('apple', 0);
     });
   });
 

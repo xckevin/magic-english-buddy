@@ -54,7 +54,10 @@ export const NODE_ITEM_HEIGHT = 120;
 export const LEVEL_DIVIDER_HEIGHT = 80;
 
 /** 节点类型样式映射 */
-export const nodeTypeStyles: Record<string, { color: string; icon: string; size: 'sm' | 'md' | 'lg' }> = {
+export const nodeTypeStyles: Record<
+  string,
+  { color: string; icon: string; size: 'sm' | 'md' | 'lg' }
+> = {
   story: { color: '#6B5CE7', icon: '📖', size: 'md' },
   boss: { color: '#F59E0B', icon: '👑', size: 'lg' },
   challenge: { color: '#EF4444', icon: '⚡', size: 'md' },
@@ -64,14 +67,17 @@ export const nodeTypeStyles: Record<string, { color: string; icon: string; size:
 };
 
 /** 级别主题颜色 */
-export const levelThemeColors: Record<LevelNumber, { primary: string; secondary: string; bg: string }> = {
-  1: { primary: '#22C55E', secondary: '#86EFAC', bg: '#052E16' },  // 森林绿
-  2: { primary: '#8B5CF6', secondary: '#C4B5FD', bg: '#1E1B4B' },  // 山谷紫
-  3: { primary: '#06B6D4', secondary: '#67E8F9', bg: '#042F2E' },  // 海洋蓝
-  4: { primary: '#F472B6', secondary: '#FBCFE8', bg: '#4C1D95' },  // 云彩粉
-  5: { primary: '#FBBF24', secondary: '#FDE68A', bg: '#1C1917' },  // 星空金
-  6: { primary: '#A78BFA', secondary: '#DDD6FE', bg: '#1E1B4B' },  // 时光紫
-  7: { primary: '#F43F5E', secondary: '#FDA4AF', bg: '#1C1917' },  // 核心红
+export const levelThemeColors: Record<
+  LevelNumber,
+  { primary: string; secondary: string; bg: string }
+> = {
+  1: { primary: '#22C55E', secondary: '#86EFAC', bg: '#052E16' }, // 森林绿
+  2: { primary: '#8B5CF6', secondary: '#C4B5FD', bg: '#1E1B4B' }, // 山谷紫
+  3: { primary: '#06B6D4', secondary: '#67E8F9', bg: '#042F2E' }, // 海洋蓝
+  4: { primary: '#F472B6', secondary: '#FBCFE8', bg: '#4C1D95' }, // 云彩粉
+  5: { primary: '#FBBF24', secondary: '#FDE68A', bg: '#1C1917' }, // 星空金
+  6: { primary: '#A78BFA', secondary: '#DDD6FE', bg: '#1E1B4B' }, // 时光紫
+  7: { primary: '#F43F5E', secondary: '#FDA4AF', bg: '#1C1917' }, // 核心红
 };
 
 // ============ 生成函数 ============
@@ -90,18 +96,37 @@ export const generateUnifiedMapData = (): UnifiedMapData => {
     const levelNum = level as LevelNumber;
     const levelData = levelDataMap[levelNum];
     const region = levelData.regionConfig;
-    const nodes = levelData.getMapNodes();
-    
+    const sourceNodes = levelData.getMapNodes();
+    const hasContent = (node: MapNode) =>
+      !!node.storyId && levelData.stories.some(story => story.id === node.storyId);
+    // Some legacy bonus/checkpoint nodes have no learning content. Bypass those
+    // placeholders instead of sending a child into an empty, unfinishable lesson.
+    const resolvePrerequisites = (id: string, seen = new Set<string>()): string[] => {
+      if (seen.has(id)) return [];
+      const source = sourceNodes.find(node => node.id === id);
+      if (!source || hasContent(source)) return [id];
+      const nextSeen = new Set(seen).add(id);
+      return source.prerequisites.flatMap(prerequisite =>
+        resolvePrerequisites(prerequisite, nextSeen)
+      );
+    };
+    const nodes = sourceNodes.filter(hasContent).map(node => ({
+      ...node,
+      prerequisites: [...new Set(node.prerequisites.flatMap(id => resolvePrerequisites(id)))],
+    }));
+
     // 记录级别起始索引
     const startIndex = globalIndex;
-    
+
     // 按 ID 排序确保顺序正确
     nodes.sort((a, b) => a.id.localeCompare(b.id));
-    
+
     // 转换为统一节点
     nodes.forEach((node, levelIndex) => {
       const unifiedNode: UnifiedMapNode = {
         ...node,
+        prerequisites:
+          level > 1 && levelIndex === 0 ? [allNodes[allNodes.length - 1]!.id] : node.prerequisites,
         level: levelNum,
         globalIndex,
         levelIndex,
@@ -109,14 +134,14 @@ export const generateUnifiedMapData = (): UnifiedMapData => {
         isLevelStart: levelIndex === 0,
         isLevelEnd: levelIndex === nodes.length - 1,
         // 只有第一个级别的第一个节点默认解锁
-        unlocked: level === 1 && levelIndex === 0 ? true : node.unlocked ?? false,
+        unlocked: level === 1 && levelIndex === 0 ? true : (node.unlocked ?? false),
         completed: node.completed ?? false,
       };
-      
+
       allNodes.push(unifiedNode);
       globalIndex++;
     });
-    
+
     // 记录级别区段信息
     sections.push({
       level: levelNum,
@@ -126,7 +151,7 @@ export const generateUnifiedMapData = (): UnifiedMapData => {
       nodeCount: nodes.length,
     });
   }
-  
+
   return {
     nodes: allNodes,
     sections,
@@ -143,12 +168,14 @@ export const mergeNodeStates = (
   dbNodes: MapNode[]
 ): UnifiedMapNode[] => {
   const dbNodeMap = new Map(dbNodes.map(n => [n.id, n]));
-  
+
   return unifiedNodes.map(node => {
-    const dbNode = dbNodeMap.get(node.id);
+    const dbNode = dbNodeMap.get(node.id) ?? dbNodes.find(saved => saved.storyId === node.storyId);
     if (dbNode) {
       return {
         ...node,
+        id: dbNode.id,
+        prerequisites: dbNode.prerequisites,
         unlocked: dbNode.unlocked ?? node.unlocked,
         completed: dbNode.completed ?? node.completed,
       };
@@ -164,13 +191,13 @@ export const findActiveNode = (nodes: UnifiedMapNode[]): UnifiedMapNode | null =
   // 找第一个解锁但未完成的节点
   const activeNode = nodes.find(n => n.unlocked && !n.completed);
   if (activeNode) return activeNode;
-  
+
   // 如果全部完成，返回最后一个已完成的
   const completedNodes = nodes.filter(n => n.completed);
   if (completedNodes.length > 0) {
     return completedNodes[completedNodes.length - 1] ?? null;
   }
-  
+
   // 否则返回第一个节点
   return nodes[0] ?? null;
 };
@@ -186,7 +213,7 @@ export const calculateNodePosition = (
 ): number => {
   // 地图从下往上，所以需要反转计算
   const reversedIndex = totalNodes - 1 - nodeIndex;
-  
+
   // 计算经过的级别分隔数
   let dividerCount = 0;
   for (const section of sections) {
@@ -194,7 +221,7 @@ export const calculateNodePosition = (
       dividerCount++;
     }
   }
-  
+
   return reversedIndex * NODE_ITEM_HEIGHT + dividerCount * LEVEL_DIVIDER_HEIGHT;
 };
 
@@ -204,7 +231,7 @@ export const calculateNodePosition = (
 export const getNodeVisualConfig = (node: UnifiedMapNode) => {
   const typeStyle = nodeTypeStyles[node.type] || nodeTypeStyles.story;
   const themeColor = levelThemeColors[node.level];
-  
+
   return {
     ...typeStyle,
     themeColor,
@@ -230,7 +257,7 @@ export const getLevelProgress = (nodes: UnifiedMapNode[], level: LevelNumber) =>
   const levelNodes = getNodesByLevel(nodes, level);
   const completed = levelNodes.filter(n => n.completed).length;
   const total = levelNodes.length;
-  
+
   return {
     completed,
     total,
@@ -244,7 +271,7 @@ export const getLevelProgress = (nodes: UnifiedMapNode[], level: LevelNumber) =>
 export const getTotalProgress = (nodes: UnifiedMapNode[]) => {
   const completed = nodes.filter(n => n.completed).length;
   const total = nodes.length;
-  
+
   return {
     completed,
     total,
@@ -266,4 +293,3 @@ export default {
   nodeTypeStyles,
   levelThemeColors,
 };
-

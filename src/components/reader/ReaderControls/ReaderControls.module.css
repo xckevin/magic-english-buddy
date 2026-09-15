@@ -1,110 +1,94 @@
-/**
- * ReaderControls 组件样式
- */
-
 .controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  background: var(--bg-card-dark);
-  border-top: 1px solid var(--border-dark);
+  display: grid;
+  grid-auto-columns: minmax(44px, 1fr);
+  grid-auto-flow: column;
+  align-items: stretch;
+  gap: var(--space-1);
+  padding: 8px 12px;
+  background: var(--surface-card, var(--bg-card-dark));
 }
 
 .controlBtn {
+  min-width: 44px;
+  min-height: 52px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 56px;
-  padding: var(--space-2);
+  gap: 2px;
+  padding: 4px;
+  color: var(--ink-muted, var(--text-muted));
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  touch-action: manipulation;
 }
 
-.controlBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
+.controlBtn:hover,
+.controlBtn:focus-visible {
+  background: var(--surface-soft, rgba(107, 92, 231, 0.08));
 }
-
+.controlBtn:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 1px;
+}
 .controlBtn:active {
-  transform: scale(0.95);
+  transform: scale(0.97);
 }
 
 .btnIcon {
-  font-size: 24px;
+  font-size: 1.3rem;
   line-height: 1;
-  margin-bottom: var(--space-1);
 }
-
 .btnLabel {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  white-space: nowrap;
+  color: currentColor;
+  font-size: 0.8125rem;
+  font-weight: var(--font-medium);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
 }
-
-/* ============ 播放按钮 ============ */
 
 .playBtn {
-  min-width: 72px;
-  padding: var(--space-3);
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: #fff;
+  background: var(--color-primary);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
-
-.playBtn:hover {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  box-shadow: var(--shadow-lg), var(--glow-primary);
+.playBtn:hover,
+.playBtn:focus-visible {
+  color: #fff;
+  background: var(--color-primary-dark);
 }
-
-.playBtn .btnLabel {
-  color: var(--text-light);
-}
-
 .playBtn.playing {
-  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
+  background: var(--color-secondary, var(--color-primary));
 }
-
 .playIcon {
-  font-size: 28px;
+  font-size: 1.4rem;
 }
 
-/* ============ 跟读按钮 ============ */
-
-.recordBtn.recording {
-  background: rgba(255, 87, 87, 0.2);
-}
-
-.recordBtn.recording .btnIcon {
-  animation: pulse 1s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-/* ============ 翻译按钮 ============ */
-
+.recordBtn.recording,
 .translationBtn.active {
-  background: rgba(107, 92, 231, 0.2);
-}
-
-.translationBtn.active .btnLabel {
   color: var(--color-primary);
+  background: var(--brand-soft, rgba(107, 92, 231, 0.16));
 }
-
-/* ============ 停止按钮 ============ */
 
 .stopBtn {
-  background: rgba(255, 87, 87, 0.1);
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
 }
 
-.stopBtn:hover {
-  background: rgba(255, 87, 87, 0.2);
+@media (max-width: 360px) {
+  .controls {
+    padding-inline: var(--space-2);
+  }
+  .btnIcon {
+    font-size: 1.15rem;
+  }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .controlBtn {
+    transition: none;
+  }
+}

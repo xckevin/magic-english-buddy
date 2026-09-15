@@ -158,3 +158,54 @@
   box-shadow: var(--shadow-md);
 }
 
+/* Light learning surface */
+.title,
+.wordText,
+.previewText {
+  color: var(--ink, #312850);
+}
+.instruction,
+.dragHint,
+.previewLabel,
+.hintBtn {
+  color: var(--ink-muted, #756c7e);
+}
+.orderArea,
+.preview {
+  background: var(--surface-card, #fff);
+  border: 1px solid var(--line, #eadfd5);
+}
+.wordItem {
+  min-height: 44px;
+  background: var(--brand-soft, #eeeaff);
+  border-color: var(--color-primary, #6b5ce7);
+}
+.hintBtn,
+.submitBtn {
+  min-height: 48px;
+}
+.hintBtn {
+  background: var(--surface-card, #fff);
+  border-color: var(--line, #eadfd5);
+}
+.submitBtn {
+  background: linear-gradient(135deg, var(--color-primary, #6b5ce7), #8b5cf6);
+}
+.wordItem:focus-visible,
+.hintBtn:focus-visible,
+.submitBtn:focus-visible {
+  outline: 3px solid var(--color-primary, #6b5ce7);
+  outline-offset: 3px;
+}
+
+@media (max-width: 360px) {
+  .container {
+    gap: var(--space-4);
+  }
+  .actions {
+    gap: var(--space-2);
+  }
+  .wordItem {
+    padding: var(--space-2) var(--space-3);
+  }
+}

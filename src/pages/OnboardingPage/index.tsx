@@ -1,277 +1,265 @@
-/**
- * OnboardingPage 新手引导页
- * 魔法蛋孵化、Buddy 起名、魔法觉醒
- */
-
-import React, { useState, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppStore } from '@/stores/useAppStore';
+import { ArrowLeft, ArrowRight, BookOpen, Headphones, Sparkles, ShieldCheck } from 'lucide-react';
 import { db, createUser } from '@/db';
+import { useAppStore } from '@/stores/useAppStore';
 import { useInitialization } from '@/hooks/useInitialization';
 import { useLongPress } from '@/hooks/useLongPress';
-import { MagicBackground, MagicEgg } from '@/components/onboarding';
-import Loading from '@/components/common/Loading';
+import { MagicEgg } from '@/components/onboarding';
+import BuddyScene from '@/components/common/BuddyScene';
 import Button from '@/components/common/Button';
 import styles from './OnboardingPage.module.css';
 
-type OnboardingStep = 'welcome' | 'hatching' | 'naming' | 'ready';
-type EggState = 'dormant' | 'awakening' | 'cracking' | 'hatched';
-
-const OnboardingPage: React.FC = () => {
+type Step = 'welcome' | 'hatching' | 'naming';
+export default function OnboardingPage() {
   const navigate = useNavigate();
-  const setCurrentUser = useAppStore((state) => state.setCurrentUser);
-  const { state: initState } = useInitialization();
-  const isLoading = initState.isChecking || initState.isInitializing;
-  const isInitialized = initState.isComplete;
-
-  // 引导步骤
-  const [step, setStep] = useState<OnboardingStep>('welcome');
-  // 蛋的状态
-  const [eggState, setEggState] = useState<EggState>('dormant');
-  // 表单数据
+  const setCurrentUser = useAppStore(s => s.setCurrentUser);
+  const finishFirstLaunch = useAppStore(s => s.setFirstLaunchComplete);
+  const { state: init, retry } = useInitialization();
+  const [step, setStep] = useState<Step>('welcome');
   const [userName, setUserName] = useState('');
   const [buddyName, setBuddyName] = useState('');
-  // 对话文本
-  const [dialogue, setDialogue] = useState('');
-
-  // 长按孵化
-  const { progress, handlers, reset: _reset } = useLongPress({ // eslint-disable-line @typescript-eslint/no-unused-vars
-    duration: 3000,
-    onStart: () => {
-      setEggState('awakening');
-      setDialogue('继续按住...感受魔法的力量...');
-    },
-    onProgress: (p) => {
-      if (p > 0.5 && eggState === 'awakening') {
-        setDialogue('快了！蛋壳在颤抖...');
-      }
-    },
-    onComplete: () => {
-      setEggState('cracking');
-      setDialogue('');
-    },
-    onCancel: () => {
-      if (eggState !== 'cracking' && eggState !== 'hatched') {
-        setEggState('dormant');
-        setDialogue('');
-      }
-    },
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const submitting = useRef(false);
+  const { progress, handlers } = useLongPress({
+    duration: 1800,
+    onComplete: () => setStep('naming'),
   });
-
-  // 蛋孵化完成
-  const handleHatched = useCallback(() => {
-    setStep('naming');
-    setDialogue('你好！我是你的魔法伙伴！给我起个名字吧！');
-  }, []);
-
-  // 开始孵化
-  const handleStartHatching = useCallback(() => {
-    setStep('hatching');
-    setDialogue('长按魔法蛋，唤醒你的伙伴...');
-  }, []);
-
-  // 创建用户并开始冒险
-  const handleStartAdventure = useCallback(async () => {
-    if (!userName.trim()) {
-      setDialogue('请告诉我你的名字~');
-      return;
-    }
-    if (!buddyName.trim()) {
-      setDialogue('给我起个名字嘛~');
-      return;
-    }
-
-    try {
-      const newUser = await createUser(userName.trim(), buddyName.trim());
-      setCurrentUser(newUser.id);
-      
-      setStep('ready');
-      setDialogue(`太棒了！${buddyName}准备好和你一起冒险了！`);
-      
-      // 延迟跳转
-      setTimeout(() => {
-        navigate('/map');
-      }, 2000);
-    } catch (error) {
-      console.error('Failed to create user:', error);
-      setDialogue('哎呀，出错了，再试一次吧~');
-    }
-  }, [userName, buddyName, setCurrentUser, navigate]);
-
-  // 跳过引导
-  const handleSkip = useCallback(async () => {
-    try {
-      const newUser = await createUser('小魔法师', '小精灵');
-      setCurrentUser(newUser.id);
-      navigate('/map');
-    } catch (error) {
-      console.error('Failed to create default user:', error);
-    }
-  }, [setCurrentUser, navigate]);
-
-  // 检查是否已有用户 (必须在条件返回之前)
   useEffect(() => {
-    const checkExistingUser = async () => {
-      const userCount = await db.users.count();
-      if (userCount > 0) {
-        const lastUser = await db.users.orderBy('createdAt').reverse().first();
-        if (lastUser) {
-          setCurrentUser(lastUser.id);
-          navigate('/map');
+    if (!init.isComplete) return;
+    let cancelled = false;
+    void db.users
+      .orderBy('createdAt')
+      .last()
+      .then(user => {
+        if (user && !cancelled) {
+          setCurrentUser(user.id);
+          navigate('/map', { replace: true });
         }
-      }
+      })
+      .catch(() => {
+        if (!cancelled) setError('暂时无法读取学习记录，请刷新后重试。');
+      });
+    return () => {
+      cancelled = true;
     };
-    if (isInitialized) {
-      checkExistingUser();
-    }
-  }, [isInitialized, setCurrentUser, navigate]);
-
-  // 加载中
-  if (isLoading) {
-    return <Loading />;
-  }
-
+  }, [init.isComplete, setCurrentUser, navigate]);
+  const create = useCallback(
+    async (skip = false) => {
+      if (submitting.current) return;
+      if (!skip && (!userName.trim() || !buddyName.trim())) {
+        setError('请填写你的名字和伙伴的名字。');
+        return;
+      }
+      submitting.current = true;
+      setBusy(true);
+      setError('');
+      try {
+        const user = await createUser(
+          skip ? '小小探险队' : userName.trim(),
+          skip ? '小精灵' : buddyName.trim()
+        );
+        setCurrentUser(user.id);
+        finishFirstLaunch();
+        navigate('/map', { replace: true });
+      } catch {
+        setError('还没能保存名字，你的输入已保留。请再试一次。');
+      } finally {
+        submitting.current = false;
+        setBusy(false);
+      }
+    },
+    [userName, buddyName, setCurrentUser, finishFirstLaunch, navigate]
+  );
+  const loading = init.isChecking || init.isInitializing;
   return (
-    <div className={styles.container}>
-      {/* 魔法背景 */}
-      <MagicBackground intensity={step === 'hatching' ? 0.8 : 0.5} />
-
-      {/* 内容区域 */}
-      <div className={styles.content}>
-        {/* 标题 */}
-        <AnimatePresence mode="wait">
-          {step === 'welcome' && (
-            <motion.div
-              key="welcome-title"
-              className={styles.titleSection}
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <h1 className={styles.title}>Magic English Buddy</h1>
-              <p className={styles.subtitle}>你的魔法英语伙伴</p>
-            </motion.div>
+    <div className={styles.page} data-testid="onboarding-page">
+      <header className={styles.header}>
+        <span className={styles.logo}>
+          <BookOpen size={23} />
+        </span>
+        <strong>Magic Buddy</strong>
+        <span>英语启蒙，从好奇开始</span>
+      </header>
+      <main className={styles.layout}>
+        <section
+          className={`${styles.storyPanel} ${step !== 'welcome' ? styles.hideOnMobile : ''}`}
+        >
+          <span className={styles.eyebrow}>
+            <Sparkles size={14} /> A LITTLE EVERY DAY
+          </span>
+          <h1>
+            小小好奇心，
+            <br />
+            大大的<span>魔法世界。</span>
+          </h1>
+          <p>
+            一个故事，一个新单词。
+            <br />
+            和专属伙伴一起，让英语成为每天的小期待。
+          </p>
+          <BuddyScene className={styles.illustration} />
+          <div className={styles.features}>
+            <span>
+              <BookOpen size={17} /> 分级故事
+            </span>
+            <span>
+              <Headphones size={17} /> 边听边读
+            </span>
+            <span>
+              <Sparkles size={17} /> 趣味练习
+            </span>
+          </div>
+        </section>
+        <section className={styles.setupPanel}>
+          <div
+            className={styles.steps}
+            aria-label={`第 ${step === 'welcome' ? 1 : step === 'hatching' ? 2 : 3} 步，共 3 步`}
+          >
+            <span className={styles.stepActive} />
+            <span className={step !== 'welcome' ? styles.stepActive : ''} />
+            <span className={step === 'naming' ? styles.stepActive : ''} />
+          </div>
+          {loading ? (
+            <div className={styles.state} role="status">
+              <Sparkles size={32} />
+              <h2>正在准备魔法世界</h2>
+              <p>{init.message}</p>
+              <progress value={init.progress} max={100} aria-label="内容加载进度" />
+            </div>
+          ) : init.error ? (
+            <div className={styles.state} role="alert">
+              <h2>内容还没有准备好</h2>
+              <p>请重新加载，准备好后就能开始冒险。</p>
+              <Button onClick={retry}>重新加载</Button>
+            </div>
+          ) : (
+            <>
+              {step !== 'welcome' && (
+                <button
+                  className={styles.back}
+                  onClick={() => {
+                    setError('');
+                    setStep(step === 'naming' ? 'hatching' : 'welcome');
+                  }}
+                  disabled={busy}
+                >
+                  <ArrowLeft size={16} /> 上一步
+                </button>
+              )}
+              {step === 'welcome' && (
+                <>
+                  <span className={styles.stepLabel}>01 / 遇见你的伙伴</span>
+                  <h2>你好，小小冒险家！</h2>
+                  <p className={styles.description}>
+                    一部手机，也能开启英语冒险。
+                    <br />
+                    和老师、伙伴们一起听故事。
+                  </p>
+                  <div className={styles.eggPreview} aria-hidden="true">
+                    🥚<span>一份只属于你的惊喜</span>
+                  </div>
+                  <Button
+                    fullWidth
+                    loading={busy}
+                    rightIcon={<ArrowRight size={17} />}
+                    onClick={() => create(true)}
+                  >
+                    直接开始，一起学英语
+                  </Button>
+                  <button
+                    className={styles.skip}
+                    onClick={() => setStep('hatching')}
+                    disabled={busy}
+                  >
+                    先为我们的伙伴起个名字
+                  </button>
+                </>
+              )}
+              {step === 'hatching' && (
+                <>
+                  <span className={styles.stepLabel}>02 / 唤醒小伙伴</span>
+                  <h2>把一点魔法，交给它。</h2>
+                  <p className={styles.description}>
+                    按住魔法蛋，就能唤醒伙伴。
+                    <br />
+                    也可以轻点下方按钮直接孵化。
+                  </p>
+                  <div className={styles.egg} {...handlers}>
+                    <MagicEgg
+                      state={progress > 0 ? 'awakening' : 'dormant'}
+                      holdProgress={progress}
+                    />
+                  </div>
+                  <Button fullWidth onClick={() => setStep('naming')}>
+                    轻点孵化 <Sparkles size={17} />
+                  </Button>
+                </>
+              )}
+              {step === 'naming' && (
+                <>
+                  <span className={styles.stepLabel}>03 / 认识一下吧</span>
+                  <h2>我们的冒险，从名字开始。</h2>
+                  <p className={styles.description}>为你和伙伴起个喜欢的昵称。</p>
+                  <form
+                    className={styles.form}
+                    onSubmit={event => {
+                      event.preventDefault();
+                      void create();
+                    }}
+                  >
+                    <label htmlFor="userName">
+                      你的昵称
+                      <input
+                        id="userName"
+                        autoFocus
+                        value={userName}
+                        onChange={event => setUserName(event.target.value)}
+                        placeholder="例如：小橙子"
+                        maxLength={20}
+                        required
+                        disabled={busy}
+                        autoComplete="nickname"
+                      />
+                    </label>
+                    <label htmlFor="buddyName">
+                      伙伴的名字
+                      <input
+                        id="buddyName"
+                        value={buddyName}
+                        onChange={event => setBuddyName(event.target.value)}
+                        placeholder="例如：布布"
+                        maxLength={20}
+                        required
+                        disabled={busy}
+                        autoComplete="off"
+                      />
+                    </label>
+                    <Button
+                      type="submit"
+                      loading={busy}
+                      fullWidth
+                      rightIcon={<ArrowRight size={17} />}
+                    >
+                      一起开始冒险
+                    </Button>
+                  </form>
+                </>
+              )}
+              {error && (
+                <p role="alert" className={styles.error}>
+                  {error}
+                </p>
+              )}
+            </>
           )}
-        </AnimatePresence>
-
-        {/* 魔法蛋 / Buddy */}
-        <div className={styles.eggContainer} {...(step === 'hatching' ? handlers : {})}>
-          <MagicEgg
-            state={eggState}
-            holdProgress={progress}
-            onHatched={handleHatched}
-            onClick={step === 'welcome' ? handleStartHatching : undefined}
-          />
-        </div>
-
-        {/* 对话框 */}
-        <AnimatePresence mode="wait">
-          {dialogue && (
-            <motion.div
-              key="dialogue"
-              className={styles.dialogue}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <p>{dialogue}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* 命名表单 */}
-        <AnimatePresence mode="wait">
-          {step === 'naming' && (
-            <motion.div
-              key="naming-form"
-              className={styles.namingForm}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-            >
-              <div className={styles.inputGroup}>
-                <label htmlFor="userName">你的名字</label>
-                <input
-                  id="userName"
-                  type="text"
-                  placeholder="输入你的名字..."
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  maxLength={20}
-                  autoComplete="off"
-                />
-              </div>
-              <div className={styles.inputGroup}>
-                <label htmlFor="buddyName">伙伴的名字</label>
-                <input
-                  id="buddyName"
-                  type="text"
-                  placeholder="给你的伙伴起个名字..."
-                  value={buddyName}
-                  onChange={(e) => setBuddyName(e.target.value)}
-                  maxLength={20}
-                  autoComplete="off"
-                />
-              </div>
-              <Button
-                variant="primary"
-                onClick={handleStartAdventure}
-                disabled={!userName.trim() || !buddyName.trim()}
-                className={styles.adventureBtn}
-              >
-                开始冒险 ✨
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* 准备完成 */}
-        <AnimatePresence mode="wait">
-          {step === 'ready' && (
-            <motion.div
-              key="ready"
-              className={styles.readySection}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              <div className={styles.sparkles}>✨🎉✨</div>
-              <p className={styles.readyText}>准备进入魔法世界...</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* 底部操作 */}
-        <div className={styles.footer}>
-          {step === 'welcome' && (
-            <motion.div
-              className={styles.actions}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              <Button variant="primary" onClick={handleStartHatching}>
-                唤醒我的伙伴 🥚
-              </Button>
-              <Button variant="ghost" onClick={handleSkip}>
-                跳过
-              </Button>
-            </motion.div>
-          )}
-
-          {step === 'hatching' && (
-            <motion.p
-              className={styles.hint}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              💡 长按魔法蛋直到孵化完成
-            </motion.p>
-          )}
-        </div>
-      </div>
+          <p className={styles.privacy}>
+            <ShieldCheck size={14} /> 无需账号 · 记录属于这台共用设备
+          </p>
+        </section>
+      </main>
+      <footer className={styles.footer}>每一次尝试，都值得被鼓励。</footer>
     </div>
   );
-};
-
-export default OnboardingPage;
+}

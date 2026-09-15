@@ -3,7 +3,7 @@
  * Quiz 练习容器，管理题目流程和状态
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { QuizItem } from '@/db';
 import { QuizProgress } from '../QuizProgress';
@@ -21,7 +21,7 @@ interface QuizContainerProps {
   /** 故事 ID */
   storyId: string;
   /** 完成回调 */
-  onComplete: (result: QuizResultData) => void;
+  onComplete: (result: QuizResultData) => Promise<void>;
   /** 退出回调 */
   onExit: () => void;
 }
@@ -53,26 +53,36 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
   const [quizState, setQuizState] = useState<QuizState>('playing');
   const [isCorrect, setIsCorrect] = useState(false);
   const [startTime] = useState(Date.now());
-  
+
   // 答题记录
   const [answers, setAnswers] = useState<QuizResultData['answers']>([]);
   const [hintsUsed, setHintsUsed] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const answerLockedRef = useRef(false);
 
   const currentQuestion = questions[currentIndex];
-  const progress = ((currentIndex) / questions.length) * 100;
+  const progress = questions.length ? (answers.length / questions.length) * 100 : 0;
 
   // 提交答案
-  const handleAnswer = useCallback((userAnswer: string | string[]) => {
-    if (!currentQuestion) return;
-    const correct = checkAnswer(currentQuestion, userAnswer);
-    setIsCorrect(correct);
-    setAnswers(prev => [...prev, {
-      questionId: currentQuestion.id,
-      isCorrect: correct,
-      userAnswer,
-    }]);
-    setQuizState('feedback');
-  }, [currentQuestion]);
+  const handleAnswer = useCallback(
+    (userAnswer: string | string[]) => {
+      if (!currentQuestion || answerLockedRef.current) return;
+      answerLockedRef.current = true;
+      const correct = checkAnswer(currentQuestion, userAnswer);
+      setIsCorrect(correct);
+      setAnswers(prev => [
+        ...prev,
+        {
+          questionId: currentQuestion.id,
+          isCorrect: correct,
+          userAnswer,
+        },
+      ]);
+      setQuizState('feedback');
+    },
+    [currentQuestion]
+  );
 
   // 检查答案
   const checkAnswer = (question: QuizItem, answer: string | string[]): boolean => {
@@ -91,6 +101,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(prev => prev + 1);
       setQuizState('playing');
+      answerLockedRef.current = false;
     } else {
       // 完成所有题目
       setQuizState('result');
@@ -108,7 +119,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
     const wrongCount = answers.length - correctCount;
     const score = Math.round((correctCount / questions.length) * 100);
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
-    
+
     // 魔力值计算：每题正确 +3，错误 0，提示 -5
     const earnedMagicPower = Math.max(0, correctCount * 3 - hintsUsed * 5);
 
@@ -124,10 +135,18 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
   }, [answers, questions.length, startTime, hintsUsed]);
 
   // 完成 Quiz
-  const handleFinish = useCallback(() => {
+  const handleFinish = useCallback(async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    setSaveError(null);
     const result = calculateResult();
-    onComplete(result);
-  }, [calculateResult, onComplete]);
+    try {
+      await onComplete(result);
+    } catch {
+      setSaveError('暂时没能保存这次练习，请检查后重试。');
+      setIsSaving(false);
+    }
+  }, [calculateResult, isSaving, onComplete]);
 
   // 渲染题目
   const renderQuestion = () => {
@@ -190,7 +209,11 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
           >
             <QuizFeedback
               isCorrect={isCorrect}
-              correctAnswer={currentQuestion.correctAnswer || ''}
+              correctAnswer={
+                currentQuestion.type === 'sentence_order'
+                  ? (currentQuestion.correctOrder || []).join(' ')
+                  : currentQuestion.correctAnswer || ''
+              }
               onContinue={handleContinue}
             />
           </motion.div>
@@ -206,11 +229,14 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
             <QuizResult
               result={calculateResult()}
               onFinish={handleFinish}
+              isSaving={isSaving}
+              saveError={saveError}
               onRetry={() => {
                 setCurrentIndex(0);
                 setAnswers([]);
                 setHintsUsed(0);
                 setQuizState('playing');
+                answerLockedRef.current = false;
               }}
             />
           </motion.div>
@@ -221,4 +247,3 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
 };
 
 export default QuizContainer;
-

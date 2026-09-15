@@ -33,95 +33,102 @@ interface ReaderControlsProps {
   onRecordToggle: () => void;
 }
 
-export const ReaderControls = memo<ReaderControlsProps>(({
-  isPlaying,
-  isPaused,
-  speed,
-  showTranslation,
-  isRecording,
-  onPlayPause,
-  onStop,
-  onSpeedChange,
-  onTranslationToggle,
-  onRecordToggle,
-}) => {
-  // 语速选项
-  const speedOptions: SpeedOption[] = [0.8, 1.0, 1.2];
-  
-  // 获取下一个语速
-  const getNextSpeed = (): SpeedOption => {
-    const currentIndex = speedOptions.indexOf(speed);
-    return speedOptions[(currentIndex + 1) % speedOptions.length] as SpeedOption;
-  };
+export const ReaderControls = memo<ReaderControlsProps>(
+  ({
+    isPlaying,
+    isPaused,
+    speed,
+    showTranslation,
+    isRecording,
+    onPlayPause,
+    onStop,
+    onSpeedChange,
+    onTranslationToggle,
+    onRecordToggle,
+  }) => {
+    // 语速选项
+    const speedOptions: SpeedOption[] = [0.8, 1.0, 1.2];
 
-  return (
-    <div className={styles.controls}>
-      {/* 翻译按钮 */}
-      <button
-        className={clsx(styles.controlBtn, styles.translationBtn, showTranslation && styles.active)}
-        onClick={onTranslationToggle}
-        title={showTranslation ? '隐藏翻译' : '显示翻译'}
-      >
-        <span className={styles.btnIcon}>📖</span>
-        <span className={styles.btnLabel}>翻译</span>
-      </button>
+    // 获取下一个语速
+    const getNextSpeed = (): SpeedOption => {
+      const currentIndex = speedOptions.indexOf(speed);
+      return speedOptions[(currentIndex + 1) % speedOptions.length] as SpeedOption;
+    };
 
-      {/* 语速按钮 */}
-      <button
-        className={styles.controlBtn}
-        onClick={() => onSpeedChange(getNextSpeed())}
-        title={`当前语速: ${speed}x`}
-      >
-        <span className={styles.btnIcon}>⚡</span>
-        <span className={styles.btnLabel}>{speed}x</span>
-      </button>
-
-      {/* 播放/暂停按钮（主按钮） */}
-      <motion.button
-        className={clsx(styles.controlBtn, styles.playBtn, (isPlaying && !isPaused) && styles.playing)}
-        onClick={onPlayPause}
-        whileTap={{ scale: 0.95 }}
-      >
-        <motion.span 
-          className={styles.playIcon}
-          animate={{ scale: isPlaying && !isPaused ? [1, 1.1, 1] : 1 }}
-          transition={{ repeat: isPlaying && !isPaused ? Infinity : 0, duration: 1 }}
+    return (
+      <div className={styles.controls}>
+        {/* 翻译按钮 */}
+        <button
+          className={clsx(
+            styles.controlBtn,
+            styles.translationBtn,
+            showTranslation && styles.active
+          )}
+          onClick={onTranslationToggle}
+          title={showTranslation ? '隐藏翻译' : '显示翻译'}
+          aria-pressed={showTranslation}
         >
-          {isPlaying && !isPaused ? '⏸️' : '▶️'}
-        </motion.span>
-        <span className={styles.btnLabel}>
-          {isPlaying && !isPaused ? '暂停' : isPaused ? '继续' : '播放'}
-        </span>
-      </motion.button>
+          <span className={styles.btnIcon}>📖</span>
+          <span className={styles.btnLabel}>翻译</span>
+        </button>
 
-      {/* 跟读按钮 */}
-      <button
-        className={clsx(styles.controlBtn, styles.recordBtn, isRecording && styles.recording)}
-        onClick={onRecordToggle}
-        title={isRecording ? '停止录音' : '开始跟读'}
-      >
-        <span className={styles.btnIcon}>🎤</span>
-        <span className={styles.btnLabel}>跟读</span>
-      </button>
+        {/* 语速按钮 */}
+        <button
+          className={styles.controlBtn}
+          onClick={() => onSpeedChange(getNextSpeed())}
+          aria-label={`语速 ${speed} 倍，点击切换`}
+        >
+          <span className={styles.btnIcon}>⚡</span>
+          <span className={styles.btnLabel}>{speed}x</span>
+        </button>
 
-      {/* 停止按钮 */}
-      {isPlaying && (
+        {/* 播放/暂停按钮（主按钮） */}
         <motion.button
-          className={clsx(styles.controlBtn, styles.stopBtn)}
-          onClick={onStop}
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0, opacity: 0 }}
+          className={clsx(
+            styles.controlBtn,
+            styles.playBtn,
+            isPlaying && !isPaused && styles.playing
+          )}
+          onClick={onPlayPause}
+          whileTap={{ scale: 0.95 }}
         >
-          <span className={styles.btnIcon}>⏹️</span>
-          <span className={styles.btnLabel}>停止</span>
+          <motion.span className={styles.playIcon}>
+            {isPlaying && !isPaused ? '⏸️' : '▶️'}
+          </motion.span>
+          <span className={styles.btnLabel}>
+            {isPlaying && !isPaused ? '暂停' : isPaused ? '继续' : '播放'}
+          </span>
         </motion.button>
-      )}
-    </div>
-  );
-});
+
+        {/* 跟读按钮 */}
+        <button
+          className={clsx(styles.controlBtn, styles.recordBtn, isRecording && styles.recording)}
+          onClick={onRecordToggle}
+          aria-pressed={isRecording}
+          aria-label={isRecording ? '收起跟读练习' : '打开跟读练习'}
+        >
+          <span className={styles.btnIcon}>🎤</span>
+          <span className={styles.btnLabel}>{isRecording ? '收起' : '跟读'}</span>
+        </button>
+
+        {/* 停止按钮 */}
+        {isPlaying && (
+          <motion.button
+            className={clsx(styles.controlBtn, styles.stopBtn)}
+            onClick={onStop}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+          >
+            <span className={styles.btnIcon}>⏹️</span>
+            <span className={styles.btnLabel}>停止</span>
+          </motion.button>
+        )}
+      </div>
+    );
+  }
+);
 
 ReaderControls.displayName = 'ReaderControls';
 
 export default ReaderControls;
-

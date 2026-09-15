@@ -28,6 +28,21 @@
   margin: 0 0 var(--space-4) 0;
 }
 
+.questionWord {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--ink, #312850);
+  letter-spacing: 0.03em;
+}
+
+.audioError {
+  max-width: 36ch;
+  margin: var(--space-3) auto 0;
+  color: var(--color-error, #c2414d);
+  font-size: var(--text-sm);
+}
+
 .playBtn {
   display: inline-flex;
   align-items: center;
@@ -57,8 +72,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 .playIcon {
@@ -102,8 +122,10 @@
 
 .optionImage {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: var(--space-2);
 }
 
 .emoji {
@@ -141,3 +163,74 @@
   color: var(--text-light);
 }
 
+.hintBtn:disabled {
+  opacity: 0.72;
+  cursor: default;
+}
+
+/* Light learning surface */
+.title,
+.optionText {
+  color: var(--ink, #312850);
+}
+.instruction,
+.hintBtn {
+  color: var(--ink-muted, #756c7e);
+}
+.playBtn {
+  min-height: 48px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-primary, #6b5ce7), #8b5cf6);
+}
+.option {
+  min-height: 120px;
+  background: var(--surface-card, #fff);
+  border: 2px solid var(--line, #eadfd5);
+}
+.option:hover {
+  border-color: var(--color-primary, #6b5ce7);
+}
+.option.selected {
+  background: var(--brand-soft, #eeeaff);
+}
+.hintBtn {
+  min-height: 48px;
+  background: var(--surface-card, #fff);
+  border-color: var(--line, #eadfd5);
+}
+.hintBtn:hover {
+  background: var(--surface-soft, #f5efff);
+  color: var(--ink, #312850);
+}
+.playBtn:focus-visible,
+.option:focus-visible,
+.hintBtn:focus-visible {
+  outline: 3px solid var(--color-primary, #6b5ce7);
+  outline-offset: 3px;
+}
+
+@media (max-width: 360px) {
+  .container {
+    gap: var(--space-4);
+  }
+  .optionsGrid {
+    gap: var(--space-2);
+  }
+  .option {
+    min-height: 112px;
+    padding: var(--space-3);
+  }
+  .emoji {
+    font-size: 44px;
+  }
+  .optionText {
+    font-size: var(--text-base);
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .playBtn.playing {
+    animation: none;
+  }
+}
